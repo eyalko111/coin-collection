@@ -214,7 +214,7 @@
             <label for="form-country-input" class="block text-xs font-medium text-slate-500 dark:text-slate-400">מדינה / ישות</label>
             <button type="button" id="btn-form-series-info" onclick="openCurrentFormCountrySeriesInfo()" class="hidden inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
               <span>ⓘ</span>
-              <span>הסבר מיון סדרות</span>
+              <span>הסבר תקופות וסדרות</span>
             </button>
           </div>
           <div class="relative flex items-center">
@@ -292,27 +292,27 @@
     </div>
   </div>
 
-  <!-- SERIES INFO MODAL (ⓘ) -->
+  <!-- SERIES & ERAS INFO MODAL (ⓘ) -->
   <div id="series-info-modal" onclick="if(event.target.id==='series-info-modal') closeSeriesInfoModal()" class="hidden fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
-      <div class="flex items-center justify-between gap-2">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85dvh]">
+      <div class="flex items-center justify-between gap-2 shrink-0">
         <div class="flex items-center gap-2 min-w-0">
           <span id="series-info-flag" class="emoji-flag text-2xl shrink-0"></span>
           <div class="min-w-0">
             <h3 id="series-info-title" class="font-bold text-base truncate"></h3>
-            <p class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium">מיון אוטומטי לפי סדרות ושנת הנפקה</p>
+            <p id="series-info-subtitle" class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium"></p>
           </div>
         </div>
         <button type="button" onclick="closeSeriesInfoModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
       </div>
 
-      <p id="series-info-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <div class="mt-3 space-y-3 overflow-y-auto flex-1 pr-0.5">
+        <p id="series-info-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+        <div id="series-info-list" class="space-y-1.5"></div>
+        <p id="series-info-note" class="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed"></p>
+      </div>
 
-      <div id="series-info-list" class="space-y-1.5 pt-0.5"></div>
-
-      <p id="series-info-note" class="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed"></p>
-
-      <button type="button" onclick="closeSeriesInfoModal()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+      <button type="button" onclick="closeSeriesInfoModal()" class="mt-3.5 w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">
         סגור
       </button>
     </div>
@@ -918,39 +918,98 @@
       return fallbackSub.some(k => c.includes(k)) ? 1 : 0;
     }
 
-    // 3. Automatic Series Sorting & Info (ⓘ) for 19 Countries where Currency Name Remained Identical
+    // 3. Automatic Series Sorting & Info (ⓘ) for 45 Countries (19 Series-by-Year + 26 Currency-Eras)
     const SERIES_INFO_DB = {
+      // --- 19 Countries with Series-by-Year Sorting (including Commonwealth portraits & Euro transitions) ---
       "הולנד": {
         currencies: ["גילדן הולנדי", "סנט"],
-        description: "מטבעות הגילדן והסנט ההולנדיים ממוינים אוטומטית לפי תקופת המלכה שעל המטבע בהתאם לשנת ההנפקה:",
+        description: "מטבעות הגילדן והסנט ההולנדיים ממוינים אוטומטית לפי תקופת המלכה שעל המטבע בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
         ranges: [
           { years: "עד 1948", label: "המלכה וילהלמינה", maxYear: 1948 },
           { years: "1949–1980", label: "המלכה יוליאנה", maxYear: 1980 },
           { years: "1981–2001", label: "המלכה ביאטריקס", maxYear: 2099 }
         ],
-        note: "משנת 2002 מופיעים מטבעות האירו. פריטים ללא שנה מופיעים בסוף סדרת הגילדן."
+        infoRows: [
+          { years: "עד 1948", label: "המלכה וילהלמינה" },
+          { years: "1949–1980", label: "המלכה יוליאנה" },
+          { years: "1981–2001", label: "המלכה ביאטריקס" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "פריטים ללא שנה מופיעים בסוף סדרת הגילדן (או בסוף סדרת האירו)."
       },
       "בלגיה": {
         currencies: ["פרנק בלגי", "סנטים"],
-        description: "מטבעות הפרנק הבלגי ממוינים אוטומטית לפי המלך וסדרת העיצוב בהתאם לשנת ההנפקה:",
+        description: "מטבעות הפרנק הבלגי ממוינים אוטומטית לפי המלך וסדרת העיצוב בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
         ranges: [
           { years: "עד 1950", label: "לאופולד השלישי והעוצר שארל", maxYear: 1950 },
           { years: "1951–1985", label: "בודואן — סדרה קלאסית", maxYear: 1985 },
           { years: "1986–1993", label: "בודואן — סדרה מודרנית", maxYear: 1993 },
           { years: "1994–2001", label: "אלברט השני", maxYear: 2099 }
         ],
-        note: "משנת 2002 מופיעים מטבעות האירו. פריטים ללא שנה מופיעים בסוף סדרת הפרנק."
+        infoRows: [
+          { years: "עד 1950", label: "לאופולד השלישי והעוצר שארל" },
+          { years: "1951–1985", label: "בודואן — סדרה קלאסית" },
+          { years: "1986–1993", label: "בודואן — סדרה מודרנית" },
+          { years: "1994–2001", label: "אלברט השני" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "פריטים ללא שנה מופיעים בסוף סדרת הפרנק (או בסוף סדרת האירו)."
       },
       "בריטניה": {
         currencies: ["לירה שטרלינג", "שילינג", "פני / פנס", "פארתינג"],
-        description: "המטבעות הבריטיים ממוינים אוטומטית לפי השליט והמעבר לשיטה העשרונית (1971) בהתאם לשנת ההנפקה:",
+        description: "המטבעות הבריטיים ממוינים אוטומטית לפי השליט, דיוקן המלכה והמעבר לשיטה העשרונית (1971) בהתאם לשנת ההנפקה:",
         ranges: [
           { years: "עד 1952", label: "ג'ורג' החמישי / ג'ורג' השישי (טרום-עשרוני)", maxYear: 1952 },
-          { years: "1953–1970", label: "אליזבת השנייה — טרום-עשרוני", maxYear: 1970 },
-          { years: "1971–2022", label: "אליזבת השנייה — עשרוני", maxYear: 2022 },
+          { years: "1953–1967", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק, טרום-עשרוני)", maxYear: 1967 },
+          { years: "1968–1970", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין, טרום-עשרוני)", maxYear: 1970 },
+          { years: "1971–1984", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין, עשרוני)", maxYear: 1984 },
+          { years: "1985–1997", label: "אליזבת השנייה — דיוקן שלישי (רפאל מקלוף)", maxYear: 1997 },
+          { years: "1998–2015", label: "אליזבת השנייה — דיוקן רביעי (איאן ראנק-ברודלי)", maxYear: 2015 },
+          { years: "2015–2022", label: "אליזבת השנייה — דיוקן חמישי (ג'ודי קלארק)", maxYear: 2022 },
           { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
         ],
         note: "בתוך כל סדרה מופיעים קודם לירה, אחריה שילינג, ואחריו פני. פריטים ללא שנה מופיעים בסוף."
+      },
+      "אוסטרליה": {
+        currencies: ["לירה אוסטרלית", "שילינג", "פני", "דולר אוסטרלי", "סנט"],
+        description: "המטבעות האוסטרליים ממוינים אוטומטית מתקופת הלירה לדולר ולפי דיוקן השליט בהתאם לשנת ההנפקה:",
+        ranges: [
+          { years: "עד 1952", label: "ג'ורג' החמישי / ג'ורג' השישי (תקופת הלירה)", maxYear: 1952 },
+          { years: "1953–1964", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק, תקופת הלירה)", maxYear: 1964 },
+          { years: "1966–1984", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין, דולר עשרוני)", maxYear: 1984 },
+          { years: "1985–1998", label: "אליזבת השנייה — דיוקן שלישי (רפאל מקלוף)", maxYear: 1998 },
+          { years: "1999–2019", label: "אליזבת השנייה — דיוקן רביעי (איאן ראנק-ברודלי)", maxYear: 2019 },
+          { years: "2019–2023", label: "אליזבת השנייה — דיוקן חמישי (ג'ודי קלארק)", maxYear: 2023 },
+          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
+        ],
+        note: "מטבעות לירה, שילינג ופני מופיעים ראשונים כתקופה קודמת, ובתוך הדולר המיון ממשיך לפי הדיוקן."
+      },
+      "קנדה": {
+        currencies: ["דולר קנדי", "סנט"],
+        description: "מטבעות הדולר הקנדי ממוינים אוטומטית לפי השליט ודיוקן המלכה (כולל העיצובים הקנדיים) בהתאם לשנת ההנפקה:",
+        ranges: [
+          { years: "עד 1952", label: "ג'ורג' השישי", maxYear: 1952 },
+          { years: "1953–1964", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק)", maxYear: 1964 },
+          { years: "1965–1989", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין)", maxYear: 1989 },
+          { years: "1990–2002", label: "אליזבת השנייה — דיוקן שלישי (דורה דה פדרי-האנט, עיצוב קנדי)", maxYear: 2002 },
+          { years: "2003–2023", label: "אליזבת השנייה — דיוקן רביעי (סוזנה בלאנט, עיצוב קנדי)", maxYear: 2023 },
+          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
+        ],
+        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
+      },
+      "ניו זילנד": {
+        currencies: ["דולר ניו זילנדי", "סנט"],
+        description: "מטבעות הדולר הניו זילנדי ממוינים אוטומטית לפי השליט ודיוקן המלכה בהתאם לשנת ההנפקה:",
+        ranges: [
+          { years: "עד 1952", label: "ג'ורג' החמישי / ג'ורג' השישי", maxYear: 1952 },
+          { years: "1953–1965", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק)", maxYear: 1965 },
+          { years: "1967–1985", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין)", maxYear: 1985 },
+          { years: "1986–1998", label: "אליזבת השנייה — דיוקן שלישי (רפאל מקלוף)", maxYear: 1998 },
+          { years: "1999–2018", label: "אליזבת השנייה — דיוקן רביעי (איאן ראנק-ברודלי)", maxYear: 2018 },
+          { years: "2019–2022", label: "אליזבת השנייה — דיוקן חמישי (ג'ודי קלארק)", maxYear: 2022 },
+          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
+        ],
+        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
       },
       "שוודיה": {
         currencies: ["כתר שוודי (קרונה)", "אורה"],
@@ -985,22 +1044,47 @@
       },
       "ספרד": {
         currencies: ["פזטה ספרדית", "סנטימו"],
-        description: "מטבעות הפזטה הספרדית ממוינים אוטומטית לפי התקופה ההיסטורית בהתאם לשנת ההנפקה:",
+        description: "מטבעות הפזטה הספרדית ממוינים אוטומטית לפי התקופה ההיסטורית בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
         ranges: [
           { years: "עד 1939", label: "הרפובליקה הספרדית", maxYear: 1939 },
           { years: "1940–1975", label: "תקופת פרנקו", maxYear: 1975 },
           { years: "1976–2001", label: "המלך חואן קרלוס הראשון", maxYear: 2099 }
         ],
-        note: "משנת 2002 מופיעים מטבעות האירו. פריטים ללא שנה מופיעים בסוף סדרת הפזטה."
+        infoRows: [
+          { years: "עד 1939", label: "הרפובליקה הספרדית" },
+          { years: "1940–1975", label: "תקופת פרנקו" },
+          { years: "1976–2001", label: "המלך חואן קרלוס הראשון" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "פריטים ללא שנה מופיעים בסוף סדרת הפזטה (או בסוף סדרת האירו)."
       },
       "איטליה": {
         currencies: ["לירה איטלקית", "צ'נטזימו"],
-        description: "מטבעות הלירה האיטלקית ממוינים אוטומטית לפי התקופה ההיסטורית בהתאם לשנת ההנפקה:",
+        description: "מטבעות הלירה האיטלקית ממוינים אוטומטית לפי התקופה ההיסטורית בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
         ranges: [
           { years: "עד 1945", label: "ממלכת איטליה (ויטוריו עמנואלה השלישי)", maxYear: 1945 },
           { years: "1946–2001", label: "הרפובליקה האיטלקית", maxYear: 2099 }
         ],
-        note: "משנת 2002 מופיעים מטבעות האירו. פריטים ללא שנה מופיעים בסוף סדרת הלירה."
+        infoRows: [
+          { years: "עד 1945", label: "ממלכת איטליה (ויטוריו עמנואלה השלישי)" },
+          { years: "1946–2001", label: "הרפובליקה האיטלקית" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "פריטים ללא שנה מופיעים בסוף סדרת הלירה (או בסוף סדרת האירו)."
+      },
+      "צרפת": {
+        currencies: ["פרנק צרפתי", "סנטים"],
+        description: "מטבעות הפרנק הצרפתי ממוינים אוטומטית לפי רפורמת הפרנק החדש (1960) בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
+        ranges: [
+          { years: "עד 1959", label: "הפרנק הישן (Ancien Franc)", maxYear: 1959 },
+          { years: "1960–2001", label: "הפרנק החדש (Nouveau Franc)", maxYear: 2099 }
+        ],
+        infoRows: [
+          { years: "עד 1959", label: "הפרנק הישן (Ancien Franc)" },
+          { years: "1960–2001", label: "הפרנק החדש (Nouveau Franc)" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "פריטים ללא שנה מופיעים בסוף סדרת הפרנק (או בסוף סדרת האירו)."
       },
       "יפן": {
         currencies: ["ין יפני", "סן"],
@@ -1031,43 +1115,6 @@
           { years: "משנת 1999", label: "סדרות ההנצחה המודרניות (50 המדינות והפארקים)", maxYear: 2099 }
         ],
         note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "קנדה": {
-        currencies: ["דולר קנדי", "סנט"],
-        description: "מטבעות הדולר הקנדי ממוינים אוטומטית לפי השליט שעל המטבע בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1952", label: "ג'ורג' השישי", maxYear: 1952 },
-          { years: "1953–2022", label: "אליזבת השנייה", maxYear: 2022 },
-          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "אוסטרליה": {
-        currencies: ["דולר אוסטרלי", "סנט"],
-        description: "לאחר הלירה האוסטרלית (עד 1965), מטבעות הדולר האוסטרלי ממוינים אוטומטית לפי השליט:",
-        ranges: [
-          { years: "1966–2022", label: "אליזבת השנייה (דולר עשרוני)", maxYear: 2022 },
-          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
-        ],
-        note: "מטבעות לירה, שילינג ופני מופיעים ראשונים כתקופה קודמת."
-      },
-      "ניו זילנד": {
-        currencies: ["דולר ניו זילנדי", "סנט"],
-        description: "מטבעות הדולר הניו זילנדי ממוינים אוטומטית לפי השליט בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 2022", label: "אליזבת השנייה", maxYear: 2022 },
-          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "צרפת": {
-        currencies: ["פרנק צרפתי", "סנטים"],
-        description: "מטבעות הפרנק הצרפתי ממוינים אוטומטית לפי רפורמת הפרנק החדש (1960) בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1959", label: "הפרנק הישן (Ancien Franc)", maxYear: 1959 },
-          { years: "1960–2001", label: "הפרנק החדש (Nouveau Franc)", maxYear: 2099 }
-        ],
-        note: "משנת 2002 מופיעים מטבעות האירו. פריטים ללא שנה מופיעים בסוף סדרת הפרנק."
       },
       "פולין": {
         currencies: ["זלוטי", "גרוש"],
@@ -1104,12 +1151,251 @@
           { years: "משנת 2005", label: "הלירה המחודשת", maxYear: 2099 }
         ],
         note: "פריטים ללא שנה מופיעים בסוף הרשימה."
+      },
+
+      // --- 26 Additional Countries with Multiple Currency Eras (Chronological Era Info) ---
+      "ישראל": {
+        eraOnly: true,
+        description: "הפריטים מישראל ממוינים בסדר כרונולוגי לפי תקופת המטבע ההיסטורית (מהישן לחדש):",
+        infoRows: [
+          { years: "1927–1948", label: "מיל ארץ-ישראלי (תקופת המנדט)" },
+          { years: "1948–1960", label: "פרוטה" },
+          { years: "1952–1980", label: "לירה ישראלית / אגורות (לירה)" },
+          { years: "1980–1985", label: "שקל (ישן)" },
+          { years: "משנת 1985", label: "שקל חדש / אגורות" }
+        ],
+        note: "בתוך כל תקופה מופיע המטבע השלם לפני יחידת המשנה שלו, ללא תלות בשנת ההנפקה."
+      },
+      "אוקראינה": {
+        eraOnly: true,
+        description: "המטבעות והשטרות מאוקראינה ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
+        infoRows: [
+          { years: "1992–1996", label: "קרבובנץ" },
+          { years: "משנת 1996", label: "הריבניה / קופיקה" }
+        ],
+        note: "המטבע ההיסטורי מופיע ראשון, ולאחריו המטבע הנוכחי."
+      },
+      "אל סלוודור": {
+        eraOnly: true,
+        description: "הפריטים מאל סלוודור ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
+        infoRows: [
+          { years: "עד 2001", label: "קולון סלוודורי" },
+          { years: "משנת 2001", label: "דולר אמריקאי / סנט" }
+        ],
+        note: "הקולון הסלוודורי מופיע ראשון, ולאחריו הדולר האמריקאי."
+      },
+      "אקוודור": {
+        eraOnly: true,
+        description: "הפריטים מאקוודור ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
+        infoRows: [
+          { years: "עד 2000", label: "סוקרה" },
+          { years: "משנת 2000", label: "דולר אמריקאי / סנטאבו" }
+        ],
+        note: "הסוקרה ההיסטורי מופיע ראשון, ולאחריו הדולר והסנטאבו."
+      },
+      "ארגנטינה": {
+        eraOnly: true,
+        description: "הפריטים מארגנטינה ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
+        infoRows: [
+          { years: "1985–1991", label: "אאוסטרל" },
+          { years: "משנת 1992", label: "פזו ארגנטינאי / סנטאבו" }
+        ],
+        note: "האאוסטרל מופיע ראשון, ולאחריו הפזו הארגנטינאי."
+      },
+      "ברזיל": {
+        eraOnly: true,
+        description: "הפריטים מברזיל ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
+        infoRows: [
+          { years: "עד 1994", label: "קרוזיירו" },
+          { years: "משנת 1994", label: "ריאל ברזילאי / סנטאבו" }
+        ],
+        note: "הקרוזיירו ההיסטורי מופיע ראשון, ולאחריו הריאל הברזילאי."
+      },
+      "פרו": {
+        eraOnly: true,
+        description: "הפריטים מפרו ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
+        infoRows: [
+          { years: "1985–1991", label: "אינטי" },
+          { years: "משנת 1991", label: "סול פרואני / סנטימו" }
+        ],
+        note: "האינטי מופיע ראשון, ולאחריו הסול הפרואני."
+      },
+      "אוסטריה": {
+        eraOnly: true,
+        description: "הפריטים מאוסטריה ממוינים בסדר כרונולוגי מהמטבע הלאומי הישן לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "שילינג אוסטרי / גרושן" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "בתוך כל תקופה מופיע המטבע השלם לפני יחידת המשנה (שילינג לפני גרושן, אירו לפני אירו סנט)."
+      },
+      "אירלנד": {
+        eraOnly: true,
+        description: "הפריטים מאירלנד ממוינים בסדר כרונולוגי מהמטבע הלאומי הישן לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "לירה אירית / פני" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "הלירה האירית מופיעה ראשונה, ולאחריה האירו."
+      },
+      "גרמניה": {
+        eraOnly: true,
+        description: "הפריטים מגרמניה ממוינים בסדר כרונולוגי מהמארק הגרמני לאירו:",
+        infoRows: [
+          { years: "1948–2001", label: "מארק גרמני / פפניג" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "המארק הגרמני והפפניג מופיעים ראשונים, ולאחריהם האירו."
+      },
+      "ותיקן": {
+        eraOnly: true,
+        description: "הפריטים מהותיקן ממוינים בסדר כרונולוגי מהלירה הותיקנית לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "לירה ותיקנית" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "הלירה הותיקנית מופיעה ראשונה, ולאחריה האירו."
+      },
+      "יוון": {
+        eraOnly: true,
+        description: "הפריטים מיוון ממוינים בסדר כרונולוגי מהדרכמה היוונית לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "דרכמה יוונית / לפטה" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "הדרכמה והלפטה מופיעות ראשונות, ולאחריהן האירו."
+      },
+      "לוקסמבורג": {
+        eraOnly: true,
+        description: "הפריטים מלוקסמבורג ממוינים בסדר כרונולוגי מהפרנק הלוקסמבורגי לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "פרנק לוקסמבורגי" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "הפרנק הלוקסמבורגי מופיע ראשון, ולאחריו האירו."
+      },
+      "מונקו": {
+        eraOnly: true,
+        description: "הפריטים ממונקו ממוינים בסדר כרונולוגי מהפרנק המונגאסקי לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "פרנק מונגאסקי" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "הפרנק המונגאסקי מופיע ראשון, ולאחריו האירו."
+      },
+      "סן מרינו": {
+        eraOnly: true,
+        description: "הפריטים מסן מרינו ממוינים בסדר כרונולוגי מהלירה הסן מרינזית לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "לירה סן מרינזית" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "הלירה הסן מרינזית מופיעה ראשונה, ולאחריה האירו."
+      },
+      "פורטוגל": {
+        eraOnly: true,
+        description: "הפריטים מפורטוגל ממוינים בסדר כרונולוגי מהאסקודו הפורטוגלי לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "אסקודו פורטוגלי / סנטאבו" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "האסקודו והסנטאבו מופיעים ראשונים, ולאחריהם האירו."
+      },
+      "פינלנד": {
+        eraOnly: true,
+        description: "הפריטים מפינלנד ממוינים בסדר כרונולוגי מהמארקה הפינית לאירו:",
+        infoRows: [
+          { years: "עד 2001", label: "מארקה פינית / פני" },
+          { years: "משנת 2002", label: "אירו / אירו סנט" }
+        ],
+        note: "המארקה והפני מופיעים ראשונים, ולאחריהם האירו."
+      },
+      "סלובניה": {
+        eraOnly: true,
+        description: "הפריטים מסלובניה ממוינים בסדר כרונולוגי מהטולאר הסלובני לאירו:",
+        infoRows: [
+          { years: "1991–2006", label: "טולאר סלובני / סטוטין" },
+          { years: "משנת 2007", label: "אירו / אירו סנט" }
+        ],
+        note: "הטולאר והסטוטין מופיעים ראשונים, ולאחריהם האירו."
+      },
+      "מלטה": {
+        eraOnly: true,
+        description: "הפריטים ממלטה ממוינים בסדר כרונולוגי מהלירה המלטזית לאירו:",
+        infoRows: [
+          { years: "עד 2007", label: "לירה מלטזית / סנט" },
+          { years: "משנת 2008", label: "אירו / אירו סנט" }
+        ],
+        note: "הלירה המלטזית מופיעה ראשונה, ולאחריה האירו."
+      },
+      "קפריסין": {
+        eraOnly: true,
+        description: "הפריטים מקפריסין ממוינים בסדר כרונולוגי מהלירה הקפריסאית לאירו:",
+        infoRows: [
+          { years: "עד 2007", label: "לירה קפריסאית / סנט" },
+          { years: "משנת 2008", label: "אירו / אירו סנט" }
+        ],
+        note: "הלירה הקפריסאית מופיעה ראשונה, ולאחריה האירו."
+      },
+      "סלובקיה": {
+        eraOnly: true,
+        description: "הפריטים מסלובקיה ממוינים בסדר כרונולוגי מהקורונה הסלובקית לאירו:",
+        infoRows: [
+          { years: "1993–2008", label: "קורונה סלובקית / הלייר" },
+          { years: "משנת 2009", label: "אירו / אירו סנט" }
+        ],
+        note: "הקורונה וההלייר מופיעים ראשונים, ולאחריהם האירו."
+      },
+      "אסטוניה": {
+        eraOnly: true,
+        description: "הפריטים מאסטוניה ממוינים בסדר כרונולוגי מהקרון האסטוני לאירו:",
+        infoRows: [
+          { years: "1992–2010", label: "קרון אסטוני / סנט" },
+          { years: "משנת 2011", label: "אירו / אירו סנט" }
+        ],
+        note: "הקרון האסטוני מופיע ראשון, ולאחריו האירו."
+      },
+      "לטביה": {
+        eraOnly: true,
+        description: "הפריטים מלטביה ממוינים בסדר כרונולוגי מהלאטס הלטבי לאירו:",
+        infoRows: [
+          { years: "1993–2013", label: "לאטס לטבי / סנטימס" },
+          { years: "משנת 2014", label: "אירו / אירו סנט" }
+        ],
+        note: "הלאטס והסנטימס מופיעים ראשונים, ולאחריהם האירו."
+      },
+      "ליטא": {
+        eraOnly: true,
+        description: "הפריטים מליטא ממוינים בסדר כרונולוגי מהליטאס הליטאי לאירו:",
+        infoRows: [
+          { years: "1993–2014", label: "ליטאס ליטאי / סנטאס" },
+          { years: "משנת 2015", label: "אירו / אירו סנט" }
+        ],
+        note: "הליטאס והסנטאס מופיעים ראשונים, ולאחריהם האירו."
+      },
+      "קרואטיה": {
+        eraOnly: true,
+        description: "הפריטים מקרואטיה ממוינים בסדר כרונולוגי מהקונה הקרואטית לאירו:",
+        infoRows: [
+          { years: "1994–2022", label: "קונה קרואטית / ליפה" },
+          { years: "משנת 2023", label: "אירו / אירו סנט" }
+        ],
+        note: "הקונה והליפה מופיעות ראשונות, ולאחריהן האירו."
+      },
+      "בולגריה": {
+        eraOnly: true,
+        description: "הפריטים מבולגריה ממוינים בסדר כרונולוגי מהלב הבולגרי לאירו:",
+        infoRows: [
+          { years: "עד 2025", label: "לב בולגרי / סטוטינקי" },
+          { years: "משנת 2026", label: "אירו / אירו סנט" }
+        ],
+        note: "הלב הבולגרי והסטוטינקי מופיעים ראשונים, ולאחריהם האירו."
       }
     };
 
     function getSeriesRank(countryName, currencyName, year) {
       const info = SERIES_INFO_DB[countryName];
-      if (!info) return 0;
+      if (!info || info.eraOnly || !info.ranges || !info.currencies) return 0;
       const c = (currencyName || "").trim();
       if (!info.currencies.includes(c)) return 0;
       if (!hasValidYear(year)) return 99;
@@ -1126,14 +1412,20 @@
       const info = SERIES_INFO_DB[countryName];
       if (!info) return;
       const meta = getCountryMeta(countryName);
+      const rows = info.infoRows || info.ranges || [];
       document.getElementById("series-info-flag").textContent = meta.flag;
-      document.getElementById("series-info-title").textContent = `${countryName} — סדרות מטבע`;
+      document.getElementById("series-info-title").textContent = info.eraOnly
+        ? `${countryName} — תקופות מטבע`
+        : `${countryName} — סדרות מטבע`;
+      document.getElementById("series-info-subtitle").textContent = info.eraOnly
+        ? "מיון כרונולוגי לפי תקופות מטבע"
+        : "מיון אוטומטי לפי סדרות ושנת הנפקה";
       document.getElementById("series-info-desc").textContent = info.description;
-      document.getElementById("series-info-list").innerHTML = info.ranges.map((r, idx) => `
+      document.getElementById("series-info-list").innerHTML = rows.map((r, idx) => `
         <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between gap-2 text-xs">
-          <div class="flex items-center gap-2 min-w-0">
+          <div class="flex items-start gap-2 min-w-0">
             <span class="w-4 text-slate-400 font-bold shrink-0">${idx + 1}.</span>
-            <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">${r.label}</span>
+            <span class="font-semibold text-slate-800 dark:text-slate-100 leading-snug">${r.label}</span>
           </div>
           <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-semibold text-[11px] shrink-0">${r.years}</span>
         </div>
@@ -1459,7 +1751,7 @@
     // 6-Level Internal Sorting per Country:
     // 1. Type (Coin before Banknote)
     // 2. Currency Era (Older currency before newer currency)
-    // 3. Series by Year (for 19 countries with identical currency names across eras)
+    // 3. Series by Year (for countries with identical currency names across series/portraits)
     // 4. Unit Hierarchy (Main currency before sub-units)
     // 5. Face Value (Highest to lowest)
     // 6. Issue Year (Oldest to newest, 'ללא שנה' last)
@@ -1519,7 +1811,7 @@
               <div class="min-w-0">
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="font-bold text-sm text-slate-900 dark:text-white">${cName}</span>
-                  ${hasSeriesInfo ? `<button type="button" onclick="event.stopPropagation(); openSeriesInfoModal('${safeNameJs}')" title="הסבר מיון סדרות במדינה זו" aria-label="הסבר מיון סדרות" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold hover:bg-indigo-200 dark:hover:bg-indigo-900 transition">i</button>` : ""}
+                  ${hasSeriesInfo ? `<button type="button" onclick="event.stopPropagation(); openSeriesInfoModal('${safeNameJs}')" title="הסבר תקופות וסדרות במדינה זו" aria-label="הסבר תקופות וסדרות" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold hover:bg-indigo-200 dark:hover:bg-indigo-900 transition">i</button>` : ""}
                   ${meta.former ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-medium">מדינת עבר</span>` : ""}
                 </div>
                 <div class="text-xs text-slate-500 dark:text-slate-400">${summaryText}</div>

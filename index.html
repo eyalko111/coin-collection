@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>אוסף מטבעות ושטרות</title>
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="האוסף שלי" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Rubik', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Rubik', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .emoji-flag {
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Samsung Color Emoji", sans-serif;
+      line-height: 1;
+    }
+    select, input, option {
+      direction: rtl;
+      text-align: right;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-24 transition-colors">
+
+  <!-- Top Header -->
+  <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">אוסף מטבעות ושטרות</h1>
+        <p id="header-subtitle" class="text-xs text-slate-500 dark:text-slate-400">טוען נתונים...</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="openDataModal()" title="ייצוא, ייבוא וגיבוי" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
+        </button>
+        <button onclick="toggleDarkMode()" title="מצב תצוגה" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+          <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+          <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-xl mx-auto px-4 flex border-t border-slate-100 dark:border-slate-900">
+      <button id="tab-collection" onclick="switchTab('collection')" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition">
+        האוסף שלי
+      </button>
+      <button id="tab-stats" onclick="switchTab('stats')" class="flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 transition">
+        סיכומים ונתונים
+      </button>
+    </div>
+  </header>
+
+  <!-- COLLECTION VIEW -->
+  <main id="view-collection" class="max-w-xl mx-auto px-4 pt-3 space-y-3">
+    <!-- Search & Filters -->
+    <div class="space-y-2.5">
+      <div class="relative">
+        <input id="search-input" type="text" oninput="renderCollection()" placeholder="חיפוש מדינה, מטבע, ערך או שנה..." class="w-full pr-9 pl-8 py-2.5 text-sm rounded-xl bg-slate-100 dark:bg-slate-900 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 outline-none transition" />
+        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+        <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5">✕</button>
+      </div>
+
+      <!-- Type Filter Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <button onclick="setTypeFilter('all')" data-type="all" class="type-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition">הכל</button>
+        <button onclick="setTypeFilter('coin')" data-type="coin" class="type-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">מטבעות</button>
+        <button onclick="setTypeFilter('banknote')" data-type="banknote" class="type-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">שטרות</button>
+      </div>
+
+      <!-- Dropdown Filters (RTL aligned) -->
+      <div class="grid grid-cols-3 gap-2">
+        <select id="filter-continent" onchange="onContinentFilterChange()" dir="rtl" class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none">
+          <option value="all">כל היבשות</option>
+        </select>
+
+        <select id="filter-country" onchange="renderCollection()" dir="rtl" class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none">
+          <option value="all">כל המדינות</option>
+        </select>
+
+        <select id="filter-decade" onchange="renderCollection()" dir="rtl" class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none">
+          <option value="all">כל העשורים</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Collection List Container (Design A) -->
+    <div id="collection-container" class="pt-1"></div>
+  </main>
+
+  <!-- STATS VIEW -->
+  <main id="view-stats" class="hidden max-w-xl mx-auto px-4 pt-4 space-y-5">
+    <div id="stats-container" class="space-y-5"></div>
+  </main>
+
+  <!-- Floating Add Button -->
+  <button onclick="openItemModal()" class="fixed bottom-5 left-5 z-30 flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+    <span>הוסף פריט</span>
+  </button>
+
+  <!-- ADD / EDIT ITEM MODAL (Top-anchored for stable mobile keyboard) -->
+  <div id="item-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-10 px-3 overflow-y-auto">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[88dvh] overflow-hidden">
+      <!-- Sticky Header -->
+      <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white dark:bg-slate-900">
+        <h2 id="modal-title" class="font-bold text-base">הוספת פריט חדש</h2>
+        <button onclick="closeItemModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
+      </div>
+
+      <!-- Scrollable Form Body -->
+      <form id="item-form" onsubmit="handleSaveItem(event)" class="p-4 space-y-3.5 overflow-y-auto flex-1">
+        <input type="hidden" id="edit-item-id" value="" />
+
+        <!-- Type Toggle -->
+        <div>
+          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">סוג פריט</label>
+          <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
+            <button type="button" id="btn-type-coin" onclick="selectFormType('coin')" class="py-2 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition">מטבע</button>
+            <button type="button" id="btn-type-banknote" onclick="selectFormType('banknote')" class="py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">שטר</button>
+          </div>
+          <input type="hidden" id="form-type" value="coin" />
+        </div>
+
+        <!-- Country Select -->
+        <div>
+          <label for="form-country" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">מדינה / ישות</label>
+          <select id="form-country" onchange="onFormCountryChange()" required dir="rtl" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none"></select>
+        </div>
+
+        <!-- Currency Select + Custom -->
+        <div>
+          <label for="form-currency-select" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שם המטבע / היחידה</label>
+          <select id="form-currency-select" onchange="onFormCurrencySelectChange()" dir="rtl" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none"></select>
+          <input id="form-currency-custom" type="text" placeholder="הזן שם מטבע מותאם אישית..." class="hidden mt-2 w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+        </div>
+
+        <!-- Value & Year -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="form-value" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">ערך נקוב</label>
+            <input id="form-value" type="number" step="any" min="0" inputmode="decimal" required placeholder="למשל: 5 או 0.5" onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+          </div>
+          <div>
+            <label for="form-year" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שנת הנפקה</label>
+            <input id="form-year" type="number" inputmode="numeric" min="100" max="2099" required placeholder="למשל: 2015" onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+          </div>
+        </div>
+
+        <!-- Quantity -->
+        <div>
+          <label for="form-quantity" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">כמות באוסף</label>
+          <input id="form-quantity" type="number" inputmode="numeric" min="1" value="1" required onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+        </div>
+
+        <!-- Sticky Footer Actions inside Form -->
+        <div class="pt-2 flex items-center gap-2 sticky bottom-0 bg-white dark:bg-slate-900 pb-1">
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
+            שמור פריט
+          </button>
+          <button type="button" id="btn-delete-item" onclick="deleteCurrentItem()" class="hidden px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium text-sm hover:bg-rose-100 transition">
+            מחק
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DUPLICATE WARNING MODAL -->
+  <div id="duplicate-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 font-bold text-lg">!</div>
+        <div>
+          <h3 class="font-bold text-base">פריט זהה כבר קיים באוסף</h3>
+          <p id="duplicate-message" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed"></p>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 pt-1">
+        <button onclick="confirmMergeDuplicate()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
+          הוסף את הכמות לפריט הקיים
+        </button>
+        <button onclick="closeDuplicateModal()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-200 transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA EXPORT / IMPORT MODAL -->
+  <div id="data-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-base">ייצוא, שיתוף וגיבוי</h3>
+        <button onclick="closeDataModal()" class="p-1 text-slate-400 hover:text-slate-600">✕</button>
+      </div>
+
+      <div class="space-y-2">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">ייצוא האוסף (שיתוף לאפליקציה או הורדה):</p>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="promptExportFormat('xlsx')" class="py-2.5 px-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 transition">
+            Excel (.xlsx)
+          </button>
+          <button onclick="promptExportFormat('csv')" class="py-2.5 px-2 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-700 dark:text-sky-300 text-xs font-semibold hover:bg-sky-100 transition">
+            CSV (.csv)
+          </button>
+          <button onclick="promptExportFormat('json')" class="py-2.5 px-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold hover:bg-indigo-100 transition">
+            JSON (.json)
+          </button>
+        </div>
+      </div>
+
+      <!-- Export Choice Sub-panel -->
+      <div id="export-choice-panel" class="hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
+        <p id="export-choice-title" class="text-xs font-semibold text-slate-700 dark:text-slate-200"></p>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="executeExport('share')" class="py-2 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+            📤 שיתוף / שליחה
+          </button>
+          <button onclick="executeExport('download')" class="py-2 px-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-100 transition">
+            📥 הורדה למכשיר
+          </button>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">שחזור / ייבוא מקובץ (JSON / CSV / Excel):</p>
+        <label class="block w-full py-2.5 px-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs font-medium text-slate-600 dark:text-slate-300 hover:border-indigo-500 cursor-pointer transition">
+          בחר קובץ לייבוא לאוסף
+          <input type="file" accept=".json,.csv,.xlsx,.xls" onchange="handleImportFile(event)" class="hidden" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-medium shadow-lg"></div>
+
+  <script>
+    // Comprehensive World & Historical Countries Database
+    const COUNTRIES_DB = [
+      // אסיה
+      { name: "ישראל", continent: "אסיה", flag: "🇮🇱", former: false, currencies: ["שקל חדש", "אגורות", "שקל (ישן)", "לירה ישראלית", "אגורות (לירה)", "פרוטה", "מיל ארץ-ישראלי"] },
+      { name: "אוזבקיסטן", continent: "אסיה", flag: "🇺🇿", former: false, currencies: ["סום אוזבקי", "טיין"] },
+      { name: "אזרבייג'ן", continent: "אסיה", flag: "🇦🇿", former: false, currencies: ["מאנאט אזרי", "קפיק"] },
+      { name: "איחוד האמירויות", continent: "אסיה", flag: "🇦🇪", former: false, currencies: ["דירהם", "פילס"] },
+      { name: "אינדונזיה", continent: "אסיה", flag: "🇮🇩", former: false, currencies: ["רופיה אינדונזית", "סן"] },
+      { name: "איראן", continent: "אסיה", flag: "🇮🇷", former: false, currencies: ["ריאל איראני", "תומאן"] },
+      { name: "אפגניסטן", continent: "אסיה", flag: "🇦🇫", former: false, currencies: ["אפגני", "פול"] },
+      { name: "ארמניה", continent: "אסיה", flag: "🇦🇲", former: false, currencies: ["דראם ארמני", "לומה"] },
+      { name: "בהוטן", continent: "אסיה", flag: "🇧🇹", former: false, currencies: ["נגולטרום", "צ'הטרום"] },
+      { name: "בחריין", continent: "אסיה", flag: "🇧🇭", former: false, currencies: ["דינר בחרייני", "פילס"] },
+      { name: "בנגלדש", continent: "אסיה", flag: "🇧🇩", former: false, currencies: ["טאקה", "פויסה"] },
+      { name: "ברוניי", continent: "אסיה", flag: "🇧🇳", former: false, currencies: ["דולר ברוניי", "סנט"] },
+      { name: "גאורגיה", continent: "אסיה", flag: "🇬🇪", former: false, currencies: ["לארי גאורגי", "תתרי"] },
+      { name: "הודו", continent: "אסיה", flag: "🇮🇳", former: false, currencies: ["רופי הודי", "פאיסה"] },
+      { name: "הונג קונג", continent: "אסיה", flag: "🇭🇰", former: false, currencies: ["דולר הונג קונגי", "סנט"] },
+      { name: "וייטנאם", continent: "אסיה", flag: "🇻🇳", former: false, currencies: ["דונג וייטנאמי", "האו", "שו"] },
+      { name: "טאיוואן", continent: "אסיה", flag: "🇹🇼", former: false, currencies: ["דולר טאיוואני חדש", "ג'יאו", "פן"] },
+      { name: "טג'יקיסטן", continent: "אסיה", flag: "🇹🇯", former: false, currencies: ["סומוני", "דיראם"] },
+      { name: "טורקמניסטן", continent: "אסיה", flag: "🇹🇲", former: false, currencies: ["מאנאט טורקמני", "טנגה"] },
+      { name: "יפן", continent: "אסיה", flag: "🇯🇵", former: false, currencies: ["ין יפני", "סן"] },
+      { name: "ירדן", continent: "אסיה", flag: "🇯🇴", former: false, currencies: ["דינר ירדני", "קירש", "פילס"] },
+      { name: "כווית", continent: "אסיה", flag: "🇰🇼", former: false, currencies: ["דינר כוויתי", "פילס"] },
+      { name: "לאוס", continent: "אסיה", flag: "🇱🇦", former: false, currencies: ["קיפ לאי", "אט"] },
+      { name: "לבנון", continent: "אסיה", flag: "🇱🇧", former: false, currencies: ["לירה לבנונית", "פיאסטר"] },
+      { name: "מאלדיביים", continent: "אסיה", flag: "🇲🇻", former: false, currencies: ["רופיה מלדיבית", "לארי"] },
+      { name: "מונגוליה", continent: "אסיה", flag: "🇲🇳", former: false, currencies: ["טוגרוג", "מונגו"] },
+      { name: "מזרח טימור", continent: "אסיה", flag: "🇹🇱", former: false, currencies: ["סנטאבו", "דולר אמריקאי"] },
+      { name: "מיאנמר", continent: "אסיה", flag: "🇲🇲", former: false, currencies: ["קיאט", "פיה"] },
+      { name: "מלזיה", continent: "אסיה", flag: "🇲🇾", former: false, currencies: ["רינגיט מלזי", "סן"] },
+      { name: "מקאו", continent: "אסיה", flag: "🇲🇴", former: false, currencies: ["פטאקה", "אבו"] },
+      { name: "נפאל", continent: "אסיה", flag: "🇳🇵", former: false, currencies: ["רופי נפאלי", "פאיסה"] },
+      { name: "סוריה", continent: "אסיה", flag: "🇸🇾", former: false, currencies: ["לירה סורית", "פיאסטר"] },
+      { name: "סין", continent: "אסיה", flag: "🇨🇳", former: false, currencies: ["יואן (רנמינבי)", "ג'יאו", "פן"] },
+      { name: "סינגפור", continent: "אסיה", flag: "🇸🇬", former: false, currencies: ["דולר סינגפורי", "סנט"] },
+      { name: "סרי לנקה", continent: "אסיה", flag: "🇱🇰", former: false, currencies: ["רופי סרי לנקי", "סנט"] },
+      { name: "עומאן", continent: "אסיה", flag: "🇴🇲", former: false, currencies: ["ריאל עומאני", "באיזה"] },
+      { name: "עיראק", continent: "אסיה", flag: "🇮🇶", former: false, currencies: ["דינר עיראקי", "פילס"] },
+      { name: "ערב הסעודית", continent: "אסיה", flag: "🇸🇦", former: false, currencies: ["ריאל סעודי", "הלאלה"] },
+      { name: "פיליפינים", continent: "אסיה", flag: "🇵🇭", former: false, currencies: ["פזו פיליפיני", "סנטימו"] },
+      { name: "פקיסטן", continent: "אסיה", flag: "🇵🇰", former: false, currencies: ["רופי פקיסטני", "פאיסה"] },
+      { name: "קזחסטן", continent: "אסיה", flag: "🇰🇿", former: false, currencies: ["טנגה קזחי", "טיין"] },
+      { name: "קטאר", continent: "אסיה", flag: "🇶🇦", former: false, currencies: ["ריאל קטארי", "דירהם"] },
+      { name: "קירגיזסטן", continent: "אסיה", flag: "🇰🇬", former: false, currencies: ["סום קירגיזי", "טיין"] },
+      { name: "קמבודיה", continent: "אסיה", flag: "🇰🇭", former: false, currencies: ["ריאל קמבודי", "סן"] },
+      { name: "קוריאה הדרומית", continent: "אסיה", flag: "🇰🇷", former: false, currencies: ["וון דרום קוריאני", "ג'ון"] },
+      { name: "קוריאה הצפונית", continent: "אסיה", flag: "🇰🇵", former: false, currencies: ["וון צפון קוריאני", "צ'ון"] },
+      { name: "תאילנד", continent: "אסיה", flag: "🇹🇭", former: false, currencies: ["באט תאילנדי", "סאטאנג"] },
+      { name: "תימן", continent: "אסיה", flag: "🇾🇪", former: false, currencies: ["ריאל תימני", "פילס"] },
+
+      // אירופה
+      { name: "אוסטריה", continent: "אירופה", flag: "🇦🇹", former: false, currencies: ["אירו", "אירו סנט", "שילינג אוסטרי", "גרושן"] },
+      { name: "אוקראינה", continent: "אירופה", flag: "🇺🇦", former: false, currencies: ["הריבניה", "קופיקה", "קרבובנץ"] },
+      { name: "איטליה", continent: "אירופה", flag: "🇮🇹", former: false, currencies: ["אירו", "אירו סנט", "לירה איטלקית", "צ'נטזימו"] },
+      { name: "איסלנד", continent: "אירופה", flag: "🇮🇸", former: false, currencies: ["קרונה איסלנדית", "איירר"] },
+      { name: "אירלנד", continent: "אירופה", flag: "🇮🇪", former: false, currencies: ["אירו", "אירו סנט", "לירה אירית", "פני"] },
+      { name: "אלבניה", continent: "אירופה", flag: "🇦🇱", former: false, currencies: ["לק אלבני", "צ'ינדארקה"] },
+      { name: "אנדורה", continent: "אירופה", flag: "🇦🇩", former: false, currencies: ["אירו", "אירו סנט"] },
+      { name: "אסטוניה", continent: "אירופה", flag: "🇪🇪", former: false, currencies: ["אירו", "אירו סנט", "קרון אסטוני", "סנט"] },
+      { name: "בולגריה", continent: "אירופה", flag: "🇧🇬", former: false, currencies: ["לב בולגרי", "סטוטינקי", "אירו", "אירו סנט"] },
+      { name: "בוסניה והרצגובינה", continent: "אירופה", flag: "🇧🇦", former: false, currencies: ["מארק סחיר", "פניג"] },
+      { name: "בלארוס", continent: "אירופה", flag: "🇧🇾", former: false, currencies: ["רובל בלארוסי", "קופיקה"] },
+      { name: "בלגיה", continent: "אירופה", flag: "🇧🇪", former: false, currencies: ["אירו", "אירו סנט", "פרנק בלגי", "סנטים"] },
+      { name: "בריטניה", continent: "אירופה", flag: "🇬🇧", former: false, currencies: ["לירה שטרלינג", "פני / פנס", "שילינג", "פארתינג"] },
+      { name: "גרמניה", continent: "אירופה", flag: "🇩🇪", former: false, currencies: ["אירו", "אירו סנט", "מארק גרמני", "פפניג"] },
+      { name: "דנמרק", continent: "אירופה", flag: "🇩🇰", former: false, currencies: ["כתר דני (קרונה)", "אורה"] },
+      { name: "הולנד", continent: "אירופה", flag: "🇳🇱", former: false, currencies: ["אירו", "אירו סנט", "גילדן הולנדי", "סנט"] },
+      { name: "הונגריה", continent: "אירופה", flag: "🇭🇺", former: false, currencies: ["פורינט", "פילר"] },
+      { name: "ותיקן", continent: "אירופה", flag: "🇻🇦", former: false, currencies: ["אירו", "אירו סנט", "לירה ותיקנית"] },
+      { name: "טורקיה", continent: "אירופה", flag: "🇹🇷", former: false, currencies: ["לירה טורקית", "קורוש"] },
+      { name: "יוון", continent: "אירופה", flag: "🇬🇷", former: false, currencies: ["אירו", "אירו סנט", "דרכמה יוונית", "לפטה"] },
+      { name: "לוקסמבורג", continent: "אירופה", flag: "🇱🇺", former: false, currencies: ["אירו", "אירו סנט", "פרנק לוקסמבורגי"] },
+      { name: "לטביה", continent: "אירופה", flag: "🇱🇻", former: false, currencies: ["אירו", "אירו סנט", "לאטס לטבי", "סנטימס"] },
+      { name: "ליטא", continent: "אירופה", flag: "🇱🇹", former: false, currencies: ["אירו", "אירו סנט", "ליטאס ליטאי", "סנטאס"] },
+      { name: "ליכטנשטיין", continent: "אירופה", flag: "🇱🇮", former: false, currencies: ["פרנק שווייצרי", "ראפן"] },
+      { name: "מולדובה", continent: "אירופה", flag: "🇲🇩", former: false, currencies: ["לאו מולדובי", "באן"] },
+      { name: "מונטנגרו", continent: "אירופה", flag: "🇲🇪", former: false, currencies: ["אירו", "אירו סנט"] },
+      { name: "מונקו", continent: "אירופה", flag: "🇲🇨", former: false, currencies: ["אירו", "אירו סנט", "פרנק מונגאסקי"] },
+      { name: "מלטה", continent: "אירופה", flag: "🇲🇹", former: false, currencies: ["אירו", "אירו סנט", "לירה מלטזית", "סנט"] },
+      { name: "מקדוניה הצפונית", continent: "אירופה", flag: "🇲🇰", former: false, currencies: ["דינר מקדוני", "דני"] },
+      { name: "נורווגיה", continent: "אירופה", flag: "🇳🇴", former: false, currencies: ["כתר נורווגי (קרונה)", "אורה"] },
+      { name: "סן מרינו", continent: "אירופה", flag: "🇸🇲", former: false, currencies: ["אירו", "אירו סנט", "לירה סן מרינזית"] },
+      { name: "סלובניה", continent: "אירופה", flag: "🇸🇮", former: false, currencies: ["אירו", "אירו סנט", "טולאר סלובני", "סטוטין"] },
+      { name: "סלובקיה", continent: "אירופה", flag: "🇸🇰", former: false, currencies: ["אירו", "אירו סנט", "קורונה סלובקית", "הלייר"] },
+      { name: "ספרד", continent: "אירופה", flag: "🇪🇸", former: false, currencies: ["אירו", "אירו סנט", "פזטה ספרדית", "סנטימו"] },
+      { name: "סרביה", continent: "אירופה", flag: "🇷🇸", former: false, currencies: ["דינר סרבי", "פארה"] },
+      { name: "פולין", continent: "אירופה", flag: "🇵🇱", former: false, currencies: ["זלוטי", "גרוש"] },
+      { name: "פורטוגל", continent: "אירופה", flag: "🇵🇹", former: false, currencies: ["אירו", "אירו סנט", "אסקודו פורטוגלי", "סנטאבו"] },
+      { name: "פינלנד", continent: "אירופה", flag: "🇫🇮", former: false, currencies: ["אירו", "אירו סנט", "מארקה פינית", "פני"] },
+      { name: "צ'כיה", continent: "אירופה", flag: "🇨🇿", former: false, currencies: ["קורונה צ'כית", "הלר"] },
+      { name: "צרפת", continent: "אירופה", flag: "🇫🇷", former: false, currencies: ["אירו", "אירו סנט", "פרנק צרפתי", "סנטים"] },
+      { name: "קוסובו", continent: "אירופה", flag: "🇽🇰", former: false, currencies: ["אירו", "אירו סנט"] },
+      { name: "קפריסין", continent: "אירופה", flag: "🇨🇾", former: false, currencies: ["אירו", "אירו סנט", "לירה קפריסאית", "סנט"] },
+      { name: "קרואטיה", continent: "אירופה", flag: "🇭🇷", former: false, currencies: ["אירו", "אירו סנט", "קונה קרואטית", "ליפה"] },
+      { name: "רומניה", continent: "אירופה", flag: "🇷🇴", former: false, currencies: ["לאו רומני", "באן"] },
+      { name: "רוסיה", continent: "אירופה", flag: "🇷🇺", former: false, currencies: ["רובל רוסי", "קופיקה"] },
+      { name: "שוודיה", continent: "אירופה", flag: "🇸🇪", former: false, currencies: ["כתר שוודי (קרונה)", "אורה"] },
+      { name: "שווייץ", continent: "אירופה", flag: "🇨🇭", former: false, currencies: ["פרנק שווייצרי", "ראפן / סנטים"] },
+
+      // אמריקה הצפונית והמרכזית
+      { name: "אל סלוודור", continent: "אמריקה הצפונית", flag: "🇸🇻", former: false, currencies: ["דולר אמריקאי", "סנט", "קולון סלוודורי"] },
+      { name: "ארה״ב", continent: "אמריקה הצפונית", flag: "🇺🇸", former: false, currencies: ["דולר אמריקאי", "סנט"] },
+      { name: "בהאמה", continent: "אמריקה הצפונית", flag: "🇧🇸", former: false, currencies: ["דולר בהאמי", "סנט"] },
+      { name: "בליז", continent: "אמריקה הצפונית", flag: "🇧🇿", former: false, currencies: ["דולר בליזי", "סנט"] },
+      { name: "ברבדוס", continent: "אמריקה הצפונית", flag: "🇧🇧", former: false, currencies: ["דולר ברבדי", "סנט"] },
+      { name: "ג'מייקה", continent: "אמריקה הצפונית", flag: "🇯🇲", former: false, currencies: ["דולר ג'מייקני", "סנט"] },
+      { name: "גואטמלה", continent: "אמריקה הצפונית", flag: "🇬🇹", former: false, currencies: ["קצאל", "סנטאבו"] },
+      { name: "האיטי", continent: "אמריקה הצפונית", flag: "🇭🇹", former: false, currencies: ["גורד", "סנטים"] },
+      { name: "הונדורס", continent: "אמריקה הצפונית", flag: "🇭🇳", former: false, currencies: ["למפירה", "סנטאבו"] },
+      { name: "הרפובליקה הדומיניקנית", continent: "אמריקה הצפונית", flag: "🇩🇴", former: false, currencies: ["פזו דומיניקני", "סנטאבו"] },
+      { name: "טרינידד וטובגו", continent: "אמריקה הצפונית", flag: "🇹🇹", former: false, currencies: ["דולר טרינידדי", "סנט"] },
+      { name: "מקסיקו", continent: "אמריקה הצפונית", flag: "🇲🇽", former: false, currencies: ["פזו מקסיקני", "סנטאבו"] },
+      { name: "ניקרגואה", continent: "אמריקה הצפונית", flag: "🇳🇮", former: false, currencies: ["קורדובה", "סנטאבו"] },
+      { name: "פנמה", continent: "אמריקה הצפונית", flag: "🇵🇦", former: false, currencies: ["בלבואה", "סנטסימו", "דולר אמריקאי"] },
+      { name: "קובה", continent: "אמריקה הצפונית", flag: "🇨🇺", former: false, currencies: ["פזו קובני", "סנטאבו"] },
+      { name: "קוסטה ריקה", continent: "אמריקה הצפונית", flag: "🇨🇷", former: false, currencies: ["קולון קוסטה ריקני", "סנטימו"] },
+      { name: "קנדה", continent: "אמריקה הצפונית", flag: "🇨🇦", former: false, currencies: ["דולר קנדי", "סנט"] },
+
+      // אמריקה הדרומית
+      { name: "אורוגוואי", continent: "אמריקה הדרומית", flag: "🇺🇾", former: false, currencies: ["פזו אורוגוואי", "סנטסימו"] },
+      { name: "אקוודור", continent: "אמריקה הדרומית", flag: "🇪🇨", former: false, currencies: ["דולר אמריקאי", "סנטאבו", "סוקרה"] },
+      { name: "ארגנטינה", continent: "אמריקה הדרומית", flag: "🇦🇷", former: false, currencies: ["פזו ארגנטינאי", "סנטאבו", "אאוסטרל"] },
+      { name: "בוליביה", continent: "אמריקה הדרומית", flag: "🇧🇴", former: false, currencies: ["בוליביאנו", "סנטאבו"] },
+      { name: "ברזיל", continent: "אמריקה הדרומית", flag: "🇧🇷", former: false, currencies: ["ריאל ברזילאי", "סנטאבו", "קרוזיירו"] },
+      { name: "גיאנה", continent: "אמריקה הדרומית", flag: "🇬🇾", former: false, currencies: ["דולר גיאני", "סנט"] },
+      { name: "ונצואלה", continent: "אמריקה הדרומית", flag: "🇻🇪", former: false, currencies: ["בוליבר", "סנטימו"] },
+      { name: "סורינאם", continent: "אמריקה הדרומית", flag: "🇸🇷", former: false, currencies: ["דולר סורינאמי", "סנט"] },
+      { name: "פרו", continent: "אמריקה הדרומית", flag: "🇵🇪", former: false, currencies: ["סול פרואני", "סנטימו", "אינטי"] },
+      { name: "פרגוואי", continent: "אמריקה הדרומית", flag: "🇵🇾", former: false, currencies: ["גוארני", "סנטימו"] },
+      { name: "צ'ילה", continent: "אמריקה הדרומית", flag: "🇨🇱", former: false, currencies: ["פזו צ'יליאני", "סנטאבו"] },
+      { name: "קולומביה", continent: "אמריקה הדרומית", flag: "🇨🇴", former: false, currencies: ["פזו קולומביאני", "סנטאבו"] },
+
+      // אפריקה
+      { name: "אוגנדה", continent: "אפריקה", flag: "🇺🇬", former: false, currencies: ["שילינג אוגנדי", "סנט"] },
+      { name: "אלג'יריה", continent: "אפריקה", flag: "🇩🇿", former: false, currencies: ["דינר אלג'יראי", "סנטים"] },
+      { name: "אנגולה", continent: "אפריקה", flag: "🇦🇴", former: false, currencies: ["קואנזה", "סנטימו"] },
+      { name: "אסוואטיני", continent: "אפריקה", flag: "🇸🇿", former: false, currencies: ["לילנגני", "סנט"] },
+      { name: "אריתריאה", continent: "אפריקה", flag: "🇪🇷", former: false, currencies: ["נאקפה", "סנט"] },
+      { name: "אתיופיה", continent: "אפריקה", flag: "🇪🇹", former: false, currencies: ["ביר אתיופי", "סנטים"] },
+      { name: "בוטסואנה", continent: "אפריקה", flag: "🇧🇼", former: false, currencies: ["פולה", "תבה"] },
+      { name: "גאנה", continent: "אפריקה", flag: "🇬🇭", former: false, currencies: ["סדי גאנאי", "פסווה"] },
+      { name: "דרום אפריקה", continent: "אפריקה", flag: "🇿🇦", former: false, currencies: ["ראנד דרום אפריקאי", "סנט"] },
+      { name: "זימבבואה", continent: "אפריקה", flag: "🇿🇼", former: false, currencies: ["דולר זימבבואי", "סנט"] },
+      { name: "זמביה", continent: "אפריקה", flag: "🇿🇲", former: false, currencies: ["קוואצ'ה זמבית", "נגווה"] },
+      { name: "חוף השנהב", continent: "אפריקה", flag: "🇨🇮", former: false, currencies: ["פרנק CFA", "סנטים"] },
+      { name: "טנזניה", continent: "אפריקה", flag: "🇹🇿", former: false, currencies: ["שילינג טנזני", "סנט"] },
+      { name: "כף ורדה", continent: "אפריקה", flag: "🇨🇻", former: false, currencies: ["אסקודו כף ורדה", "סנטאבו"] },
+      { name: "לוב", continent: "אפריקה", flag: "🇱🇾", former: false, currencies: ["דינר לובי", "דירהם"] },
+      { name: "מאוריציוס", continent: "אפריקה", flag: "🇲🇺", former: false, currencies: ["רופי מאוריצי", "סנט"] },
+      { name: "מדגסקר", continent: "אפריקה", flag: "🇲🇬", former: false, currencies: ["אריארי", "איראימבילאנג'ה"] },
+      { name: "מוזמביק", continent: "אפריקה", flag: "🇲🇿", former: false, currencies: ["מטיקל", "סנטאבו"] },
+      { name: "מלאווי", continent: "אפריקה", flag: "🇲🇼", former: false, currencies: ["קוואצ'ה מלאווית", "טמבאלה"] },
+      { name: "מצרים", continent: "אפריקה", flag: "🇪🇬", former: false, currencies: ["לירה מצרית", "קירש / פיאסטר", "מילים"] },
+      { name: "מרוקו", continent: "אפריקה", flag: "🇲🇦", former: false, currencies: ["דירהם מרוקאי", "סנטים"] },
+      { name: "ניגריה", continent: "אפריקה", flag: "🇳🇬", former: false, currencies: ["נאירה", "קובו"] },
+      { name: "נמיביה", continent: "אפריקה", flag: "🇳🇦", former: false, currencies: ["דולר נמיבי", "סנט"] },
+      { name: "סודאן", continent: "אפריקה", flag: "🇸🇩", former: false, currencies: ["לירה סודאנית", "קירש"] },
+      { name: "סיישל", continent: "אפריקה", flag: "🇸🇨", former: false, currencies: ["רופי סיישלי", "סנט"] },
+      { name: "סנגל", continent: "אפריקה", flag: "🇸🇳", former: false, currencies: ["פרנק CFA", "סנטים"] },
+      { name: "קמרון", continent: "אפריקה", flag: "🇨🇲", former: false, currencies: ["פרנק CFA", "סנטים"] },
+      { name: "קניה", continent: "אפריקה", flag: "🇰🇪", former: false, currencies: ["שילינג קנייתי", "סנט"] },
+      { name: "רואנדה", continent: "אפריקה", flag: "🇷🇼", former: false, currencies: ["פרנק רואנדי", "סנטים"] },
+      { name: "תוניסיה", continent: "אפריקה", flag: "🇹🇳", former: false, currencies: ["דינר תוניסאי", "מילים"] },
+
+      // אוקיאניה
+      { name: "אוסטרליה", continent: "אוקיאניה", flag: "🇦🇺", former: false, currencies: ["דולר אוסטרלי", "סנט", "לירה אוסטרלית", "שילינג", "פני"] },
+      { name: "ונואטו", continent: "אוקיאניה", flag: "🇻🇺", former: false, currencies: ["ואטו"] },
+      { name: "טונגה", continent: "אוקיאניה", flag: "🇹🇴", former: false, currencies: ["פאנגה", "סניטי"] },
+      { name: "ניו זילנד", continent: "אוקיאניה", flag: "🇳🇿", former: false, currencies: ["דולר ניו זילנדי", "סנט"] },
+      { name: "סמואה", continent: "אוקיאניה", flag: "🇼🇸", former: false, currencies: ["טאלה", "סנה"] },
+      { name: "פיג'י", continent: "אוקיאניה", flag: "🇫🇯", former: false, currencies: ["דולר פיג'יאני", "סנט"] },
+      { name: "פפואה גינאה החדשה", continent: "אוקיאניה", flag: "🇵🇬", former: false, currencies: ["קינה", "טואיה"] },
+
+      // מדינות עבר היסטוריות
+      { name: "ברית המועצות", continent: "אירופה", flag: "🚩", former: true, currencies: ["רובל סובייטי", "קופיקה"] },
+      { name: "גרמניה המזרחית", continent: "אירופה", flag: "🇩🇪", former: true, currencies: ["מארק מזרח גרמני", "פפניג"] },
+      { name: "גרמניה המערבית", continent: "אירופה", flag: "🇩🇪", former: true, currencies: ["מארק גרמני", "פפניג"] },
+      { name: "יוגוסלביה", continent: "אירופה", flag: "🏳️", former: true, currencies: ["דינר יוגוסלבי", "פארה"] },
+      { name: "צ'כוסלובקיה", continent: "אירופה", flag: "🇨🇿", former: true, currencies: ["קורונה צ'כוסלובקית", "הלייר"] },
+      { name: "האימפריה האוסטרו-הונגרית", continent: "אירופה", flag: "👑", former: true, currencies: ["קרונה אוסטרו-הונגרית", "הלר", "פילר"] },
+      { name: "האימפריה העות'מאנית", continent: "אסיה", flag: "🌙", former: true, currencies: ["לירה עות'מאנית", "קורוש", "פארה"] }
+    ];
+
+    const hebrewCollator = new Intl.Collator('he');
+    COUNTRIES_DB.sort((a, b) => hebrewCollator.compare(a.name, b.name));
+
+    const CONTINENT_ORDER = ["אסיה", "אירופה", "אמריקה הצפונית", "אמריקה הדרומית", "אפריקה", "אוקיאניה"];
+
+    // Era / Currency System Rank (Lower = Older Era, shown first)
+    function getEraRank(countryName, currencyName) {
+      const c = (currencyName || "").trim();
+      const map = {
+        "ישראל": {
+          "מיל ארץ-ישראלי": 1, "פרוטה": 2,
+          "לירה ישראלית": 3, "אגורות (לירה)": 3,
+          "שקל (ישן)": 4,
+          "שקל חדש": 5, "אגורות": 5
+        },
+        "גרמניה": { "מארק גרמני": 1, "פפניג": 1, "אירו": 2, "אירו סנט": 2 },
+        "צרפת": { "פרנק צרפתי": 1, "סנטים": 1, "אירו": 2, "אירו סנט": 2 },
+        "איטליה": { "לירה איטלקית": 1, "צ'נטזימו": 1, "אירו": 2, "אירו סנט": 2 },
+        "ספרד": { "פזטה ספרדית": 1, "סנטימו": 1, "אירו": 2, "אירו סנט": 2 },
+        "הולנד": { "גילדן הולנדי": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 },
+        "בלגיה": { "פרנק בלגי": 1, "סנטים": 1, "אירו": 2, "אירו סנט": 2 },
+        "אוסטריה": { "שילינג אוסטרי": 1, "גרושן": 1, "אירו": 2, "אירו סנט": 2 },
+        "יוון": { "דרכמה יוונית": 1, "לפטה": 1, "אירו": 2, "אירו סנט": 2 },
+        "פורטוגל": { "אסקודו פורטוגלי": 1, "סנטאבו": 1, "אירו": 2, "אירו סנט": 2 },
+        "אירלנד": { "לירה אירית": 1, "פני": 1, "אירו": 2, "אירו סנט": 2 },
+        "פינלנד": { "מארקה פינית": 1, "פני": 1, "אירו": 2, "אירו סנט": 2 },
+        "אסטוניה": { "קרון אסטוני": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 },
+        "לטביה": { "לאטס לטבי": 1, "סנטימס": 1, "אירו": 2, "אירו סנט": 2 },
+        "ליטא": { "ליטאס ליטאי": 1, "סנטאס": 1, "אירו": 2, "אירו סנט": 2 },
+        "סלובקיה": { "קורונה סלובקית": 1, "הלייר": 1, "אירו": 2, "אירו סנט": 2 },
+        "סלובניה": { "טולאר סלובני": 1, "סטוטין": 1, "אירו": 2, "אירו סנט": 2 },
+        "קרואטיה": { "קונה קרואטית": 1, "ליפה": 1, "אירו": 2, "אירו סנט": 2 },
+        "קפריסין": { "לירה קפריסאית": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 },
+        "מלטה": { "לירה מלטזית": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 }
+      };
+      if (map[countryName] && map[countryName][c] !== undefined) {
+        return map[countryName][c];
+      }
+      const countryObj = COUNTRIES_DB.find(x => x.name === countryName);
+      if (countryObj) {
+        const idx = countryObj.currencies.indexOf(c);
+        if (idx !== -1) {
+          if (countryObj.currencies.includes("אירו") && !c.includes("אירו")) return 1;
+          if (c.includes("אירו")) return 2;
+        }
+      }
+      return 10;
+    }
+
+    // Determine if currency name is a fractional unit (sub-unit)
+    function isSubUnit(currencyName) {
+      const subKeywords = [
+        "אגורות", "פרוטה", "מיל", "סנט", "סנטים", "סנטאבו", "סנטסימו", "סנטימו",
+        "פפניג", "פני", "פנס", "שילינג", "פארתינג", "אורה", "קופיקה", "גרושן", "גרוש",
+        "לפטה", "הלר", "הלייר", "פילר", "קורוש", "פאיסה", "פילס", "הלאלה", "סאטאנג",
+        "סן", "באן", "סטוטינקי", "סטוטין", "ליפה", "ראפן", "טיין", "אגורה"
+      ];
+      const lower = (currencyName || "").trim();
+      if (lower === "אירו סנט") return true;
+      return subKeywords.some(k => lower.includes(k));
+    }
+
+    // App State
+    const STORAGE_KEY = "world_coin_collection_v1";
+    let collection = [];
+    let currentTypeFilter = "all";
+    let collapsedContinents = {};
+    let collapsedCountries = {};
+    let pendingDuplicate = null;
+    let pendingExportFormat = null;
+
+    // Sample initial data if storage is empty
+    const SAMPLE_DATA = [
+      { id: "1", type: "coin", country: "ישראל", currency: "לירה ישראלית", value: 5, year: 1978, quantity: 1 },
+      { id: "2", type: "coin", country: "ישראל", currency: "אגורות (לירה)", value: 50, year: 1975, quantity: 2 },
+      { id: "3", type: "coin", country: "ישראל", currency: "שקל חדש", value: 5, year: 2015, quantity: 1 },
+      { id: "4", type: "coin", country: "ישראל", currency: "אגורות", value: 50, year: 1992, quantity: 3 },
+      { id: "5", type: "banknote", country: "ישראל", currency: "שקל חדש", value: 20, year: 2017, quantity: 1 },
+      { id: "6", type: "coin", country: "יפן", currency: "ין יפני", value: 500, year: 2019, quantity: 1 },
+      { id: "7", type: "coin", country: "יפן", currency: "ין יפני", value: 100, year: 2012, quantity: 2 },
+      { id: "8", type: "coin", country: "גרמניה", currency: "מארק גרמני", value: 2, year: 1988, quantity: 1 },
+      { id: "9", type: "coin", country: "גרמניה", currency: "אירו", value: 2, year: 2002, quantity: 1 },
+      { id: "10", type: "banknote", country: "ארה״ב", currency: "דולר אמריקאי", value: 1, year: 2013, quantity: 2 }
+    ];
+
+    function init() {
+      const savedTheme = localStorage.getItem("coin_theme");
+      if (savedTheme === "dark") document.documentElement.classList.add("dark");
+
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        try {
+          collection = JSON.parse(raw);
+        } catch (e) {
+          collection = [...SAMPLE_DATA];
+        }
+      } else {
+        collection = [...SAMPLE_DATA];
+        saveCollection();
+      }
+
+      populateStaticSelects();
+      renderCollection();
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      }
+    }
+
+    function saveCollection() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
+    }
+
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("coin_theme", isDark ? "dark" : "light");
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => el.classList.add("hidden"), 2600);
+    }
+
+    function getCountryMeta(name) {
+      return COUNTRIES_DB.find(c => c.name === name) || {
+        name,
+        continent: "אחר",
+        flag: "🏳️",
+        former: false,
+        currencies: []
+      };
+    }
+
+    function populateStaticSelects() {
+      const contSel = document.getElementById("filter-continent");
+      contSel.innerHTML = `<option value="all">כל היבשות</option>` +
+        CONTINENT_ORDER.map(c => `<option value="${c}">${c}</option>`).join("");
+
+      const formCountry = document.getElementById("form-country");
+      formCountry.innerHTML = COUNTRIES_DB.map(c =>
+        `<option value="${c.name}">${c.flag} ${c.name}</option>`
+      ).join("");
+
+      updateFilterDropdowns();
+    }
+
+    function updateFilterDropdowns() {
+      const selectedCont = document.getElementById("filter-continent").value;
+      const countrySel = document.getElementById("filter-country");
+      const prevCountry = countrySel.value;
+
+      const countriesInCollection = Array.from(new Set(collection.map(i => i.country)))
+        .filter(cName => selectedCont === "all" || getCountryMeta(cName).continent === selectedCont)
+        .sort((a, b) => hebrewCollator.compare(a, b));
+
+      countrySel.innerHTML = `<option value="all">כל המדינות</option>` +
+        countriesInCollection.map(cName => {
+          const meta = getCountryMeta(cName);
+          return `<option value="${cName}">${meta.flag} ${cName}</option>`;
+        }).join("");
+
+      if (countriesInCollection.includes(prevCountry)) {
+        countrySel.value = prevCountry;
+      }
+
+      const decadeSel = document.getElementById("filter-decade");
+      const prevDecade = decadeSel.value;
+      const decades = Array.from(new Set(collection.map(i => Math.floor(Number(i.year) / 10) * 10)))
+        .filter(d => !isNaN(d))
+        .sort((a, b) => b - a);
+
+      decadeSel.innerHTML = `<option value="all">כל העשורים</option>` +
+        decades.map(d => `<option value="${d}">שנות ה-${d}</option>`).join("");
+
+      if (decades.map(String).includes(prevDecade)) {
+        decadeSel.value = prevDecade;
+      }
+    }
+
+    function onContinentFilterChange() {
+      updateFilterDropdowns();
+      renderCollection();
+    }
+
+    function setTypeFilter(type) {
+      currentTypeFilter = type;
+      document.querySelectorAll(".type-pill").forEach(btn => {
+        if (btn.dataset.type === type) {
+          btn.className = "type-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition";
+        } else {
+          btn.className = "type-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition";
+        }
+      });
+      renderCollection();
+    }
+
+    function clearSearch() {
+      document.getElementById("search-input").value = "";
+      renderCollection();
+    }
+
+    function formatQuantitySummary(coinsCount, notesCount) {
+      const parts = [];
+      if (coinsCount > 0) {
+        parts.push(coinsCount === 1 ? "מטבע 1" : `${coinsCount} מטבעות`);
+      }
+      if (notesCount > 0) {
+        parts.push(notesCount === 1 ? "שטר 1" : `${notesCount} שטרות`);
+      }
+      return parts.join(", ");
+    }
+
+    function sortCountryItems(items, countryName) {
+      return [...items].sort((a, b) => {
+        // 1. Coins before Banknotes
+        if (a.type !== b.type) {
+          return a.type === "coin" ? -1 : 1;
+        }
+        // 2. Older currency era before newer currency era
+        const eraA = getEraRank(countryName, a.currency);
+        const eraB = getEraRank(countryName, b.currency);
+        if (eraA !== eraB) {
+          return eraA - eraB;
+        }
+        // 3. Main units before sub-units
+        const subA = isSubUnit(a.currency) ? 1 : 0;
+        const subB = isSubUnit(b.currency) ? 1 : 0;
+        if (subA !== subB) {
+          return subA - subB;
+        }
+        // 4. Value descending
+        const valA = Number(a.value) || 0;
+        const valB = Number(b.value) || 0;
+        if (valA !== valB) {
+          return valB - valA;
+        }
+        // 5. Year ascending
+        return (Number(a.year) || 0) - (Number(b.year) || 0);
+      });
+    }
+
+    function renderCollection() {
+      const search = document.getElementById("search-input").value.trim().toLowerCase();
+      document.getElementById("clear-search-btn").classList.toggle("hidden", !search);
+
+      const contFilter = document.getElementById("filter-continent").value;
+      const countryFilter = document.getElementById("filter-country").value;
+      const decadeFilter = document.getElementById("filter-decade").value;
+
+      // Update header subtitle
+      const totalItems = collection.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
+      const uniqueCountries = new Set(collection.map(i => i.country)).size;
+      document.getElementById("header-subtitle").textContent =
+        `${totalItems} פריטים • ${uniqueCountries} מדינות`;
+
+      // Filter items
+      const filtered = collection.filter(item => {
+        if (currentTypeFilter !== "all" && item.type !== currentTypeFilter) return false;
+        const meta = getCountryMeta(item.country);
+        if (contFilter !== "all" && meta.continent !== contFilter) return false;
+        if (countryFilter !== "all" && item.country !== countryFilter) return false;
+        if (decadeFilter !== "all") {
+          const dec = Math.floor(Number(item.year) / 10) * 10;
+          if (String(dec) !== decadeFilter) return false;
+        }
+        if (search) {
+          const hay = `${item.country} ${item.currency} ${item.value} ${item.year}`.toLowerCase();
+          if (!hay.includes(search)) return false;
+        }
+        return true;
+      });
+
+      const container = document.getElementById("collection-container");
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-14 text-slate-400 dark:text-slate-500">
+            <p class="text-sm font-medium">לא נמצאו פריטים תואמים</p>
+            <p class="text-xs mt-1">נסה לשנות את הסינון או להוסיף פריט חדש</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Group by Continent -> Country
+      const byContinent = {};
+      filtered.forEach(item => {
+        const meta = getCountryMeta(item.country);
+        const cont = meta.continent;
+        if (!byContinent[cont]) byContinent[cont] = {};
+        if (!byContinent[cont][item.country]) byContinent[cont][item.country] = [];
+        byContinent[cont][item.country].push(item);
+      });
+
+      const orderedContinents = Object.keys(byContinent).sort((a, b) => {
+        const ia = CONTINENT_ORDER.indexOf(a);
+        const ib = CONTINENT_ORDER.indexOf(b);
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+
+      let html = "";
+      orderedContinents.forEach(cont => {
+        const countriesObj = byContinent[cont];
+        const countryNames = Object.keys(countriesObj).sort((a, b) => hebrewCollator.compare(a, b));
+        const contTotal = Object.values(countriesObj).flat().reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+        const isContCollapsed = !!collapsedContinents[cont];
+
+        html += `
+          <section class="mb-6">
+            <button onclick="toggleContinent('${cont}')" class="w-full flex items-center justify-between py-2 px-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide border-b border-slate-200 dark:border-slate-800 mb-3">
+              <div class="flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 transition-transform ${isContCollapsed ? 'rotate-90' : ''}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                <span>${cont}</span>
+                <span class="text-[11px] font-normal text-slate-400">(${countryNames.length} מדינות)</span>
+              </div>
+              <span class="text-[11px] font-medium">${contTotal} פריטים</span>
+            </button>
+        `;
+
+        if (!isContCollapsed) {
+          countryNames.forEach(cName => {
+            const meta = getCountryMeta(cName);
+            const items = sortCountryItems(countriesObj[cName], cName);
+            const coinsCount = items.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+            const notesCount = items.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+            const summaryText = formatQuantitySummary(coinsCount, notesCount);
+            const isCountryCollapsed = !!collapsedCountries[cName];
+
+            // Country block with mb-5 (20px spacing) + subtle tinted header bar
+            html += `
+              <div class="mb-5">
+                <div class="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-100/80 dark:bg-slate-800/60">
+                  <button onclick="toggleCountry('${cName.replace(/'/g, "\\'")}')" class="flex items-center gap-2.5 text-right flex-1 min-w-0">
+                    <span class="emoji-flag text-2xl shrink-0">${meta.flag}</span>
+                    <div class="min-w-0">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-bold text-sm text-slate-900 dark:text-white">${cName}</span>
+                        ${meta.former ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-medium">מדינת עבר</span>` : ""}
+                      </div>
+                      <div class="text-xs text-slate-500 dark:text-slate-400">${summaryText}</div>
+                    </div>
+                  </button>
+                  <div class="flex items-center gap-1 shrink-0">
+                    <button onclick="openItemModal(null, '${cName.replace(/'/g, "\\'")}')" title="הוסף פריט ל${cName}" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 transition">+</button>
+                    <button onclick="toggleCountry('${cName.replace(/'/g, "\\'")}')" class="p-1 text-slate-400">
+                      <svg class="w-4 h-4 transition-transform ${isCountryCollapsed ? 'rotate-90' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                  </div>
+                </div>
+            `;
+
+            if (!isCountryCollapsed) {
+              html += `<div class="divide-y divide-slate-100 dark:divide-slate-900 px-1">`;
+              items.forEach(item => {
+                const isCoin = item.type === "coin";
+                const qty = Number(item.quantity) || 1;
+                html += `
+                  <div onclick="openItemModal('${item.id}')" class="py-2.5 px-1.5 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                      <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
+                        ${isCoin ? 'מטבע' : 'שטר'}
+                      </span>
+                      <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                        <span class="font-bold">${item.value}</span> ${item.currency}
+                        ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
+                    </div>
+                  </div>
+                `;
+              });
+              html += `</div>`;
+            }
+
+            html += `</div>`;
+          });
+        }
+
+        html += `</section>`;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function toggleContinent(cont) {
+      collapsedContinents[cont] = !collapsedContinents[cont];
+      renderCollection();
+    }
+
+    function toggleCountry(cName) {
+      collapsedCountries[cName] = !collapsedCountries[cName];
+      renderCollection();
+    }
+
+    // Tabs
+    function switchTab(tab) {
+      const isCol = tab === "collection";
+      document.getElementById("view-collection").classList.toggle("hidden", !isCol);
+      document.getElementById("view-stats").classList.toggle("hidden", isCol);
+
+      document.getElementById("tab-collection").className = isCol
+        ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
+        : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
+
+      document.getElementById("tab-stats").className = !isCol
+        ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
+        : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
+
+      if (!isCol) renderStats();
+    }
+
+    // Stats View (Top 10 Countries + Decades + Totals)
+    function renderStats() {
+      const container = document.getElementById("stats-container");
+      const totalCoins = collection.filter(i => i.type === "coin").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
+      const totalNotes = collection.filter(i => i.type === "banknote").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
+      const totalItems = totalCoins + totalNotes;
+      const totalCountries = new Set(collection.map(i => i.country)).size;
+
+      // Top 10 Countries
+      const byCountry = {};
+      collection.forEach(i => {
+        byCountry[i.country] = (byCountry[i.country] || 0) + (Number(i.quantity) || 1);
+      });
+      const topCountries = Object.entries(byCountry)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+      const maxCountryCount = topCountries.length ? topCountries[0][1] : 1;
+
+      // By Decade
+      const byDecade = {};
+      collection.forEach(i => {
+        const d = Math.floor(Number(i.year) / 10) * 10;
+        if (!isNaN(d)) {
+          byDecade[d] = (byDecade[d] || 0) + (Number(i.quantity) || 1);
+        }
+      });
+      const decadesList = Object.entries(byDecade).sort((a, b) => Number(b[0]) - Number(a[0]));
+      const maxDecadeCount = decadesList.length ? Math.max(...decadesList.map(x => x[1])) : 1;
+
+      container.innerHTML = `
+        <div class="grid grid-cols-3 gap-2.5">
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
+            <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${totalItems}</div>
+            <div class="text-xs text-slate-500 mt-0.5">סה״כ פריטים</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
+            <div class="text-xl font-bold text-amber-600 dark:text-amber-400">${totalCoins}</div>
+            <div class="text-xs text-slate-500 mt-0.5">מטבעות</div>
+          </div>
+          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400">${totalNotes}</div>
+            <div class="text-xs text-slate-500 mt-0.5">שטרות</div>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-sm">המדינות המובילות (עד 10)</h3>
+            <span class="text-xs text-slate-400">מתוך ${totalCountries} מדינות</span>
+          </div>
+          <div class="space-y-2.5">
+            ${topCountries.map(([cName, count], idx) => {
+              const meta = getCountryMeta(cName);
+              const pct = Math.round((count / maxCountryCount) * 100);
+              return `
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                      <span class="w-4 text-slate-400 font-semibold">${idx + 1}.</span>
+                      <span class="emoji-flag text-base">${meta.flag}</span>
+                      <span class="font-medium">${cName}</span>
+                    </div>
+                    <span class="font-bold text-slate-700 dark:text-slate-300">${count}</span>
+                  </div>
+                  <div class="w-full h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full bg-indigo-500 rounded-full" style="width: ${pct}%"></div>
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
+          <h3 class="font-bold text-sm">התפלגות לפי עשורים</h3>
+          <div class="space-y-2">
+            ${decadesList.map(([dec, count]) => {
+              const pct = Math.round((count / maxDecadeCount) * 100);
+              return `
+                <div class="flex items-center gap-3 text-xs">
+                  <span class="w-20 shrink-0 font-medium text-slate-600 dark:text-slate-300">שנות ה-${dec}</span>
+                  <div class="flex-1 h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                    <div class="h-full bg-emerald-500 rounded-full" style="width: ${pct}%"></div>
+                  </div>
+                  <span class="w-7 text-left font-bold">${count}</span>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    // Add / Edit Modal Logic
+    function openItemModal(itemId = null, prefillCountry = null) {
+      const modal = document.getElementById("item-modal");
+      const form = document.getElementById("item-form");
+      form.reset();
+
+      document.getElementById("edit-item-id").value = itemId || "";
+      document.getElementById("btn-delete-item").classList.toggle("hidden", !itemId);
+
+      if (itemId) {
+        const item = collection.find(i => i.id === itemId);
+        if (!item) return;
+        document.getElementById("modal-title").textContent = "עריכת פריט";
+        selectFormType(item.type);
+
+        const countrySel = document.getElementById("form-country");
+        if (![...countrySel.options].some(o => o.value === item.country)) {
+          const opt = new Option(`🏳️ ${item.country}`, item.country);
+          countrySel.add(opt);
+        }
+        countrySel.value = item.country;
+        onFormCountryChange(item.currency);
+
+        document.getElementById("form-value").value = item.value;
+        document.getElementById("form-year").value = item.year;
+        document.getElementById("form-quantity").value = item.quantity || 1;
+      } else {
+        document.getElementById("modal-title").textContent = "הוספת פריט חדש";
+        selectFormType("coin");
+        const countrySel = document.getElementById("form-country");
+        countrySel.value = prefillCountry || "ישראל";
+        onFormCountryChange();
+        document.getElementById("form-quantity").value = 1;
+      }
+
+      modal.classList.remove("hidden");
+    }
+
+    function closeItemModal() {
+      document.getElementById("item-modal").classList.add("hidden");
+    }
+
+    function scrollFieldIntoView(el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 250);
+    }
+
+    function selectFormType(type) {
+      document.getElementById("form-type").value = type;
+      const btnCoin = document.getElementById("btn-type-coin");
+      const btnNote = document.getElementById("btn-type-banknote");
+      if (type === "coin") {
+        btnCoin.className = "py-2 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition";
+        btnNote.className = "py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
+      } else {
+        btnNote.className = "py-2 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition";
+        btnCoin.className = "py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
+      }
+    }
+
+    function onFormCountryChange(selectedCurrency = null) {
+      const countryName = document.getElementById("form-country").value;
+      const meta = getCountryMeta(countryName);
+      const currSel = document.getElementById("form-currency-select");
+      const customInput = document.getElementById("form-currency-custom");
+
+      const list = meta.currencies.length ? meta.currencies : ["מטבע מקומי"];
+      currSel.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join("") +
+        `<option value="__custom__">אחר (הקלדה ידנית)...</option>`;
+
+      if (selectedCurrency) {
+        if (list.includes(selectedCurrency)) {
+          currSel.value = selectedCurrency;
+          customInput.classList.add("hidden");
+        } else {
+          currSel.value = "__custom__";
+          customInput.value = selectedCurrency;
+          customInput.classList.remove("hidden");
+        }
+      } else {
+        customInput.classList.add("hidden");
+        customInput.value = "";
+      }
+    }
+
+    function onFormCurrencySelectChange() {
+      const val = document.getElementById("form-currency-select").value;
+      const customInput = document.getElementById("form-currency-custom");
+      if (val === "__custom__") {
+        customInput.classList.remove("hidden");
+        customInput.focus();
+      } else {
+        customInput.classList.add("hidden");
+      }
+    }
+
+    function handleSaveItem(e) {
+      e.preventDefault();
+      const editId = document.getElementById("edit-item-id").value;
+      const type = document.getElementById("form-type").value;
+      const country = document.getElementById("form-country").value;
+      const currSel = document.getElementById("form-currency-select").value;
+      const currency = currSel === "__custom__"
+        ? document.getElementById("form-currency-custom").value.trim()
+        : currSel;
+
+      if (!currency) {
+        showToast("נא להזין שם מטבע");
+        return;
+      }
+
+      const value = parseFloat(document.getElementById("form-value").value);
+      const year = parseInt(document.getElementById("form-year").value, 10);
+      const quantity = parseInt(document.getElementById("form-quantity").value, 10) || 1;
+
+      if (editId) {
+        const idx = collection.findIndex(i => i.id === editId);
+        if (idx !== -1) {
+          collection[idx] = { id: editId, type, country, currency, value, year, quantity };
+        }
+        finalizeSave("הפריט עודכן בהצלחה");
+      } else {
+        // Check exact duplicate (including year)
+        const existing = collection.find(i =>
+          i.type === type &&
+          i.country === country &&
+          i.currency === currency &&
+          Number(i.value) === value &&
+          Number(i.year) === year
+        );
+
+        if (existing) {
+          pendingDuplicate = { existingId: existing.id, addQty: quantity };
+          const typeLabel = type === "coin" ? "מטבע" : "שטר";
+          document.getElementById("duplicate-message").textContent =
+            `${typeLabel} של ${value} ${currency} (${country}, ${year}) כבר נמצא באוסף שלך (כמות נוכחית: ${existing.quantity || 1}). האם להוסיף אליו עוד ${quantity}?`;
+          document.getElementById("duplicate-modal").classList.remove("hidden");
+          return;
+        }
+
+        collection.push({
+          id: String(Date.now()),
+          type,
+          country,
+          currency,
+          value,
+          year,
+          quantity
+        });
+        finalizeSave("הפריט נוסף לאוסף");
+      }
+    }
+
+    function confirmMergeDuplicate() {
+      if (!pendingDuplicate) return;
+      const target = collection.find(i => i.id === pendingDuplicate.existingId);
+      if (target) {
+        target.quantity = (Number(target.quantity) || 1) + pendingDuplicate.addQty;
+      }
+      pendingDuplicate = null;
+      document.getElementById("duplicate-modal").classList.add("hidden");
+      finalizeSave("הכמות עודכנה בפריט הקיים");
+    }
+
+    function closeDuplicateModal() {
+      pendingDuplicate = null;
+      document.getElementById("duplicate-modal").classList.add("hidden");
+    }
+
+    function deleteCurrentItem() {
+      const editId = document.getElementById("edit-item-id").value;
+      if (!editId) return;
+      collection = collection.filter(i => i.id !== editId);
+      finalizeSave("הפריט נמחק מהאוסף");
+    }
+
+    function finalizeSave(toastMsg) {
+      saveCollection();
+      updateFilterDropdowns();
+      renderCollection();
+      closeItemModal();
+      showToast(toastMsg);
+    }
+
+    // Export / Share / Import Logic
+    function openDataModal() {
+      document.getElementById("export-choice-panel").classList.add("hidden");
+      pendingExportFormat = null;
+      document.getElementById("data-modal").classList.remove("hidden");
+    }
+
+    function closeDataModal() {
+      document.getElementById("data-modal").classList.add("hidden");
+    }
+
+    function promptExportFormat(fmt) {
+      pendingExportFormat = fmt;
+      const names = { xlsx: "Excel (.xlsx)", csv: "CSV (.csv)", json: "JSON (.json)" };
+      document.getElementById("export-choice-title").textContent = `ייצוא קובץ ${names[fmt]} — בחר פעולה:`;
+      document.getElementById("export-choice-panel").classList.remove("hidden");
+    }
+
+    function buildExportFile(fmt) {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      if (fmt === "json") {
+        const blob = new Blob([JSON.stringify(collection, null, 2)], { type: "application/json" });
+        return { blob, filename: `coin-collection-${dateStr}.json` };
+      }
+
+      const rows = collection.map(i => ({
+        "סוג": i.type === "coin" ? "מטבע" : "שטר",
+        "מדינה": i.country,
+        "שם מטבע": i.currency,
+        "ערך": i.value,
+        "שנה": i.year,
+        "כמות": i.quantity || 1
+      }));
+
+      if (fmt === "csv") {
+        const headers = ["סוג", "מדינה", "שם מטבע", "ערך", "שנה", "כמות"];
+        const csvLines = [
+          headers.join(","),
+          ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g, '""')}"`).join(","))
+        ];
+        const blob = new Blob(["\uFEFF" + csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
+        return { blob, filename: `coin-collection-${dateStr}.csv` };
+      }
+
+      if (fmt === "xlsx") {
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "אוסף");
+        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        return { blob, filename: `coin-collection-${dateStr}.xlsx` };
+      }
+    }
+
+    async function executeExport(mode) {
+      if (!pendingExportFormat) return;
+      const { blob, filename } = buildExportFile(pendingExportFormat);
+
+      if (mode === "share") {
+        const file = new File([blob], filename, { type: blob.type });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "אוסף מטבעות ושטרות",
+              text: "גיבוי אוסף מטבעות ושטרות"
+            });
+            closeDataModal();
+            return;
+          } catch (err) {
+            if (err.name === "AbortError") return;
+          }
+        }
+        showToast("הדפדפן לא תומך בשיתוף קובץ זה — מוריד למכשיר");
+      }
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      closeDataModal();
+      showToast("הקובץ הורד למכשיר");
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const ext = file.name.split(".").pop().toLowerCase();
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          let imported = [];
+          if (ext === "json") {
+            const parsed = JSON.parse(e.target.result);
+            if (Array.isArray(parsed)) imported = parsed;
+          } else {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws);
+            imported = rows.map((r, idx) => ({
+              id: String(Date.now() + idx),
+              type: (r["סוג"] === "שטר" || r.type === "banknote") ? "banknote" : "coin",
+              country: String(r["מדינה"] || r.country || "").trim(),
+              currency: String(r["שם מטבע"] || r.currency || "").trim(),
+              value: parseFloat(r["ערך"] ?? r.value ?? 0),
+              year: parseInt(r["שנה"] ?? r.year ?? 2000, 10),
+              quantity: parseInt(r["כמות"] ?? r.quantity ?? 1, 10) || 1
+            })).filter(x => x.country && x.currency);
+          }
+
+          if (!imported.length) {
+            showToast("לא נמצאו נתונים תקינים בקובץ");
+            return;
+          }
+
+          collection = imported;
+          saveCollection();
+          updateFilterDropdowns();
+          renderCollection();
+          closeDataModal();
+          showToast(`יובאו ${imported.length} רשומות בהצלחה`);
+        } catch (err) {
+          showToast("שגיאה בקריאת הקובץ");
+        }
+      };
+
+      if (ext === "json") {
+        reader.readAsText(file);
+      } else {
+        reader.readAsArrayBuffer(file);
+      }
+      event.target.value = "";
+    }
+
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "אוסף מטבעות ושטרות",
+  "short_name": "האוסף שלי",
+  "description": "ניהול ומעקב אחר אוסף מטבעות ושטרות מכל העולם",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

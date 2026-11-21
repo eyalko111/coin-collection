@@ -63,7 +63,7 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="max-w-xl mx-auto px-4 flex border-t border-slate-100 dark:border-slate-900">
+    <div id="main-tabs" class="max-w-xl mx-auto px-4 flex border-t border-slate-100 dark:border-slate-900">
       <button id="tab-collection" onclick="switchTab('collection')" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition">
         האוסף שלי
       </button>
@@ -115,23 +115,38 @@
     <div id="stats-container" class="space-y-5"></div>
   </main>
 
+  <!-- OLDEST COINS BY YEAR VIEW -->
+  <main id="view-oldest-coins" class="hidden max-w-xl mx-auto px-4 pt-3 space-y-3">
+    <div class="flex items-center justify-between gap-2 pb-1 border-b border-slate-200 dark:border-slate-800">
+      <button onclick="closeOldestCoinsView()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition">
+        <span>←</span>
+        <span>חזרה לסיכומים</span>
+      </button>
+      <div class="text-right">
+        <h2 class="text-sm font-bold text-slate-900 dark:text-white">מטבעות לפי שנת הנפקה (מהישן לחדש)</h2>
+        <p id="oldest-coins-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+      </div>
+    </div>
+    <div id="oldest-coins-list" class="divide-y divide-slate-100 dark:divide-slate-900"></div>
+  </main>
+
   <!-- Floating Add Button -->
-  <button onclick="openItemModal()" class="fixed bottom-5 left-5 z-30 flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition">
+  <button id="fab-add-item" onclick="openItemModal()" class="fixed bottom-5 left-5 z-30 flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
     <span>הוסף פריט</span>
   </button>
 
-  <!-- ADD / EDIT ITEM MODAL (Top-anchored for stable mobile keyboard) -->
-  <div id="item-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-10 px-3 overflow-y-auto">
+  <!-- ADD / EDIT / DUPLICATE ITEM MODAL (Top-anchored for stable mobile keyboard) -->
+  <div id="item-modal" onclick="handleModalBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-10 px-3 overflow-y-auto">
     <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[88dvh] overflow-hidden">
       <!-- Sticky Header -->
       <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white dark:bg-slate-900">
         <h2 id="modal-title" class="font-bold text-base">הוספת פריט חדש</h2>
-        <button onclick="closeItemModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
+        <button type="button" onclick="closeItemModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
       </div>
 
       <!-- Scrollable Form Body -->
-      <form id="item-form" onsubmit="handleSaveItem(event)" class="p-4 space-y-3.5 overflow-y-auto flex-1">
+      <form id="item-form" onsubmit="handleSaveItem(event, 'update')" class="p-4 space-y-3.5 overflow-y-auto flex-1">
         <input type="hidden" id="edit-item-id" value="" />
 
         <!-- Type Toggle -->
@@ -144,17 +159,43 @@
           <input type="hidden" id="form-type" value="coin" />
         </div>
 
-        <!-- Country Select -->
-        <div>
-          <label for="form-country" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">מדינה / ישות</label>
-          <select id="form-country" onchange="onFormCountryChange()" required dir="rtl" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none"></select>
+        <!-- Custom Searchable Country Dropdown -->
+        <div class="relative">
+          <label for="form-country-input" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">מדינה / ישות</label>
+          <div class="relative flex items-center">
+            <span id="form-country-flag" class="emoji-flag text-lg absolute right-3 pointer-events-none">🇮🇱</span>
+            <input
+              id="form-country-input"
+              type="text"
+              autocomplete="off"
+              placeholder="הקלד או בחר מדינה..."
+              onfocus="openCountryDropdown()"
+              oninput="onCountryInputChange()"
+              class="w-full pr-9 pl-8 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none"
+            />
+            <button type="button" onclick="toggleCountryDropdown()" aria-label="פתח רשימת מדינות" class="absolute left-2 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          </div>
+          <input type="hidden" id="form-country" value="ישראל" />
+          <div id="country-dropdown-menu" class="hidden absolute left-0 right-0 mt-1 z-40 max-h-48 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl divide-y divide-slate-100 dark:divide-slate-700/60"></div>
         </div>
 
-        <!-- Currency Select + Custom -->
-        <div>
-          <label for="form-currency-select" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שם המטבע / היחידה</label>
-          <select id="form-currency-select" onchange="onFormCurrencySelectChange()" dir="rtl" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none"></select>
-          <input id="form-currency-custom" type="text" placeholder="הזן שם מטבע מותאם אישית..." class="hidden mt-2 w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+        <!-- Custom Currency Dropdown + Custom Input -->
+        <div class="relative">
+          <label for="form-currency-trigger" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שם המטבע / היחידה</label>
+          <button
+            type="button"
+            id="form-currency-trigger"
+            onclick="toggleCurrencyDropdown()"
+            class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none flex items-center justify-between text-right"
+          >
+            <span id="form-currency-display" class="truncate">שקל חדש</span>
+            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <input type="hidden" id="form-currency-select" value="שקל חדש" />
+          <div id="currency-dropdown-menu" class="hidden absolute left-0 right-0 mt-1 z-40 max-h-44 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl divide-y divide-slate-100 dark:divide-slate-700/60"></div>
+          <input id="form-currency-custom" type="text" placeholder="הזן שם מטבע מותאם אישית..." onfocus="scrollFieldIntoView(this)" class="hidden mt-2 w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
         </div>
 
         <!-- Value & Year -->
@@ -176,11 +217,14 @@
         </div>
 
         <!-- Sticky Footer Actions inside Form -->
-        <div class="pt-2 flex items-center gap-2 sticky bottom-0 bg-white dark:bg-slate-900 pb-1">
-          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
+        <div id="form-actions-bar" class="pt-2 flex items-center gap-2 sticky bottom-0 bg-white dark:bg-slate-900 pb-1">
+          <button type="submit" id="btn-save-main" class="flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition truncate">
             שמור פריט
           </button>
-          <button type="button" id="btn-delete-item" onclick="deleteCurrentItem()" class="hidden px-3.5 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 font-medium text-sm hover:bg-rose-100 transition">
+          <button type="button" id="btn-save-as-new" onclick="handleSaveAsNew()" class="hidden shrink-0 py-2.5 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-semibold text-xs sm:text-sm transition">
+            שמור כחדש
+          </button>
+          <button type="button" id="btn-delete-item" onclick="deleteCurrentItem()" class="hidden shrink-0 px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-600 dark:text-rose-400 font-medium text-xs sm:text-sm transition">
             מחק
           </button>
         </div>
@@ -514,6 +558,7 @@
     let collapsedCountries = {};
     let pendingDuplicate = null;
     let pendingExportFormat = null;
+    let currentCurrencyOptions = [];
 
     // Sample initial data if storage is empty
     const SAMPLE_DATA = [
@@ -547,6 +592,18 @@
 
       populateStaticSelects();
       renderCollection();
+
+      // Close inline dropdowns when tapping outside
+      document.addEventListener("click", (e) => {
+        const countryWrap = document.getElementById("form-country-input")?.closest(".relative");
+        if (countryWrap && !countryWrap.contains(e.target)) {
+          closeCountryDropdown();
+        }
+        const currWrap = document.getElementById("form-currency-trigger")?.closest(".relative");
+        if (currWrap && !currWrap.contains(e.target)) {
+          closeCurrencyDropdown();
+        }
+      });
 
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -584,11 +641,6 @@
       const contSel = document.getElementById("filter-continent");
       contSel.innerHTML = `<option value="all">כל היבשות</option>` +
         CONTINENT_ORDER.map(c => `<option value="${c}">${c}</option>`).join("");
-
-      const formCountry = document.getElementById("form-country");
-      formCountry.innerHTML = COUNTRIES_DB.map(c =>
-        `<option value="${c.name}">${c.flag} ${c.name}</option>`
-      ).join("");
 
       updateFilterDropdowns();
     }
@@ -844,8 +896,9 @@
       renderCollection();
     }
 
-    // Tabs
+    // Tabs & Oldest Coins Sub-view
     function switchTab(tab) {
+      document.getElementById("view-oldest-coins").classList.add("hidden");
       const isCol = tab === "collection";
       document.getElementById("view-collection").classList.toggle("hidden", !isCol);
       document.getElementById("view-stats").classList.toggle("hidden", isCol);
@@ -861,13 +914,73 @@
       if (!isCol) renderStats();
     }
 
-    // Stats View (Top 10 Countries + Decades + Totals)
+    function getSortedCoinsOldestFirst() {
+      return collection
+        .filter(i => i.type === "coin" && !isNaN(Number(i.year)))
+        .sort((a, b) => {
+          const yearDiff = Number(a.year) - Number(b.year);
+          if (yearDiff !== 0) return yearDiff;
+          return hebrewCollator.compare(a.country, b.country);
+        });
+    }
+
+    function openOldestCoinsView() {
+      const coins = getSortedCoinsOldestFirst();
+      document.getElementById("view-stats").classList.add("hidden");
+      document.getElementById("view-collection").classList.add("hidden");
+      document.getElementById("view-oldest-coins").classList.remove("hidden");
+
+      const totalCoinQty = coins.reduce((s, c) => s + (Number(c.quantity) || 1), 0);
+      document.getElementById("oldest-coins-subtitle").textContent =
+        `${coins.length} רשומות מטבעות (${totalCoinQty} יחידות)`;
+
+      const listEl = document.getElementById("oldest-coins-list");
+      if (!coins.length) {
+        listEl.innerHTML = `<div class="text-center py-12 text-xs text-slate-400">אין מטבעות באוסף להצגה</div>`;
+        return;
+      }
+
+      listEl.innerHTML = coins.map(coin => {
+        const meta = getCountryMeta(coin.country);
+        const qty = Number(coin.quantity) || 1;
+        return `
+          <div onclick="openItemModal('${coin.id}')" class="py-3 px-1.5 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="emoji-flag text-xl shrink-0">${meta.flag}</span>
+              <div class="min-w-0">
+                <div class="text-sm font-bold text-slate-900 dark:text-white truncate">${coin.country}</div>
+                <div class="text-xs text-slate-600 dark:text-slate-300 truncate">
+                  <span class="font-semibold">${coin.value}</span> ${coin.currency}
+                  ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
+                </div>
+              </div>
+            </div>
+            <div class="shrink-0 px-2.5 py-1 rounded-lg bg-amber-100/80 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-xs font-bold">
+              ${coin.year}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function closeOldestCoinsView() {
+      document.getElementById("view-oldest-coins").classList.add("hidden");
+      document.getElementById("view-stats").classList.remove("hidden");
+      renderStats();
+    }
+
+    // Stats View (Top 10 Countries + Decades + Totals + Oldest Coin Card)
     function renderStats() {
       const container = document.getElementById("stats-container");
       const totalCoins = collection.filter(i => i.type === "coin").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
       const totalNotes = collection.filter(i => i.type === "banknote").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
       const totalItems = totalCoins + totalNotes;
       const totalCountries = new Set(collection.map(i => i.country)).size;
+
+      // Oldest Coin
+      const sortedCoins = getSortedCoinsOldestFirst();
+      const oldestCoin = sortedCoins.length ? sortedCoins[0] : null;
+      const oldestMeta = oldestCoin ? getCountryMeta(oldestCoin.country) : null;
 
       // Top 10 Countries
       const byCountry = {};
@@ -890,6 +1003,29 @@
       const decadesList = Object.entries(byDecade).sort((a, b) => Number(b[0]) - Number(a[0]));
       const maxDecadeCount = decadesList.length ? Math.max(...decadesList.map(x => x[1])) : 1;
 
+      const oldestCoinCardHtml = oldestCoin ? `
+        <button onclick="openOldestCoinsView()" class="w-full text-right p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 transition flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="emoji-flag text-3xl shrink-0">${oldestMeta.flag}</span>
+            <div class="min-w-0">
+              <div class="text-[11px] font-bold text-amber-800 dark:text-amber-300">המטבע הכי ישן באוסף</div>
+              <div class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                ${oldestCoin.country} • <span class="font-semibold">${oldestCoin.value} ${oldestCoin.currency}</span>
+              </div>
+              <div class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">שנת הנפקה: <span class="font-bold">${oldestCoin.year}</span></div>
+            </div>
+          </div>
+          <div class="shrink-0 flex items-center gap-1 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-white/80 dark:bg-slate-900/70 px-2.5 py-1.5 rounded-xl border border-amber-200/70 dark:border-amber-800/50">
+            <span>לכל המטבעות</span>
+            <span>←</span>
+          </div>
+        </button>
+      ` : `
+        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs text-slate-500">
+          אין מטבעות רשומים באוסף להצגת המטבע הכי ישן.
+        </div>
+      `;
+
       container.innerHTML = `
         <div class="grid grid-cols-3 gap-2.5">
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
@@ -905,6 +1041,8 @@
             <div class="text-xs text-slate-500 mt-0.5">שטרות</div>
           </div>
         </div>
+
+        ${oldestCoinCardHtml}
 
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
           <div class="flex items-center justify-between">
@@ -954,27 +1092,157 @@
       `;
     }
 
-    // Add / Edit Modal Logic
+    // Custom Dropdowns for Country & Currency
+    function openCountryDropdown() {
+      closeCurrencyDropdown();
+      renderCountryDropdownList(document.getElementById("form-country-input").value);
+      document.getElementById("country-dropdown-menu").classList.remove("hidden");
+    }
+
+    function closeCountryDropdown() {
+      document.getElementById("country-dropdown-menu").classList.add("hidden");
+    }
+
+    function toggleCountryDropdown() {
+      const menu = document.getElementById("country-dropdown-menu");
+      if (menu.classList.contains("hidden")) {
+        openCountryDropdown();
+      } else {
+        closeCountryDropdown();
+      }
+    }
+
+    function onCountryInputChange() {
+      const query = document.getElementById("form-country-input").value;
+      renderCountryDropdownList(query);
+      document.getElementById("country-dropdown-menu").classList.remove("hidden");
+    }
+
+    function renderCountryDropdownList(rawQuery) {
+      const q = (rawQuery || "").trim().toLowerCase();
+      const menu = document.getElementById("country-dropdown-menu");
+
+      let matches = COUNTRIES_DB;
+      if (q) {
+        matches = COUNTRIES_DB
+          .filter(c => c.name.toLowerCase().includes(q))
+          .sort((a, b) => {
+            const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
+            const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
+            if (aStarts !== bStarts) return aStarts - bStarts;
+            return hebrewCollator.compare(a.name, b.name);
+          });
+      }
+
+      if (!matches.length) {
+        menu.innerHTML = `<div class="px-3 py-2.5 text-xs text-slate-400">לא נמצאה מדינה תואמת</div>`;
+        return;
+      }
+
+      menu.innerHTML = matches.map(c => `
+        <button type="button" onclick="selectCountryFromDropdown('${c.name.replace(/'/g, "\\'")}')" class="w-full px-3 py-2 text-right text-sm flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="emoji-flag text-lg shrink-0">${c.flag}</span>
+            <span class="font-medium truncate">${c.name}</span>
+          </div>
+          ${c.former ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 shrink-0">עבר</span>` : ""}
+        </button>
+      `).join("");
+    }
+
+    function selectCountryFromDropdown(countryName) {
+      const meta = getCountryMeta(countryName);
+      document.getElementById("form-country").value = meta.name;
+      document.getElementById("form-country-input").value = meta.name;
+      document.getElementById("form-country-flag").textContent = meta.flag;
+      closeCountryDropdown();
+      onFormCountryChange();
+    }
+
+    function toggleCurrencyDropdown() {
+      const menu = document.getElementById("currency-dropdown-menu");
+      if (!menu.classList.contains("hidden")) {
+        closeCurrencyDropdown();
+        return;
+      }
+      closeCountryDropdown();
+      renderCurrencyDropdownList();
+      menu.classList.remove("hidden");
+    }
+
+    function closeCurrencyDropdown() {
+      document.getElementById("currency-dropdown-menu").classList.add("hidden");
+    }
+
+    function renderCurrencyDropdownList() {
+      const menu = document.getElementById("currency-dropdown-menu");
+      const currentVal = document.getElementById("form-currency-select").value;
+      const items = [
+        ...currentCurrencyOptions.map(c => ({ value: c, label: c })),
+        { value: "__custom__", label: "אחר (הקלדה ידנית)..." }
+      ];
+
+      menu.innerHTML = items.map(opt => {
+        const active = opt.value === currentVal;
+        return `
+          <button type="button" onclick="selectCurrencyFromDropdown('${opt.value.replace(/'/g, "\\'")}')" class="w-full px-3 py-2 text-right text-sm flex items-center justify-between hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${active ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : ''}">
+            <span class="truncate">${opt.label}</span>
+            ${active ? `<span class="text-xs">✓</span>` : ""}
+          </button>
+        `;
+      }).join("");
+    }
+
+    function selectCurrencyFromDropdown(val) {
+      document.getElementById("form-currency-select").value = val;
+      const customInput = document.getElementById("form-currency-custom");
+      if (val === "__custom__") {
+        document.getElementById("form-currency-display").textContent = "אחר (הקלדה ידנית)...";
+        customInput.classList.remove("hidden");
+        closeCurrencyDropdown();
+        customInput.focus();
+      } else {
+        document.getElementById("form-currency-display").textContent = val;
+        customInput.classList.add("hidden");
+        closeCurrencyDropdown();
+      }
+    }
+
+    // Add / Edit / Duplicate Modal Logic
+    function handleModalBackdropClick(e) {
+      if (e.target.id === "item-modal") {
+        closeItemModal();
+      }
+    }
+
     function openItemModal(itemId = null, prefillCountry = null) {
       const modal = document.getElementById("item-modal");
       const form = document.getElementById("item-form");
       form.reset();
+      closeCountryDropdown();
+      closeCurrencyDropdown();
+
+      const btnSaveMain = document.getElementById("btn-save-main");
+      const btnSaveAsNew = document.getElementById("btn-save-as-new");
+      const btnDelete = document.getElementById("btn-delete-item");
 
       document.getElementById("edit-item-id").value = itemId || "";
-      document.getElementById("btn-delete-item").classList.toggle("hidden", !itemId);
 
       if (itemId) {
         const item = collection.find(i => i.id === itemId);
         if (!item) return;
         document.getElementById("modal-title").textContent = "עריכת פריט";
+        btnSaveMain.textContent = "שמור שינויים";
+        btnSaveAsNew.classList.remove("hidden");
+        btnDelete.classList.remove("hidden");
+
         selectFormType(item.type);
 
-        const countrySel = document.getElementById("form-country");
-        if (![...countrySel.options].some(o => o.value === item.country)) {
-          const opt = new Option(`🏳️ ${item.country}`, item.country);
-          countrySel.add(opt);
-        }
-        countrySel.value = item.country;
+        const meta = getCountryMeta(item.country);
+        document.getElementById("form-country").value = item.country;
+        document.getElementById("form-country-input").value = item.country;
+        document.getElementById("form-country-flag").textContent = meta.flag;
+
         onFormCountryChange(item.currency);
 
         document.getElementById("form-value").value = item.value;
@@ -982,9 +1250,17 @@
         document.getElementById("form-quantity").value = item.quantity || 1;
       } else {
         document.getElementById("modal-title").textContent = "הוספת פריט חדש";
+        btnSaveMain.textContent = "שמור פריט";
+        btnSaveAsNew.classList.add("hidden");
+        btnDelete.classList.add("hidden");
+
         selectFormType("coin");
-        const countrySel = document.getElementById("form-country");
-        countrySel.value = prefillCountry || "ישראל";
+        const startCountry = prefillCountry || "ישראל";
+        const meta = getCountryMeta(startCountry);
+        document.getElementById("form-country").value = startCountry;
+        document.getElementById("form-country-input").value = startCountry;
+        document.getElementById("form-country-flag").textContent = meta.flag;
+
         onFormCountryChange();
         document.getElementById("form-quantity").value = 1;
       }
@@ -993,6 +1269,8 @@
     }
 
     function closeItemModal() {
+      closeCountryDropdown();
+      closeCurrencyDropdown();
       document.getElementById("item-modal").classList.add("hidden");
     }
 
@@ -1019,43 +1297,56 @@
       const countryName = document.getElementById("form-country").value;
       const meta = getCountryMeta(countryName);
       const currSel = document.getElementById("form-currency-select");
+      const currDisplay = document.getElementById("form-currency-display");
       const customInput = document.getElementById("form-currency-custom");
 
-      const list = meta.currencies.length ? meta.currencies : ["מטבע מקומי"];
-      currSel.innerHTML = list.map(c => `<option value="${c}">${c}</option>`).join("") +
-        `<option value="__custom__">אחר (הקלדה ידנית)...</option>`;
+      currentCurrencyOptions = meta.currencies.length ? meta.currencies : ["מטבע מקומי"];
 
       if (selectedCurrency) {
-        if (list.includes(selectedCurrency)) {
+        if (currentCurrencyOptions.includes(selectedCurrency)) {
           currSel.value = selectedCurrency;
+          currDisplay.textContent = selectedCurrency;
           customInput.classList.add("hidden");
+          customInput.value = "";
         } else {
           currSel.value = "__custom__";
+          currDisplay.textContent = "אחר (הקלדה ידנית)...";
           customInput.value = selectedCurrency;
           customInput.classList.remove("hidden");
         }
       } else {
+        const defaultCurr = currentCurrencyOptions[0];
+        currSel.value = defaultCurr;
+        currDisplay.textContent = defaultCurr;
         customInput.classList.add("hidden");
         customInput.value = "";
       }
     }
 
-    function onFormCurrencySelectChange() {
-      const val = document.getElementById("form-currency-select").value;
-      const customInput = document.getElementById("form-currency-custom");
-      if (val === "__custom__") {
-        customInput.classList.remove("hidden");
-        customInput.focus();
-      } else {
-        customInput.classList.add("hidden");
-      }
+    function handleSaveAsNew() {
+      const form = document.getElementById("item-form");
+      if (!form.reportValidity()) return;
+      handleSaveItem(null, "create_new");
     }
 
-    function handleSaveItem(e) {
-      e.preventDefault();
+    function handleSaveItem(e, mode = "update") {
+      if (e) e.preventDefault();
+
       const editId = document.getElementById("edit-item-id").value;
       const type = document.getElementById("form-type").value;
-      const country = document.getElementById("form-country").value;
+
+      // Resolve country from hidden value or matching typed text
+      let country = document.getElementById("form-country").value.trim();
+      const typedCountry = document.getElementById("form-country-input").value.trim();
+      if (typedCountry && typedCountry !== country) {
+        const exactMatch = COUNTRIES_DB.find(c => c.name === typedCountry);
+        country = exactMatch ? exactMatch.name : typedCountry;
+      }
+      if (!country) {
+        showToast("נא לבחור או להזין מדינה");
+        return;
+      }
+
       const currSel = document.getElementById("form-currency-select").value;
       const currency = currSel === "__custom__"
         ? document.getElementById("form-currency-custom").value.trim()
@@ -1070,12 +1361,12 @@
       const year = parseInt(document.getElementById("form-year").value, 10);
       const quantity = parseInt(document.getElementById("form-quantity").value, 10) || 1;
 
-      if (editId) {
+      if (editId && mode === "update") {
         const idx = collection.findIndex(i => i.id === editId);
         if (idx !== -1) {
           collection[idx] = { id: editId, type, country, currency, value, year, quantity };
         }
-        finalizeSave("הפריט עודכן בהצלחה");
+        finalizeSave("השינויים נשמרו בהצלחה");
       } else {
         // Check exact duplicate (including year)
         const existing = collection.find(i =>
@@ -1104,7 +1395,7 @@
           year,
           quantity
         });
-        finalizeSave("הפריט נוסף לאוסף");
+        finalizeSave(mode === "create_new" ? "נשמר כפריט חדש באוסף" : "הפריט נוסף לאוסף");
       }
     }
 
@@ -1135,6 +1426,11 @@
       saveCollection();
       updateFilterDropdowns();
       renderCollection();
+      if (!document.getElementById("view-oldest-coins").classList.contains("hidden")) {
+        openOldestCoinsView();
+      } else if (!document.getElementById("view-stats").classList.contains("hidden")) {
+        renderStats();
+      }
       closeItemModal();
       showToast(toastMsg);
     }

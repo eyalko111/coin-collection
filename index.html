@@ -45,7 +45,7 @@
 <body class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-24 transition-colors">
 
   <!-- Top Header -->
-  <header class="sticky top-0 z-30 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+  <header id="app-header" class="sticky top-0 z-30 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
     <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
       <div>
         <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">אוסף מטבעות ושטרות</h1>
@@ -83,11 +83,18 @@
         <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5">✕</button>
       </div>
 
-      <!-- Type Filter Pills -->
-      <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-        <button onclick="setTypeFilter('all')" data-type="all" class="type-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition">הכל</button>
-        <button onclick="setTypeFilter('coin')" data-type="coin" class="type-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">מטבעות</button>
-        <button onclick="setTypeFilter('banknote')" data-type="banknote" class="type-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">שטרות</button>
+      <!-- Type Filter Pills + Grouping Mode Toggle -->
+      <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="setTypeFilter('all')" data-type="all" class="type-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition">הכל</button>
+          <button onclick="setTypeFilter('coin')" data-type="coin" class="type-pill px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">מטבעות</button>
+          <button onclick="setTypeFilter('banknote')" data-type="banknote" class="type-pill px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">שטרות</button>
+        </div>
+
+        <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-900 shrink-0">
+          <button onclick="setGroupMode('continent')" data-group="continent" class="group-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs transition">לפי יבשות</button>
+          <button onclick="setGroupMode('alpha')" data-group="alpha" class="group-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">לפי א'-ב'</button>
+        </div>
       </div>
 
       <!-- Dropdown Filters (RTL aligned) -->
@@ -210,8 +217,8 @@
             <input id="form-value" type="number" step="any" min="0" inputmode="decimal" required placeholder="למשל: 5 או 0.5" onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
           </div>
           <div>
-            <label for="form-year" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שנת הנפקה</label>
-            <input id="form-year" type="number" inputmode="numeric" min="100" max="2099" required placeholder="למשל: 2015" onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+            <label for="form-year" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שנת הנפקה (אופציונלי)</label>
+            <input id="form-year" type="number" inputmode="numeric" min="100" max="2099" placeholder="ללא שנה" onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
           </div>
         </div>
 
@@ -595,9 +602,22 @@
       return subKeywords.some(k => lower.includes(k));
     }
 
+    function hasValidYear(y) {
+      return y !== null && y !== undefined && y !== "" && !isNaN(Number(y));
+    }
+
+    function normalizeYear(y) {
+      return hasValidYear(y) ? Number(y) : null;
+    }
+
+    function formatYearText(y) {
+      return hasValidYear(y) ? String(y) : "ללא שנה";
+    }
+
     const STORAGE_KEY = "world_coin_collection_v1";
     let collection = [];
     let currentTypeFilter = "all";
+    let currentGroupMode = "continent"; // 'continent' | 'alpha'
     let collapsedContinents = {};
     let collapsedCountries = {};
     let pendingDuplicate = null;
@@ -710,9 +730,11 @@
 
       const decadeSel = document.getElementById("filter-decade");
       const prevDecade = decadeSel.value;
-      const decades = Array.from(new Set(collection.map(i => Math.floor(Number(i.year) / 10) * 10)))
-        .filter(d => !isNaN(d))
-        .sort((a, b) => b - a);
+      const decades = Array.from(new Set(
+        collection
+          .filter(i => hasValidYear(i.year))
+          .map(i => Math.floor(Number(i.year) / 10) * 10)
+      )).sort((a, b) => b - a);
 
       decadeSel.innerHTML = `<option value="all">כל העשורים</option>` +
         decades.map(d => `<option value="${d}">שנות ה-${d}</option>`).join("");
@@ -731,9 +753,21 @@
       currentTypeFilter = type;
       document.querySelectorAll(".type-pill").forEach(btn => {
         if (btn.dataset.type === type) {
-          btn.className = "type-pill px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition";
+          btn.className = "type-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition";
         } else {
-          btn.className = "type-pill px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition";
+          btn.className = "type-pill px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition";
+        }
+      });
+      renderCollection();
+    }
+
+    function setGroupMode(mode) {
+      currentGroupMode = mode;
+      document.querySelectorAll(".group-pill").forEach(btn => {
+        if (btn.dataset.group === mode) {
+          btn.className = "group-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs transition";
+        } else {
+          btn.className = "group-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
         }
       });
       renderCollection();
@@ -775,8 +809,82 @@
         if (valA !== valB) {
           return valB - valA;
         }
-        return (Number(a.year) || 0) - (Number(b.year) || 0);
+        const hasA = hasValidYear(a.year);
+        const hasB = hasValidYear(b.year);
+        if (hasA !== hasB) {
+          return hasA ? -1 : 1;
+        }
+        if (hasA && hasB) {
+          return Number(a.year) - Number(b.year);
+        }
+        return 0;
       });
+    }
+
+    function renderCountryBlockHtml(cName, rawItems) {
+      const meta = getCountryMeta(cName);
+      const items = sortCountryItems(rawItems, cName);
+      const coinsCount = items.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+      const notesCount = items.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+      const summaryText = formatQuantitySummary(coinsCount, notesCount);
+      const isCountryCollapsed = !!collapsedCountries[cName];
+      const safeNameAttr = cName.replace(/"/g, "&quot;");
+      const safeNameJs = cName.replace(/'/g, "\\'");
+
+      let block = `
+        <div class="mb-5" data-country-block="${safeNameAttr}">
+          <div data-country-header class="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-100/80 dark:bg-slate-800/60 transition-all duration-500">
+            <button onclick="toggleCountry('${safeNameJs}')" class="flex items-center gap-2.5 text-right flex-1 min-w-0">
+              <span class="emoji-flag text-2xl shrink-0">${meta.flag}</span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-bold text-sm text-slate-900 dark:text-white">${cName}</span>
+                  ${meta.former ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-medium">מדינת עבר</span>` : ""}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400">${summaryText}</div>
+              </div>
+            </button>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="openItemModal(null, '${safeNameJs}')" title="הוסף פריט ל${safeNameAttr}" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 transition">+</button>
+              <button onclick="toggleCountry('${safeNameJs}')" class="p-1 text-slate-400">
+                <svg class="w-4 h-4 transition-transform ${isCountryCollapsed ? 'rotate-90' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+            </div>
+          </div>
+      `;
+
+      if (!isCountryCollapsed) {
+        block += `<div class="divide-y divide-slate-100 dark:divide-slate-900 px-1">`;
+        items.forEach(item => {
+          const isCoin = item.type === "coin";
+          const qty = Number(item.quantity) || 1;
+          const yearHtml = hasValidYear(item.year)
+            ? `<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>`
+            : `<span class="text-[11px] text-slate-400 dark:text-slate-500">ללא שנה</span>`;
+
+          block += `
+            <div onclick="openItemModal('${item.id}')" class="py-2.5 px-1.5 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
+                  ${isCoin ? 'מטבע' : 'שטר'}
+                </span>
+                <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                  <span class="font-bold">${item.value}</span> ${item.currency}
+                  ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                ${yearHtml}
+                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
+              </div>
+            </div>
+          `;
+        });
+        block += `</div>`;
+      }
+
+      block += `</div>`;
+      return block;
     }
 
     function renderCollection() {
@@ -798,11 +906,13 @@
         if (contFilter !== "all" && meta.continent !== contFilter) return false;
         if (countryFilter !== "all" && item.country !== countryFilter) return false;
         if (decadeFilter !== "all") {
+          if (!hasValidYear(item.year)) return false;
           const dec = Math.floor(Number(item.year) / 10) * 10;
           if (String(dec) !== decadeFilter) return false;
         }
         if (search) {
-          const hay = `${item.country} ${item.currency} ${item.value} ${item.year}`.toLowerCase();
+          const yearStr = hasValidYear(item.year) ? String(item.year) : "ללא שנה";
+          const hay = `${item.country} ${item.currency} ${item.value} ${yearStr}`.toLowerCase();
           if (!hay.includes(search)) return false;
         }
         return true;
@@ -820,6 +930,20 @@
         return;
       }
 
+      if (currentGroupMode === "alpha") {
+        const byCountry = {};
+        filtered.forEach(item => {
+          if (!byCountry[item.country]) byCountry[item.country] = [];
+          byCountry[item.country].push(item);
+        });
+        const sortedCountries = Object.keys(byCountry).sort((a, b) => hebrewCollator.compare(a, b));
+        container.innerHTML = sortedCountries
+          .map(cName => renderCountryBlockHtml(cName, byCountry[cName]))
+          .join("");
+        return;
+      }
+
+      // Group by Continent -> Country
       const byContinent = {};
       filtered.forEach(item => {
         const meta = getCountryMeta(item.country);
@@ -856,62 +980,7 @@
 
         if (!isContCollapsed) {
           countryNames.forEach(cName => {
-            const meta = getCountryMeta(cName);
-            const items = sortCountryItems(countriesObj[cName], cName);
-            const coinsCount = items.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
-            const notesCount = items.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
-            const summaryText = formatQuantitySummary(coinsCount, notesCount);
-            const isCountryCollapsed = !!collapsedCountries[cName];
-
-            html += `
-              <div class="mb-5">
-                <div class="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-100/80 dark:bg-slate-800/60">
-                  <button onclick="toggleCountry('${cName.replace(/'/g, "\\'")}')" class="flex items-center gap-2.5 text-right flex-1 min-w-0">
-                    <span class="emoji-flag text-2xl shrink-0">${meta.flag}</span>
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-1.5 flex-wrap">
-                        <span class="font-bold text-sm text-slate-900 dark:text-white">${cName}</span>
-                        ${meta.former ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-medium">מדינת עבר</span>` : ""}
-                      </div>
-                      <div class="text-xs text-slate-500 dark:text-slate-400">${summaryText}</div>
-                    </div>
-                  </button>
-                  <div class="flex items-center gap-1 shrink-0">
-                    <button onclick="openItemModal(null, '${cName.replace(/'/g, "\\'")}')" title="הוסף פריט ל${cName}" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 transition">+</button>
-                    <button onclick="toggleCountry('${cName.replace(/'/g, "\\'")}')" class="p-1 text-slate-400">
-                      <svg class="w-4 h-4 transition-transform ${isCountryCollapsed ? 'rotate-90' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                    </button>
-                  </div>
-                </div>
-            `;
-
-            if (!isCountryCollapsed) {
-              html += `<div class="divide-y divide-slate-100 dark:divide-slate-900 px-1">`;
-              items.forEach(item => {
-                const isCoin = item.type === "coin";
-                const qty = Number(item.quantity) || 1;
-                html += `
-                  <div onclick="openItemModal('${item.id}')" class="py-2.5 px-1.5 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/50 cursor-pointer transition">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                      <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
-                        ${isCoin ? 'מטבע' : 'שטר'}
-                      </span>
-                      <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                        <span class="font-bold">${item.value}</span> ${item.currency}
-                        ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
-                      </div>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                      <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>
-                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
-                    </div>
-                  </div>
-                `;
-              });
-              html += `</div>`;
-            }
-
-            html += `</div>`;
+            html += renderCountryBlockHtml(cName, countriesObj[cName]);
           });
         }
 
@@ -919,6 +988,30 @@
       });
 
       container.innerHTML = html;
+    }
+
+    function scrollToCountryBlock(countryName) {
+      if (!countryName) return;
+      const collectionView = document.getElementById("view-collection");
+      if (collectionView.classList.contains("hidden")) return;
+
+      setTimeout(() => {
+        const blocks = Array.from(document.querySelectorAll("[data-country-block]"));
+        const targetBlock = blocks.find(el => el.dataset.countryBlock === countryName);
+        if (!targetBlock) return;
+
+        const headerHeight = document.getElementById("app-header")?.offsetHeight || 105;
+        const targetTop = targetBlock.getBoundingClientRect().top + window.scrollY - headerHeight - 10;
+        window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
+
+        const headerBar = targetBlock.querySelector("[data-country-header]");
+        if (headerBar) {
+          headerBar.classList.add("ring-2", "ring-indigo-500/70");
+          setTimeout(() => {
+            headerBar.classList.remove("ring-2", "ring-indigo-500/70");
+          }, 1600);
+        }
+      }, 70);
     }
 
     function toggleContinent(cont) {
@@ -951,7 +1044,7 @@
 
     function getSortedCoinsOldestFirst() {
       return collection
-        .filter(i => i.type === "coin" && !isNaN(Number(i.year)))
+        .filter(i => i.type === "coin" && hasValidYear(i.year))
         .sort((a, b) => {
           const yearDiff = Number(a.year) - Number(b.year);
           if (yearDiff !== 0) return yearDiff;
@@ -967,11 +1060,11 @@
 
       const totalCoinQty = coins.reduce((s, c) => s + (Number(c.quantity) || 1), 0);
       document.getElementById("oldest-coins-subtitle").textContent =
-        `${coins.length} רשומות מטבעות (${totalCoinQty} יחידות)`;
+        `${coins.length} רשומות מטבעות עם שנה (${totalCoinQty} יחידות)`;
 
       const listEl = document.getElementById("oldest-coins-list");
       if (!coins.length) {
-        listEl.innerHTML = `<div class="text-center py-12 text-xs text-slate-400">אין מטבעות באוסף להצגה</div>`;
+        listEl.innerHTML = `<div class="text-center py-12 text-xs text-slate-400">אין מטבעות עם שנת הנפקה באוסף</div>`;
         return;
       }
 
@@ -1026,8 +1119,8 @@
 
       const byDecade = {};
       collection.forEach(i => {
-        const d = Math.floor(Number(i.year) / 10) * 10;
-        if (!isNaN(d)) {
+        if (hasValidYear(i.year)) {
+          const d = Math.floor(Number(i.year) / 10) * 10;
           byDecade[d] = (byDecade[d] || 0) + (Number(i.quantity) || 1);
         }
       });
@@ -1053,7 +1146,7 @@
         </button>
       ` : `
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs text-slate-500">
-          אין מטבעות רשומים באוסף להצגת המטבע הכי ישן.
+          אין מטבעות עם שנת הנפקה להצגת המטבע הכי ישן.
         </div>
       `;
 
@@ -1106,7 +1199,7 @@
         <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
           <h3 class="font-bold text-sm">התפלגות לפי עשורים</h3>
           <div class="space-y-2">
-            ${decadesList.map(([dec, count]) => {
+            ${decadesList.length ? decadesList.map(([dec, count]) => {
               const pct = Math.round((count / maxDecadeCount) * 100);
               return `
                 <div class="flex items-center gap-3 text-xs">
@@ -1117,7 +1210,7 @@
                   <span class="w-7 text-left font-bold">${count}</span>
                 </div>
               `;
-            }).join("")}
+            }).join("") : `<p class="text-xs text-slate-400">אין פריטים עם שנת הנפקה</p>`}
           </div>
         </div>
       `;
@@ -1331,7 +1424,7 @@
         onFormCountryChange(item.currency);
 
         document.getElementById("form-value").value = item.value;
-        document.getElementById("form-year").value = item.year;
+        document.getElementById("form-year").value = hasValidYear(item.year) ? item.year : "";
         document.getElementById("form-quantity").value = item.quantity || 1;
       } else {
         document.getElementById("modal-title").textContent = "הוספת פריט חדש";
@@ -1437,11 +1530,16 @@
       }
 
       const value = parseFloat(document.getElementById("form-value").value);
-      const year = parseInt(document.getElementById("form-year").value, 10);
+      const yearRaw = document.getElementById("form-year").value.trim();
+      const year = yearRaw === "" ? null : parseInt(yearRaw, 10);
       const quantity = parseInt(document.getElementById("form-quantity").value, 10) || 1;
 
-      if (isNaN(value) || isNaN(year)) {
-        showToast("נא למלא ערך ושנת הנפקה תקינים");
+      if (isNaN(value)) {
+        showToast("נא למלא ערך נקוב תקין");
+        return null;
+      }
+      if (yearRaw !== "" && isNaN(year)) {
+        showToast("נא להזין שנת הנפקה תקינה או להשאיר ריק");
         return null;
       }
 
@@ -1455,7 +1553,7 @@
         orig.country !== nextData.country ||
         orig.currency !== nextData.currency ||
         Number(orig.value) !== Number(nextData.value) ||
-        Number(orig.year) !== Number(nextData.year) ||
+        normalizeYear(orig.year) !== normalizeYear(nextData.year) ||
         Number(orig.quantity || 1) !== Number(nextData.quantity || 1)
       );
     }
@@ -1473,7 +1571,7 @@
           data,
           title: "שמירה כפריט חדש",
           message: changed
-            ? `לשמור את ${data.value} ${data.currency} (${data.country}, ${data.year}) כפריט חדש באוסף ולהשאיר את הפריט המקורי ללא שינוי?`
+            ? `לשמור את ${data.value} ${data.currency} (${data.country}, ${formatYearText(data.year)}) כפריט חדש באוסף ולהשאיר את הפריט המקורי ללא שינוי?`
             : `לא בוצעו שינויים מול הפריט המקורי. ליצור עותק זהה כפריט חדש באוסף?`,
           btnText: "שמור כפריט חדש"
         });
@@ -1497,7 +1595,7 @@
           action: "update",
           data,
           title: "אישור עדכון פריט",
-          message: `לעדכן את הפריט הקיים ל-${data.value} ${data.currency} (${data.country}, ${data.year}, כמות: ${data.quantity})?`,
+          message: `לעדכן את הפריט הקיים ל-${data.value} ${data.currency} (${data.country}, ${formatYearText(data.year)}, כמות: ${data.quantity})?`,
           btnText: "אשר ועדכן"
         });
         return;
@@ -1528,13 +1626,14 @@
 
     function commitSaveItem(data, mode) {
       const { editId, type, country, currency, value, year, quantity } = data;
+      const normalizedYear = normalizeYear(year);
 
       if (editId && mode === "update") {
         const idx = collection.findIndex(i => i.id === editId);
         if (idx !== -1) {
-          collection[idx] = { id: editId, type, country, currency, value, year, quantity };
+          collection[idx] = { id: editId, type, country, currency, value, year: normalizedYear, quantity };
         }
-        finalizeSave("השינויים נשמרו בהצלחה");
+        finalizeSave("השינויים נשמרו בהצלחה", country);
         return;
       }
 
@@ -1543,14 +1642,14 @@
         i.country === country &&
         i.currency === currency &&
         Number(i.value) === value &&
-        Number(i.year) === year
+        normalizeYear(i.year) === normalizedYear
       );
 
       if (existing) {
         pendingDuplicate = { existingId: existing.id, addQty: quantity };
         const typeLabel = type === "coin" ? "מטבע" : "שטר";
         document.getElementById("duplicate-message").textContent =
-          `${typeLabel} של ${value} ${currency} (${country}, ${year}) כבר נמצא באוסף שלך (כמות נוכחית: ${existing.quantity || 1}). האם להוסיף אליו עוד ${quantity}?`;
+          `${typeLabel} של ${value} ${currency} (${country}, ${formatYearText(normalizedYear)}) כבר נמצא באוסף שלך (כמות נוכחית: ${existing.quantity || 1}). האם להוסיף אליו עוד ${quantity}?`;
         document.getElementById("duplicate-modal").classList.remove("hidden");
         return;
       }
@@ -1561,21 +1660,23 @@
         country,
         currency,
         value,
-        year,
+        year: normalizedYear,
         quantity
       });
-      finalizeSave(mode === "create_new" ? "נשמר כפריט חדש באוסף" : "הפריט נוסף לאוסף");
+      finalizeSave(mode === "create_new" ? "נשמר כפריט חדש באוסף" : "הפריט נוסף לאוסף", country);
     }
 
     function confirmMergeDuplicate() {
       if (!pendingDuplicate) return;
       const target = collection.find(i => i.id === pendingDuplicate.existingId);
+      let targetCountry = null;
       if (target) {
         target.quantity = (Number(target.quantity) || 1) + pendingDuplicate.addQty;
+        targetCountry = target.country;
       }
       pendingDuplicate = null;
       document.getElementById("duplicate-modal").classList.add("hidden");
-      finalizeSave("הכמות עודכנה בפריט הקיים");
+      finalizeSave("הכמות עודכנה בפריט הקיים", targetCountry);
     }
 
     function closeDuplicateModal() {
@@ -1588,7 +1689,7 @@
       if (!editId) return;
       const item = collection.find(i => i.id === editId);
       const label = item
-        ? `${item.value} ${item.currency} • ${item.country} (${item.year})`
+        ? `${item.value} ${item.currency} • ${item.country} (${formatYearText(item.year)})`
         : "הפריט הנבחר";
       document.getElementById("delete-confirm-message").textContent =
         `האם אתה בטוח שברצונך למחוק לצמיתות את ${label}?`;
@@ -1604,12 +1705,21 @@
       closeDeleteConfirmModal();
       if (!editId) return;
       collection = collection.filter(i => i.id !== editId);
-      finalizeSave("הפריט נמחק מהאוסף");
+      finalizeSave("הפריט נמחק מהאוסף", null);
     }
 
-    function finalizeSave(toastMsg) {
+    function finalizeSave(toastMsg, targetCountry = null) {
       saveCollection();
       updateFilterDropdowns();
+
+      if (targetCountry) {
+        const meta = getCountryMeta(targetCountry);
+        if (meta && meta.continent) {
+          collapsedContinents[meta.continent] = false;
+        }
+        collapsedCountries[targetCountry] = false;
+      }
+
       renderCollection();
       if (!document.getElementById("view-oldest-coins").classList.contains("hidden")) {
         openOldestCoinsView();
@@ -1618,6 +1728,10 @@
       }
       closeItemModal();
       showToast(toastMsg);
+
+      if (targetCountry) {
+        scrollToCountryBlock(targetCountry);
+      }
     }
 
     // Export / Share / Import Logic
@@ -1650,7 +1764,7 @@
         "מדינה": i.country,
         "שם מטבע": i.currency,
         "ערך": i.value,
-        "שנה": i.year,
+        "שנה": hasValidYear(i.year) ? Number(i.year) : "",
         "כמות": i.quantity || 1
       }));
 
@@ -1719,21 +1833,30 @@
           let imported = [];
           if (ext === "json") {
             const parsed = JSON.parse(e.target.result);
-            if (Array.isArray(parsed)) imported = parsed;
+            if (Array.isArray(parsed)) {
+              imported = parsed.map(item => ({
+                ...item,
+                year: normalizeYear(item.year)
+              }));
+            }
           } else {
             const data = new Uint8Array(e.target.result);
             const wb = XLSX.read(data, { type: "array" });
             const ws = wb.Sheets[wb.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(ws);
-            imported = rows.map((r, idx) => ({
-              id: String(Date.now() + idx),
-              type: (r["סוג"] === "שטר" || r.type === "banknote") ? "banknote" : "coin",
-              country: String(r["מדינה"] || r.country || "").trim(),
-              currency: String(r["שם מטבע"] || r.currency || "").trim(),
-              value: parseFloat(r["ערך"] ?? r.value ?? 0),
-              year: parseInt(r["שנה"] ?? r.year ?? 2000, 10),
-              quantity: parseInt(r["כמות"] ?? r.quantity ?? 1, 10) || 1
-            })).filter(x => x.country && x.currency);
+            imported = rows.map((r, idx) => {
+              const rawY = r["שנה"] ?? r.year;
+              const parsedY = (rawY === "" || rawY === null || rawY === undefined) ? null : parseInt(rawY, 10);
+              return {
+                id: String(Date.now() + idx),
+                type: (r["סוג"] === "שטר" || r.type === "banknote") ? "banknote" : "coin",
+                country: String(r["מדינה"] || r.country || "").trim(),
+                currency: String(r["שם מטבע"] || r.currency || "").trim(),
+                value: parseFloat(r["ערך"] ?? r.value ?? 0),
+                year: isNaN(parsedY) ? null : parsedY,
+                quantity: parseInt(r["כמות"] ?? r.quantity ?? 1, 10) || 1
+              };
+            }).filter(x => x.country && x.currency);
           }
 
           if (!imported.length) {

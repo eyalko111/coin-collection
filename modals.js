@@ -1,6 +1,6 @@
-// Item Details Modal, Add/Edit Form Modal, Dropdowns & Duplicate/Delete Dialogs (modals.js)
+// Item Details Modal, Add/Edit Form Modal, Dropdowns & Confirmation Dialogs (modals.js)
 
-let pendingDeleteId = null;
+let pendingEditAction = null;
 
 // --- Location Datalist Suggestions ---
 function populateLocationSuggestions() {
@@ -19,7 +19,7 @@ function populateLocationSuggestions() {
     .join("");
 }
 
-// --- Item Details Modal (Read-Only View) ---
+// --- Item Details Modal (Centered Read-Only Info Popup) ---
 function openItemDetailsModal(itemId) {
   const item = collection.find(x => x.id === itemId);
   if (!item) return;
@@ -39,8 +39,8 @@ function openItemDetailsModal(itemId) {
   if (typeBadgeEl) {
     typeBadgeEl.textContent = isCoin ? "מטבע" : "שטר";
     typeBadgeEl.className = isCoin
-      ? "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300"
-      : "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300";
+      ? "inline-block mt-0.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300"
+      : "inline-block mt-0.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300";
   }
 
   const valCurrEl = document.getElementById("details-value-currency");
@@ -58,24 +58,8 @@ function openItemDetailsModal(itemId) {
   if (locEl) {
     locEl.textContent = loc || "ללא מיקום מוגדר";
     locEl.className = loc
-      ? "text-sm font-semibold text-slate-800 dark:text-slate-100"
-      : "text-sm font-normal text-slate-400 dark:text-slate-500";
-  }
-
-  const editBtn = document.getElementById("details-edit-btn");
-  if (editBtn) {
-    editBtn.onclick = () => {
-      closeItemDetailsModal();
-      openItemModal(item.id);
-    };
-  }
-
-  const deleteBtn = document.getElementById("details-delete-btn");
-  if (deleteBtn) {
-    deleteBtn.onclick = () => {
-      closeItemDetailsModal();
-      requestDeleteItem(item.id);
-    };
+      ? "font-semibold text-slate-800 dark:text-slate-100 truncate text-left"
+      : "font-normal text-slate-400 dark:text-slate-500 truncate text-left";
   }
 
   document.getElementById("item-details-modal")?.classList.remove("hidden");
@@ -123,7 +107,8 @@ function openItemModal(itemId = null, prefillCountry = "") {
   const yearInput = document.getElementById("form-year");
   const qtyInput = document.getElementById("form-quantity");
   const locInput = document.getElementById("form-location");
-  const deleteBtn = document.getElementById("btn-delete-item");
+  const addActions = document.getElementById("form-add-actions");
+  const editActions = document.getElementById("form-edit-actions");
 
   if (itemId) {
     const item = collection.find(x => x.id === itemId);
@@ -143,7 +128,9 @@ function openItemModal(itemId = null, prefillCountry = "") {
     if (yearInput) yearInput.value = hasValidYear(item.year) ? item.year : "";
     if (qtyInput) qtyInput.value = Number(item.quantity) || 1;
     if (locInput) locInput.value = normalizeLocation(item.location);
-    if (deleteBtn) deleteBtn.classList.remove("hidden");
+
+    if (addActions) addActions.classList.add("hidden");
+    if (editActions) editActions.classList.remove("hidden");
   } else {
     originalEditingItem = null;
     if (titleEl) titleEl.textContent = "הוספת פריט חדש";
@@ -160,7 +147,9 @@ function openItemModal(itemId = null, prefillCountry = "") {
     if (yearInput) yearInput.value = "";
     if (qtyInput) qtyInput.value = 1;
     if (locInput) locInput.value = "";
-    if (deleteBtn) deleteBtn.classList.add("hidden");
+
+    if (addActions) addActions.classList.remove("hidden");
+    if (editActions) editActions.classList.add("hidden");
   }
 
   modal.classList.remove("hidden");
@@ -359,7 +348,7 @@ function onCustomCurrencyInputChange() {
   }
 }
 
-// --- Save / Duplicate / Edit Handling ---
+// --- Form Parsing, Validation & Mutation Helpers ---
 function isSameItemIdentity(a, b) {
   return (
     a.type === b.type &&
@@ -370,22 +359,20 @@ function isSameItemIdentity(a, b) {
   );
 }
 
-function finalizeCollectionMutation(toastMsg, targetCountry = "") {
-  saveCollection();
-  updateFilterDropdowns();
-  renderCollection();
-  if (currentTab === "stats") {
-    renderStats();
-  }
-  if (toastMsg) showToast(toastMsg);
-  if (targetCountry) {
-    scrollToCountryBlock(targetCountry);
-  }
+function hasItemBeenModified(orig, updated) {
+  if (!orig || !updated) return true;
+  return (
+    orig.type !== updated.type ||
+    orig.country !== updated.country ||
+    orig.currency !== updated.currency ||
+    Number(orig.value) !== Number(updated.value) ||
+    normalizeYear(orig.year) !== normalizeYear(updated.year) ||
+    (Number(orig.quantity) || 1) !== (Number(updated.quantity) || 1) ||
+    normalizeLocation(orig.location) !== normalizeLocation(updated.location)
+  );
 }
 
-function handleItemFormSubmit(event) {
-  if (event) event.preventDefault();
-
+function buildValidatedCandidateFromForm() {
   const id = (document.getElementById("form-item-id")?.value || "").trim();
   const type = document.getElementById("form-type")?.value || "coin";
   const rawCountry = (document.getElementById("form-country")?.value || document.getElementById("form-country-input")?.value || "").trim();
@@ -404,22 +391,22 @@ function handleItemFormSubmit(event) {
 
   if (!rawCountry) {
     showToast("יש לבחור או להזין מדינה");
-    return;
+    return null;
   }
   if (!rawCurrency) {
     showToast("יש לבחור או להזין שם מטבע");
-    return;
+    return null;
   }
   if (isNaN(parsedValue) || parsedValue <= 0) {
     showToast("יש להזין ערך נקוב תקין גדול מ-0");
-    return;
+    return null;
   }
   if (rawYear !== "" && parsedYear === null) {
     showToast("שנת הנפקה לא תקינה");
-    return;
+    return null;
   }
 
-  const candidate = {
+  return {
     id: id || String(Date.now()),
     type,
     country: rawCountry,
@@ -429,31 +416,34 @@ function handleItemFormSubmit(event) {
     quantity: parsedQty,
     location: parsedLoc
   };
+}
 
-  // Editing an existing record
+function finalizeCollectionMutation(toastMsg, targetCountry = "") {
+  saveCollection();
+  updateFilterDropdowns();
+  renderCollection();
+  if (currentTab === "stats") {
+    renderStats();
+  }
+  if (toastMsg) showToast(toastMsg);
+  if (targetCountry) {
+    scrollToCountryBlock(targetCountry);
+  }
+}
+
+// --- Add Mode Submit ---
+function handleItemFormSubmit(event) {
+  if (event) event.preventDefault();
+
+  const id = (document.getElementById("form-item-id")?.value || "").trim();
   if (id) {
-    const idx = collection.findIndex(x => x.id === id);
-    if (idx === -1) return;
-
-    const existingDuplicate = collection.find(x => x.id !== id && isSameItemIdentity(x, candidate));
-    if (existingDuplicate) {
-      pendingDuplicate = {
-        mode: "edit-merge",
-        editingId: id,
-        existingId: existingDuplicate.id,
-        newItem: candidate
-      };
-      openDuplicateModal(existingDuplicate, candidate);
-      return;
-    }
-
-    collection[idx] = candidate;
-    closeItemModal();
-    finalizeCollectionMutation("הפריט עודכן בהצלחה", candidate.country);
+    onEditSaveClick();
     return;
   }
 
-  // Adding a new record — check for duplicate
+  const candidate = buildValidatedCandidateFromForm();
+  if (!candidate) return;
+
   const existingMatch = collection.find(x => isSameItemIdentity(x, candidate));
   if (existingMatch) {
     pendingDuplicate = {
@@ -470,11 +460,160 @@ function handleItemFormSubmit(event) {
   finalizeCollectionMutation("הפריט נוסף לאוסף", candidate.country);
 }
 
+// --- Edit Mode 3-Button Handlers & Unified Confirmation Modal ---
+function onEditSaveClick() {
+  const id = (document.getElementById("form-item-id")?.value || "").trim();
+  if (!id) return;
+
+  const candidate = buildValidatedCandidateFromForm();
+  if (!candidate) return;
+
+  if (!hasItemBeenModified(originalEditingItem, candidate)) {
+    closeItemModal();
+    showToast("לא בוצעו שינויים בפריט");
+    return;
+  }
+
+  const typeLabel = candidate.type === "coin" ? "המטבע" : "השטר";
+  openEditConfirmModal({
+    type: "save",
+    candidate,
+    title: "אישור שמירת שינויים",
+    desc: `האם לשמור את השינויים שביצעת ב${typeLabel} ${formatDenomination(candidate.value)} ${candidate.currency} (${candidate.country}, ${formatYearText(candidate.year)})?`,
+    btnText: "שמור שינויים",
+    btnClass: "flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition"
+  });
+}
+
+function onEditSaveAsNewClick() {
+  const candidate = buildValidatedCandidateFromForm();
+  if (!candidate) return;
+
+  const newCopy = {
+    ...candidate,
+    id: String(Date.now())
+  };
+
+  const typeLabel = newCopy.type === "coin" ? "מטבע" : "שטר";
+  openEditConfirmModal({
+    type: "save-as-new",
+    candidate: newCopy,
+    title: "שמירה כפריט חדש",
+    desc: `האם להוסיף ${typeLabel} חדש של ${formatDenomination(newCopy.value)} ${newCopy.currency} (${newCopy.country}, ${formatYearText(newCopy.year)}) מבלי לשנות את הפריט המקורי?`,
+    btnText: "שמור כחדש",
+    btnClass: "flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold transition"
+  });
+}
+
+function onEditDeleteClick() {
+  const id = (document.getElementById("form-item-id")?.value || "").trim();
+  if (!id) return;
+
+  const item = collection.find(x => x.id === id) || originalEditingItem;
+  if (!item) return;
+
+  const typeLabel = item.type === "coin" ? "המטבע" : "השטר";
+  openEditConfirmModal({
+    type: "delete",
+    itemId: id,
+    title: "אישור מחיקת פריט",
+    desc: `האם אתה בטוח שברצונך למחוק לצמיתות את ${typeLabel} ${formatDenomination(item.value)} ${item.currency} (${item.country}, ${formatYearText(item.year)})?`,
+    btnText: "כן, מחק פריט",
+    btnClass: "flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition"
+  });
+}
+
+function openEditConfirmModal(actionConfig) {
+  pendingEditAction = actionConfig;
+  const modal = document.getElementById("edit-confirm-modal");
+  if (!modal) {
+    confirmPendingEditAction();
+    return;
+  }
+
+  const titleEl = document.getElementById("edit-confirm-title");
+  if (titleEl) titleEl.textContent = actionConfig.title;
+
+  const descEl = document.getElementById("edit-confirm-desc");
+  if (descEl) descEl.textContent = actionConfig.desc;
+
+  const btnEl = document.getElementById("edit-confirm-btn");
+  if (btnEl) {
+    btnEl.textContent = actionConfig.btnText;
+    btnEl.className = actionConfig.btnClass;
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function closeEditConfirmModal() {
+  pendingEditAction = null;
+  document.getElementById("edit-confirm-modal")?.classList.add("hidden");
+}
+
+// Compatibility alias in case Escape handler references closeDeleteConfirmModal
+function closeDeleteConfirmModal() {
+  closeEditConfirmModal();
+}
+
+function confirmPendingEditAction() {
+  if (!pendingEditAction) return;
+  const action = pendingEditAction;
+  closeEditConfirmModal();
+
+  if (action.type === "save") {
+    const candidate = action.candidate;
+    const idx = collection.findIndex(x => x.id === candidate.id);
+    if (idx === -1) return;
+
+    const existingDuplicate = collection.find(x => x.id !== candidate.id && isSameItemIdentity(x, candidate));
+    if (existingDuplicate) {
+      pendingDuplicate = {
+        mode: "edit-merge",
+        editingId: candidate.id,
+        existingId: existingDuplicate.id,
+        newItem: candidate
+      };
+      openDuplicateModal(existingDuplicate, candidate);
+      return;
+    }
+
+    collection[idx] = candidate;
+    closeItemModal();
+    finalizeCollectionMutation("השינויים נשמרו בהצלחה", candidate.country);
+    return;
+  }
+
+  if (action.type === "save-as-new") {
+    const newCopy = action.candidate;
+    const existingMatch = collection.find(x => isSameItemIdentity(x, newCopy));
+    if (existingMatch) {
+      pendingDuplicate = {
+        mode: "add",
+        existingId: existingMatch.id,
+        newItem: newCopy
+      };
+      openDuplicateModal(existingMatch, newCopy);
+      return;
+    }
+
+    collection.push(newCopy);
+    closeItemModal();
+    finalizeCollectionMutation("נשמר כפריט חדש באוסף", newCopy.country);
+    return;
+  }
+
+  if (action.type === "delete") {
+    collection = collection.filter(x => x.id !== action.itemId);
+    closeItemModal();
+    finalizeCollectionMutation("הפריט נמחק מהאוסף", "");
+  }
+}
+
 // --- Duplicate Confirmation Modal ---
 function openDuplicateModal(existingItem, newItem) {
   const modal = document.getElementById("duplicate-modal");
   if (!modal) {
-    // Fallback if modal element is absent: merge directly
     confirmDuplicateMerge();
     return;
   }
@@ -532,50 +671,4 @@ function confirmDuplicateSeparate() {
   closeDuplicateModal();
   closeItemModal();
   finalizeCollectionMutation("נשמר כפריט נפרד באוסף", countryToScroll);
-}
-
-// --- Delete Item Flow ---
-function deleteCurrentEditingItem() {
-  const id = (document.getElementById("form-item-id")?.value || "").trim();
-  if (!id) return;
-  closeItemModal();
-  requestDeleteItem(id);
-}
-
-function requestDeleteItem(itemId) {
-  const item = collection.find(x => x.id === itemId);
-  if (!item) return;
-
-  const modal = document.getElementById("delete-confirm-modal");
-  if (!modal) {
-    if (confirm(`למחוק את ${formatDenomination(item.value)} ${item.currency} (${item.country})?`)) {
-      executeDeleteItem(itemId);
-    }
-    return;
-  }
-
-  pendingDeleteId = itemId;
-  const descEl = document.getElementById("delete-confirm-desc");
-  if (descEl) {
-    const typeLabel = item.type === "coin" ? "המטבע" : "השטר";
-    descEl.textContent = `האם אתה בטוח שברצונך למחוק את ${typeLabel} ${formatDenomination(item.value)} ${item.currency} (${item.country}, ${formatYearText(item.year)})?`;
-  }
-  modal.classList.remove("hidden");
-}
-
-function closeDeleteConfirmModal() {
-  pendingDeleteId = null;
-  document.getElementById("delete-confirm-modal")?.classList.add("hidden");
-}
-
-function confirmDeleteItem() {
-  if (!pendingDeleteId) return;
-  const idToDelete = pendingDeleteId;
-  closeDeleteConfirmModal();
-  executeDeleteItem(idToDelete);
-}
-
-function executeDeleteItem(itemId) {
-  collection = collection.filter(x => x.id !== itemId);
-  finalizeCollectionMutation("הפריט נמחק מהאוסף", "");
 }

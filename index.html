@@ -8,6 +8,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="אוסף מטבעות" />
   <title>אוסף מטבעות ושטרות</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="manifest" href="./manifest.json" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -200,53 +201,44 @@
     +
   </button>
 
-  <!-- MODAL 1: ITEM DETAILS (READ-ONLY) -->
-  <div id="item-details-modal" onclick="if(event.target===this) closeItemDetailsModal()" class="hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
-      <div class="flex items-center justify-between gap-2">
+  <!-- MODAL 1: ITEM DETAILS (CENTERED READ-ONLY INFO POPUP) -->
+  <div id="item-details-modal" onclick="if(event.target===this) closeItemDetailsModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+      <div class="flex items-start justify-between gap-2">
         <div class="flex items-center gap-2.5 min-w-0">
           <span id="details-flag" class="emoji-flag text-3xl shrink-0"></span>
           <div class="min-w-0">
-            <h3 id="details-country" class="font-bold text-base text-slate-900 dark:text-white truncate"></h3>
-            <span id="details-type-badge" class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"></span>
+            <h3 id="details-country" class="text-sm font-bold text-slate-900 dark:text-white leading-snug truncate"></h3>
+            <span id="details-type-badge" class="inline-block mt-0.5 px-2 py-0.5 rounded-md text-[11px] font-semibold"></span>
           </div>
         </div>
-        <button type="button" onclick="closeItemDetailsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-sm">✕</button>
+        <button type="button" onclick="closeItemDetailsModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0">✕</button>
       </div>
 
-      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-100 dark:border-slate-800 space-y-2.5 text-sm">
-        <div class="flex items-center justify-between">
+      <div class="space-y-1.5">
+        <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between gap-2 text-xs">
           <span class="text-slate-500 dark:text-slate-400">ערך ומטבע</span>
           <span id="details-value-currency" class="font-bold text-slate-900 dark:text-white"></span>
         </div>
-        <div class="flex items-center justify-between">
+        <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between gap-2 text-xs">
           <span class="text-slate-500 dark:text-slate-400">שנת הנפקה</span>
           <span id="details-year" class="font-semibold text-slate-800 dark:text-slate-100"></span>
         </div>
-        <div class="flex items-center justify-between">
+        <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between gap-2 text-xs">
           <span class="text-slate-500 dark:text-slate-400">כמות באוסף</span>
           <span id="details-quantity" class="font-semibold text-slate-800 dark:text-slate-100"></span>
         </div>
-        <div class="flex items-center justify-between gap-3">
-          <span class="text-slate-500 dark:text-slate-400 shrink-0">מיקום</span>
+        <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between gap-2 text-xs">
+          <span class="text-slate-500 dark:text-slate-400 shrink-0">מיקום אחסון</span>
           <span id="details-location" class="truncate text-left"></span>
         </div>
-      </div>
-
-      <div class="flex items-center gap-2 pt-1">
-        <button type="button" id="details-edit-btn" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition">
-          ערוך פריט
-        </button>
-        <button type="button" id="details-delete-btn" class="px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 hover:bg-rose-100 text-sm font-semibold transition">
-          מחק
-        </button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 2: ADD / EDIT ITEM -->
-  <div id="item-modal" onclick="if(event.target===this) closeItemModal()" class="hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="w-full max-w-md max-h-[92vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-slate-200/80 dark:border-slate-800">
+  <!-- MODAL 2: ADD / EDIT ITEM (TOP-ALIGNED SO MOBILE KEYBOARD NEVER COVERS IT) -->
+  <div id="item-modal" onclick="if(event.target===this) closeItemModal()" class="hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-4 px-4 pb-4 overflow-y-auto">
+    <div class="w-full max-w-md max-h-[88vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200/80 dark:border-slate-800">
       <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
         <h3 id="item-modal-title" class="text-base font-bold text-slate-900 dark:text-white">הוספת פריט חדש</h3>
         <button type="button" onclick="closeItemModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-sm">✕</button>
@@ -326,12 +318,22 @@
           </div>
         </div>
 
-        <!-- Submit & Delete Buttons -->
-        <div class="flex items-center gap-2 pt-2">
-          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition">
+        <!-- Add Mode Submit Button -->
+        <div id="form-add-actions" class="pt-2">
+          <button type="submit" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition">
             שמור פריט
           </button>
-          <button type="button" id="btn-delete-item" onclick="deleteCurrentEditingItem()" class="hidden px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 hover:bg-rose-100 text-sm font-semibold transition">
+        </div>
+
+        <!-- Edit Mode 3-Button Row: Save / Save as New / Delete -->
+        <div id="form-edit-actions" class="hidden grid grid-cols-3 gap-2 pt-2">
+          <button type="button" onclick="onEditSaveClick()" class="py-2.5 px-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition">
+            שמור
+          </button>
+          <button type="button" onclick="onEditSaveAsNewClick()" class="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition">
+            שמור כחדש
+          </button>
+          <button type="button" onclick="onEditDeleteClick()" class="py-2.5 px-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950 text-xs font-semibold transition">
             מחק
           </button>
         </div>
@@ -377,16 +379,16 @@
     </div>
   </div>
 
-  <!-- MODAL 5: DELETE CONFIRMATION -->
-  <div id="delete-confirm-modal" onclick="if(event.target===this) closeDeleteConfirmModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <!-- MODAL 5: UNIFIED EDIT ACTION CONFIRMATION (SAVE / SAVE AS NEW / DELETE) -->
+  <div id="edit-confirm-modal" onclick="if(event.target===this) closeEditConfirmModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <h3 class="text-base font-bold text-slate-900 dark:text-white">מחיקת פריט</h3>
-      <p id="delete-confirm-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <h3 id="edit-confirm-title" class="text-base font-bold text-slate-900 dark:text-white">אישור פעולה</h3>
+      <p id="edit-confirm-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
       <div class="flex items-center gap-2">
-        <button type="button" onclick="confirmDeleteItem()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition">
-          כן, מחק פריט
+        <button type="button" id="edit-confirm-btn" onclick="confirmPendingEditAction()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+          אישור
         </button>
-        <button type="button" onclick="closeDeleteConfirmModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition">
+        <button type="button" onclick="closeEditConfirmModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition">
           ביטול
         </button>
       </div>

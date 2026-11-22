@@ -41,11 +41,11 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .era-divider {
-      border-top-width: 2.5px !important;
-      border-top-color: #6366f1 !important;
+      border-top-width: 1.5px !important;
+      border-top-color: #cbd5e1 !important;
     }
     .dark .era-divider {
-      border-top-color: #818cf8 !important;
+      border-top-color: #334155 !important;
     }
   </style>
 </head>
@@ -898,7 +898,7 @@
       });
     }
 
-    // Determine era/series key for visual 2.5px colored divider between coin eras
+    // Determine era/series key for visual 1.5px neutral divider between coin eras
     function getItemEraSignature(item, countryName) {
       const era = getEraRank(countryName, item.currency);
       const series = item.type === "coin" ? getSeriesRank(countryName, item.currency, item.year) : 0;
@@ -918,7 +918,7 @@
 
       let block = `
         <div class="mb-5" data-country-block="${safeNameAttr}">
-          <div data-country-header class="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-100/80 dark:bg-slate-800/60 transition-all duration-500">
+          <div data-country-header class="flex items-center justify-between px-2.5 py-2 rounded-lg bg-[#c4cfdd] dark:bg-slate-800 transition-all duration-500">
             <div onclick="toggleCountry('${safeNameJs}')" class="flex items-center gap-2.5 text-right flex-1 min-w-0 cursor-pointer">
               <span class="emoji-flag text-2xl shrink-0">${meta.flag}</span>
               <div class="min-w-0">

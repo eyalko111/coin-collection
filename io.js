@@ -1,6 +1,7 @@
 // Import, Export (JSON / CSV / Excel), Backup & Reset Management (io.js)
 
 let pendingImportItems = [];
+let pendingDoubleSafeAction = null;
 
 function getTodayDateSlug() {
   const now = new Date();
@@ -468,30 +469,107 @@ function confirmImportReplace() {
   finalizeCollectionMutation(`האוסף הוחלף (${formatDenomination(collection.length)} רשומות)`, "");
 }
 
-// --- Reset / Clear Collection ---
-function openResetModal() {
+// --- Double-Safe Reset / Restore Sample Collection ---
+function renderDoubleSafeModal() {
   const modal = document.getElementById("reset-modal");
-  if (modal) {
-    modal.classList.remove("hidden");
-  } else if (confirm("האם למחוק את כל הפריטים באוסף?")) {
+  if (!modal || !pendingDoubleSafeAction) return;
+
+  const badgeEl = document.getElementById("double-safe-step-badge");
+  const titleEl = document.getElementById("double-safe-title");
+  const descEl = document.getElementById("double-safe-desc");
+  const confirmBtn = document.getElementById("double-safe-confirm-btn");
+
+  const isReset = pendingDoubleSafeAction.action === "reset";
+  const step = pendingDoubleSafeAction.step;
+
+  if (badgeEl) {
+    badgeEl.textContent = step === 1 ? "שלב 1 מתוך 2" : "שלב 2 מתוך 2 — אישור סופי";
+    badgeEl.className = step === 1
+      ? "inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 mb-1"
+      : "inline-block px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 mb-1";
+  }
+
+  if (isReset) {
+    if (titleEl) titleEl.textContent = "ריקון האוסף לחלוטין";
+    if (descEl) {
+      descEl.textContent = step === 1
+        ? "פעולה זו תמחק את כל הפריטים באוסף הנוכחי. מומלץ לייצא גיבוי JSON לפני כן. האם להמשיך לשלב האישור השני?"
+        : "אזהרה סופית: כל הפריטים באוסף יימחקו לצמיתות ולא ניתן יהיה לשחזר ללא קובץ גיבוי. ללחוץ לריקון האוסף?";
+    }
+    if (confirmBtn) {
+      confirmBtn.textContent = step === 1 ? "המשך לשלב 2" : "כן, רוקן לחלוטין";
+    }
+  } else {
+    if (titleEl) titleEl.textContent = "טעינת נתוני דוגמה מחדש";
+    if (descEl) {
+      descEl.textContent = step === 1
+        ? "פעולה זו תחליף את האוסף הנוכחי בפריטי הדוגמה המובנים. מומלץ לגבות קודם. האם להמשיך לשלב האישור השני?"
+        : "אישור סופי: האוסף הנוכחי יוחלף בנתוני הדוגמה. ללחוץ לטעינת נתוני הדוגמה עכשיו?";
+    }
+    if (confirmBtn) {
+      confirmBtn.textContent = step === 1 ? "המשך לשלב 2" : "כן, טען דוגמה";
+    }
+  }
+
+  modal.classList.remove("hidden");
+}
+
+function requestResetCollectionStep1() {
+  closeDataMenuModal();
+  pendingDoubleSafeAction = { action: "reset", step: 1 };
+  renderDoubleSafeModal();
+}
+
+function requestSampleRestoreStep1() {
+  closeDataMenuModal();
+  pendingDoubleSafeAction = { action: "sample", step: 1 };
+  renderDoubleSafeModal();
+}
+
+function advanceDoubleSafeAction() {
+  if (!pendingDoubleSafeAction) return;
+  if (pendingDoubleSafeAction.step === 1) {
+    pendingDoubleSafeAction.step = 2;
+    renderDoubleSafeModal();
+    return;
+  }
+
+  const action = pendingDoubleSafeAction.action;
+  pendingDoubleSafeAction = null;
+  document.getElementById("reset-modal")?.classList.add("hidden");
+
+  if (action === "reset") {
     confirmResetCollection();
+  } else if (action === "sample") {
+    restoreSampleCollection();
   }
 }
 
-function closeResetModal() {
+function cancelDoubleSafeAction() {
+  pendingDoubleSafeAction = null;
   document.getElementById("reset-modal")?.classList.add("hidden");
+}
+
+function openResetModal() {
+  requestResetCollectionStep1();
+}
+
+function closeResetModal() {
+  cancelDoubleSafeAction();
 }
 
 function confirmResetCollection() {
   collection = [];
-  closeResetModal();
+  pendingDoubleSafeAction = null;
+  document.getElementById("reset-modal")?.classList.add("hidden");
   closeDataMenuModal();
   finalizeCollectionMutation("האוסף נוקה לחלוטין", "");
 }
 
 function restoreSampleCollection() {
   collection = SAMPLE_DATA.map(item => ({ ...item, location: normalizeLocation(item.location) }));
-  closeResetModal();
+  pendingDoubleSafeAction = null;
+  document.getElementById("reset-modal")?.classList.add("hidden");
   closeDataMenuModal();
   finalizeCollectionMutation("נטענו נתוני הדוגמה מחדש", "");
 }

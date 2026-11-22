@@ -161,20 +161,20 @@ function renderStats() {
     const sortedItems = sortCountryItems(c.items, c.country);
 
     const breakdownHtml = isExpanded ? `
-      <div class="mt-2 pt-2 border-t border-indigo-200/60 dark:border-indigo-800/50 space-y-1">
+      <div class="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 space-y-1">
         ${sortedItems.map(item => {
           const typeBadge = item.type === "coin" ? "מטבע" : "שטר";
           const qty = Number(item.quantity) || 1;
           const loc = normalizeLocation(item.location);
           return `
-            <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
+            <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
               <div class="flex items-center gap-1.5 min-w-0">
-                <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/90 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
                 <span class="font-semibold text-slate-800 dark:text-slate-200 truncate">${formatDenomination(item.value)} ${item.currency}</span>
                 <span class="text-slate-400 text-[11px] shrink-0">(${formatYearText(item.year)})</span>
                 ${loc ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 truncate max-w-[95px]">📍 ${loc}</span>` : ""}
               </div>
-              <span class="font-bold text-indigo-700 dark:text-indigo-300 shrink-0">×${formatDenomination(qty)}</span>
+              <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">×${formatDenomination(qty)}</span>
             </div>
           `;
         }).join("")}
@@ -182,7 +182,7 @@ function renderStats() {
     ` : "";
 
     return `
-      <div onclick="toggleStatsCountry('${escapeJsStr(c.country)}')" class="py-2 px-2.5 rounded-xl bg-white/75 dark:bg-slate-900/65 border border-indigo-100/90 dark:border-indigo-900/50 cursor-pointer hover:bg-white dark:hover:bg-slate-900 transition">
+      <div onclick="toggleStatsCountry('${escapeJsStr(c.country)}')" class="py-1.5 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-900/40 rounded-lg px-1 transition">
         <div class="flex items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-2 min-w-0">
             <span class="w-4 text-slate-400 font-bold shrink-0">${idx + 1}.</span>
@@ -190,9 +190,9 @@ function renderStats() {
             <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">${c.country}</span>
             <span class="text-[11px] text-slate-400 shrink-0">${isExpanded ? "▾" : "▸"}</span>
           </div>
-          <span class="font-bold text-slate-700 dark:text-slate-200 shrink-0">${formatQuantitySummary(c.coinsQty, c.notesQty)}</span>
+          <span class="font-bold text-slate-700 dark:text-slate-200 shrink-0">${formatDenomination(c.totalQty)} פריטים</span>
         </div>
-        <div class="w-full h-1.5 rounded-full bg-indigo-100/80 dark:bg-slate-800 mt-1.5 overflow-hidden">
+        <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 mt-1 overflow-hidden">
           <div class="h-full rounded-full bg-indigo-500 transition-all duration-300" style="width: ${pct}%"></div>
         </div>
         ${breakdownHtml}
@@ -215,7 +215,7 @@ function renderStats() {
     });
 
     const countriesAccordionHtml = isExpanded ? `
-      <div class="mt-2 pt-2 border-t border-violet-200/60 dark:border-violet-800/50 space-y-1.5">
+      <div class="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 space-y-1.5">
         ${countriesList.map(cObj => {
           const cMeta = getCountryMeta(cObj.country);
           const cKey = `${loc.key}__${cObj.country}`;
@@ -223,18 +223,18 @@ function renderStats() {
           const sortedCountryItems = sortCountryItems(cObj.items, cObj.country);
 
           const itemsHtml = isCountryExpanded ? `
-            <div class="mt-1.5 mr-4 space-y-1 border-r-2 border-violet-300/70 dark:border-violet-700/70 pr-2">
+            <div class="mt-1.5 mr-4 space-y-1 border-r-2 border-slate-200 dark:border-slate-700 pr-2">
               ${sortedCountryItems.map(item => {
                 const typeBadge = item.type === "coin" ? "מטבע" : "שטר";
                 const qty = Number(item.quantity) || 1;
                 return `
-                  <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-violet-50/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
+                  <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
                     <div class="flex items-center gap-1.5 min-w-0">
                       <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
                       <span class="font-medium text-slate-800 dark:text-slate-200 truncate">${formatDenomination(item.value)} ${item.currency}</span>
                       <span class="text-slate-400 text-[11px] shrink-0">(${formatYearText(item.year)})</span>
                     </div>
-                    <span class="font-bold text-violet-700 dark:text-violet-300 shrink-0">×${formatDenomination(qty)}</span>
+                    <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">×${formatDenomination(qty)}</span>
                   </div>
                 `;
               }).join("")}
@@ -242,14 +242,14 @@ function renderStats() {
           ` : "";
 
           return `
-            <div class="rounded-xl bg-white/80 dark:bg-slate-900/75 p-2 border border-violet-100/80 dark:border-violet-900/40">
+            <div class="rounded-xl bg-slate-50/80 dark:bg-slate-800/40 p-2">
               <div onclick="event.stopPropagation(); toggleStatsLocationCountry('${escapeJsStr(loc.key)}', '${escapeJsStr(cObj.country)}')" class="flex items-center justify-between gap-2 cursor-pointer text-xs">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <span class="text-[11px] text-slate-400 shrink-0">${isCountryExpanded ? "▾" : "▸"}</span>
                   <span class="emoji-flag text-sm shrink-0">${cMeta.flag}</span>
                   <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">${cObj.country}</span>
                 </div>
-                <span class="font-semibold text-slate-600 dark:text-slate-300 shrink-0">${formatQuantitySummary(cObj.coinsQty, cObj.notesQty)}</span>
+                <span class="font-semibold text-slate-600 dark:text-slate-300 shrink-0">${formatDenomination(cObj.totalQty)} פריטים</span>
               </div>
               ${itemsHtml}
             </div>
@@ -259,7 +259,7 @@ function renderStats() {
     ` : "";
 
     return `
-      <div onclick="toggleStatsLocation('${escapeJsStr(loc.key)}')" class="py-2 px-2.5 rounded-xl bg-white/75 dark:bg-slate-900/65 border border-violet-100/90 dark:border-violet-900/50 cursor-pointer hover:bg-white dark:hover:bg-slate-900 transition">
+      <div onclick="toggleStatsLocation('${escapeJsStr(loc.key)}')" class="py-1.5 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-900/40 rounded-lg px-1 transition">
         <div class="flex items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-2 min-w-0">
             <span class="text-[11px] text-slate-400 shrink-0">${isExpanded ? "▾" : "▸"}</span>
@@ -267,7 +267,7 @@ function renderStats() {
               ${loc.isUnassigned ? loc.label : `📍 ${loc.label}`}
             </span>
           </div>
-          <span class="font-bold text-slate-700 dark:text-slate-200 shrink-0">${formatQuantitySummary(loc.coinsQty, loc.notesQty)}</span>
+          <span class="font-bold text-slate-700 dark:text-slate-200 shrink-0">${formatDenomination(loc.totalQty)} פריטים</span>
         </div>
         ${countriesAccordionHtml}
       </div>
@@ -293,21 +293,21 @@ function renderStats() {
     });
 
     const decadeItemsHtml = isExpanded ? `
-      <div class="mt-2 pt-2 border-t border-emerald-200/60 dark:border-emerald-800/50 space-y-1">
+      <div class="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 space-y-1">
         ${sortedDecadeItems.map(item => {
           const meta = getCountryMeta(item.country);
           const typeBadge = item.type === "coin" ? "מטבע" : "שטר";
           const qty = Number(item.quantity) || 1;
           return `
-            <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-white/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
+            <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
               <div class="flex items-center gap-1.5 min-w-0">
                 <span class="emoji-flag text-sm shrink-0">${meta.flag}</span>
                 <span class="font-semibold text-slate-800 dark:text-slate-200 truncate">${item.country}</span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded bg-white/90 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
                 <span class="text-slate-700 dark:text-slate-300 truncate">${formatDenomination(item.value)} ${item.currency}</span>
                 <span class="text-slate-400 text-[11px] shrink-0">(${formatYearText(item.year)})</span>
               </div>
-              <span class="font-bold text-emerald-700 dark:text-emerald-300 shrink-0">×${formatDenomination(qty)}</span>
+              <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">×${formatDenomination(qty)}</span>
             </div>
           `;
         }).join("")}
@@ -315,15 +315,15 @@ function renderStats() {
     ` : "";
 
     return `
-      <div onclick="toggleStatsDecade('${escapeJsStr(d.key)}')" class="py-2 px-2.5 rounded-xl bg-white/75 dark:bg-slate-900/65 border border-emerald-100/90 dark:border-emerald-900/50 cursor-pointer hover:bg-white dark:hover:bg-slate-900 transition">
+      <div onclick="toggleStatsDecade('${escapeJsStr(d.key)}')" class="py-1.5 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-900/40 rounded-lg px-1 transition">
         <div class="flex items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-1.5 min-w-0">
             <span class="font-bold ${d.isNoYear ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-100"}">${d.label}</span>
             <span class="text-[11px] text-slate-400">${isExpanded ? "▾" : "▸"}</span>
           </div>
-          <span class="font-semibold text-slate-600 dark:text-slate-300 shrink-0">${formatQuantitySummary(d.coinsQty, d.notesQty)}</span>
+          <span class="font-semibold text-slate-600 dark:text-slate-300 shrink-0">${formatDenomination(d.totalQty)} פריטים</span>
         </div>
-        <div class="w-full h-1.5 rounded-full bg-emerald-100/80 dark:bg-slate-800 mt-1.5 overflow-hidden">
+        <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 mt-1 overflow-hidden">
           <div class="h-full rounded-full bg-emerald-500 transition-all duration-300" style="width: ${pct}%"></div>
         </div>
         ${decadeItemsHtml}
@@ -352,31 +352,19 @@ function renderStats() {
         ${oldestCoinCardHtml}
       </div>
 
-      <!-- Category 1: Top Countries -->
-      <section class="p-3.5 rounded-2xl bg-indigo-50/45 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/50 space-y-2.5">
-        <div class="flex items-center justify-between gap-2 pb-2 border-b border-indigo-200/70 dark:border-indigo-800/50">
-          <h3 class="text-[15px] font-extrabold text-indigo-950 dark:text-indigo-200 tracking-tight">המדינות המובילות</h3>
-          <span class="text-[11px] font-semibold text-indigo-700/80 dark:text-indigo-300/80">לחיצה לפירוט</span>
-        </div>
-        <div class="space-y-2">${topCountriesHtml}</div>
+      <section class="p-3.5 rounded-2xl bg-indigo-50/35 dark:bg-indigo-950/15 border border-indigo-200/60 dark:border-indigo-900/40 space-y-2">
+        <h3 class="text-[15px] font-extrabold text-indigo-950 dark:text-indigo-200 pb-1.5 border-b border-indigo-200/70 dark:border-indigo-800/50">המדינות המובילות</h3>
+        <div class="space-y-1.5">${topCountriesHtml}</div>
       </section>
 
-      <!-- Category 2: Storage Locations -->
-      <section class="p-3.5 rounded-2xl bg-violet-50/45 dark:bg-violet-950/20 border border-violet-200/70 dark:border-violet-900/50 space-y-2.5">
-        <div class="flex items-center justify-between gap-2 pb-2 border-b border-violet-200/70 dark:border-violet-800/50">
-          <h3 class="text-[15px] font-extrabold text-violet-950 dark:text-violet-200 tracking-tight">מיקומים באוסף</h3>
-          <span class="text-[11px] font-semibold text-violet-700/80 dark:text-violet-300/80">לחיצה לפירוט</span>
-        </div>
-        <div class="space-y-2">${locationsHtml}</div>
+      <section class="p-3.5 rounded-2xl bg-violet-50/35 dark:bg-violet-950/15 border border-violet-200/60 dark:border-violet-900/40 space-y-2">
+        <h3 class="text-[15px] font-extrabold text-violet-950 dark:text-violet-200 pb-1.5 border-b border-violet-200/70 dark:border-violet-800/50">מיקומים באוסף</h3>
+        <div class="space-y-1.5">${locationsHtml}</div>
       </section>
 
-      <!-- Category 3: Decades Distribution -->
-      <section class="p-3.5 rounded-2xl bg-emerald-50/45 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/50 space-y-2.5">
-        <div class="flex items-center justify-between gap-2 pb-2 border-b border-emerald-200/70 dark:border-emerald-800/50">
-          <h3 class="text-[15px] font-extrabold text-emerald-950 dark:text-emerald-200 tracking-tight">התפלגות לפי עשורים</h3>
-          <span class="text-[11px] font-semibold text-emerald-700/80 dark:text-emerald-300/80">לחיצה לפירוט</span>
-        </div>
-        <div class="space-y-2">${decadesHtml}</div>
+      <section class="p-3.5 rounded-2xl bg-emerald-50/35 dark:bg-emerald-950/15 border border-emerald-200/60 dark:border-emerald-900/40 space-y-2">
+        <h3 class="text-[15px] font-extrabold text-emerald-950 dark:text-emerald-200 pb-1.5 border-b border-emerald-200/70 dark:border-emerald-800/50">התפלגות לפי עשורים</h3>
+        <div class="space-y-1.5">${decadesHtml}</div>
       </section>
     </div>
   `;

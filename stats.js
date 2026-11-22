@@ -1,373 +1,66 @@
-// Statistics Screen, Top 15 Oldest Coins, Storage Locations & Decades Breakdown (stats.js)
+// Statistics View, Top Countries, Locations Accordion, Decades & Top 15 Oldest Coins (stats.js)
 
-function renderStats() {
-  const container = document.getElementById("stats-container");
-  if (!container) return;
 
-  if (!collection.length) {
-    container.innerHTML = `
-      <div class="py-12 text-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">
-        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400">אין נתונים להצגת סטטיסטיקות</p>
-        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">הוסף מטבעות או שטרות כדי לראות פילוחים.</p>
-      </div>
-    `;
+function getSortedCoinsOldestFirst() {
+  return collection
+    .filter(i => i.type === "coin" && hasValidYear(i.year))
+    .sort((a, b) => {
+      const yearDiff = Number(a.year) - Number(b.year);
+      if (yearDiff !== 0) return yearDiff;
+      return hebrewCollator.compare(a.country, b.country);
+    });
+}
+
+function openOldestCoinsView() {
+  const allCoins = getSortedCoinsOldestFirst();
+  const top15Coins = allCoins.slice(0, 15);
+
+  document.getElementById("view-stats").classList.add("hidden");
+  document.getElementById("view-collection").classList.add("hidden");
+  document.getElementById("view-oldest-coins").classList.remove("hidden");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const subtitleEl = document.getElementById("oldest-coins-subtitle");
+  if (!top15Coins.length) {
+    subtitleEl.textContent = "אין מטבעות עם שנת הנפקה באוסף";
+  } else if (allCoins.length > 15) {
+    subtitleEl.textContent = `מציג 15 מתוך ${formatDenomination(allCoins.length)} רשומות מטבעות עם שנה`;
+  } else {
+    subtitleEl.textContent = `מציג ${top15Coins.length} מטבעות עם שנת הנפקה`;
+  }
+
+  const listEl = document.getElementById("oldest-coins-list");
+  if (!top15Coins.length) {
+    listEl.innerHTML = `<div class="text-center py-12 text-xs text-slate-400">אין מטבעות עם שנת הנפקה באוסף</div>`;
     return;
   }
 
-  let totalCoins = 0;
-  let totalBanknotes = 0;
-  const countryStats = {};
-  const locationStats = {};
-  const decadeStats = {};
-  const datedCoins = [];
-
-  collection.forEach(item => {
-    const qty = Number(item.quantity) || 1;
-    const isCoin = item.type === "coin";
-    const isNote = item.type === "banknote";
-
-    if (isCoin) totalCoins += qty;
-    if (isNote) totalBanknotes += qty;
-
-    if (!countryStats[item.country]) {
-      countryStats[item.country] = {
-        country: item.country,
-        totalQty: 0,
-        coinsQty: 0,
-        notesQty: 0,
-        recordsCount: 0,
-        items: []
-      };
-    }
-    countryStats[item.country].totalQty += qty;
-    if (isCoin) countryStats[item.country].coinsQty += qty;
-    if (isNote) countryStats[item.country].notesQty += qty;
-    countryStats[item.country].recordsCount += 1;
-    countryStats[item.country].items.push(item);
-
-    const locKey = normalizeLocation(item.location) || "__NO_LOCATION__";
-    if (!locationStats[locKey]) {
-      locationStats[locKey] = {
-        key: locKey,
-        label: normalizeLocation(item.location) || "ללא מיקום מוגדר",
-        isUnassigned: locKey === "__NO_LOCATION__",
-        totalQty: 0,
-        coinsQty: 0,
-        notesQty: 0,
-        countries: {}
-      };
-    }
-    locationStats[locKey].totalQty += qty;
-    if (isCoin) locationStats[locKey].coinsQty += qty;
-    if (isNote) locationStats[locKey].notesQty += qty;
-
-    if (!locationStats[locKey].countries[item.country]) {
-      locationStats[locKey].countries[item.country] = {
-        country: item.country,
-        totalQty: 0,
-        coinsQty: 0,
-        notesQty: 0,
-        items: []
-      };
-    }
-    locationStats[locKey].countries[item.country].totalQty += qty;
-    if (isCoin) locationStats[locKey].countries[item.country].coinsQty += qty;
-    if (isNote) locationStats[locKey].countries[item.country].notesQty += qty;
-    locationStats[locKey].countries[item.country].items.push(item);
-
-    const decadeKey = hasValidYear(item.year)
-      ? `${Math.floor(Number(item.year) / 10) * 10}s`
-      : "__NO_YEAR__";
-
-    if (!decadeStats[decadeKey]) {
-      decadeStats[decadeKey] = {
-        key: decadeKey,
-        label: decadeKey === "__NO_YEAR__" ? "ללא שנה" : decadeKey,
-        isNoYear: decadeKey === "__NO_YEAR__",
-        sortDecade: decadeKey === "__NO_YEAR__" ? Infinity : Math.floor(Number(item.year) / 10) * 10,
-        totalQty: 0,
-        coinsQty: 0,
-        notesQty: 0,
-        items: []
-      };
-    }
-    decadeStats[decadeKey].totalQty += qty;
-    if (isCoin) decadeStats[decadeKey].coinsQty += qty;
-    if (isNote) decadeStats[decadeKey].notesQty += qty;
-    decadeStats[decadeKey].items.push(item);
-
-    if (isCoin && hasValidYear(item.year)) {
-      datedCoins.push(item);
-    }
-  });
-
-  const totalItems = totalCoins + totalBanknotes;
-  const sortedCountries = Object.values(countryStats).sort((a, b) => {
-    if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
-    return hebrewCollator.compare(a.country, b.country);
-  });
-
-  const topCountries = sortedCountries.slice(0, 10);
-  const maxCountryQty = topCountries.length ? topCountries[0].totalQty : 1;
-
-  datedCoins.sort((a, b) => {
-    const yearDiff = Number(a.year) - Number(b.year);
-    if (yearDiff !== 0) return yearDiff;
-    return hebrewCollator.compare(a.country, b.country);
-  });
-
-  const oldestCoin = datedCoins.length ? datedCoins[0] : null;
-  const oldestYear = oldestCoin ? Number(oldestCoin.year) : null;
-  const oldestCoinsAtMinYear = oldestCoin
-    ? datedCoins.filter(c => Number(c.year) === oldestYear)
-    : [];
-
-  const oldestCoinCardHtml = oldestCoin
-    ? `
-      <div onclick="openOldestCoinsView()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ') openOldestCoinsView()" class="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/25 border border-amber-200/80 dark:border-amber-800/50 cursor-pointer hover:bg-amber-100/60 dark:hover:bg-amber-950/40 transition">
-        <div class="flex items-center justify-between gap-2">
-          <span class="text-xs font-bold text-amber-800 dark:text-amber-300">המטבע הכי ישן באוסף</span>
-          <span class="text-[11px] font-semibold text-amber-700 dark:text-amber-400">לרשימת 15 הישנים ←</span>
-        </div>
-        <div class="mt-1.5 flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="emoji-flag text-xl shrink-0">${getCountryMeta(oldestCoin.country).flag}</span>
-            <span class="text-sm font-bold text-slate-900 dark:text-white truncate">
-              ${formatDenomination(oldestCoin.value)} ${oldestCoin.currency} — ${oldestCoin.country}
-            </span>
-          </div>
-          <span class="px-2.5 py-0.5 rounded-full bg-amber-200/80 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 text-xs font-extrabold shrink-0">
-            ${oldestYear}
-          </span>
-        </div>
-        ${oldestCoinsAtMinYear.length > 1 ? `
-          <p class="text-[11px] text-amber-700 dark:text-amber-400 mt-1">
-            קיימים ${oldestCoinsAtMinYear.length} מטבעות משנת ${oldestYear}
-          </p>
-        ` : ""}
-      </div>
-    `
-    : `
-      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/70">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">המטבע הכי ישן באוסף</span>
-        <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">אין מטבעות עם שנת הנפקה</p>
-      </div>
-    `;
-
-  const topCountriesHtml = topCountries.map((c, idx) => {
-    const meta = getCountryMeta(c.country);
-    const pct = Math.max(8, Math.round((c.totalQty / maxCountryQty) * 100));
-    const isExpanded = !!expandedStatsCountries[c.country];
-    const sortedItems = sortCountryItems(c.items, c.country);
-
-    const breakdownHtml = isExpanded ? `
-      <div class="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 space-y-1">
-        ${sortedItems.map(item => {
-          const typeBadge = item.type === "coin" ? "מטבע" : "שטר";
-          const qty = Number(item.quantity) || 1;
-          const loc = normalizeLocation(item.location);
-          return `
-            <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
-                <span class="font-semibold text-slate-800 dark:text-slate-200 truncate">${formatDenomination(item.value)} ${item.currency}</span>
-                <span class="text-slate-400 text-[11px] shrink-0">(${formatYearText(item.year)})</span>
-                ${loc ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 truncate max-w-[95px]">📍 ${loc}</span>` : ""}
-              </div>
-              <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">×${formatDenomination(qty)}</span>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    ` : "";
-
+  listEl.innerHTML = top15Coins.map((coin, idx) => {
+    const meta = getCountryMeta(coin.country);
     return `
-      <div onclick="toggleStatsCountry('${escapeJsStr(c.country)}')" class="py-1.5 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-900/40 rounded-lg px-1 transition">
-        <div class="flex items-center justify-between gap-2 text-xs">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="w-4 text-slate-400 font-bold shrink-0">${idx + 1}.</span>
-            <span class="emoji-flag text-base shrink-0">${meta.flag}</span>
-            <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">${c.country}</span>
-            <span class="text-[11px] text-slate-400 shrink-0">${isExpanded ? "▾" : "▸"}</span>
+      <div class="py-3 px-1.5 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="w-5 text-xs font-bold text-slate-400 shrink-0">${idx + 1}.</span>
+          <span class="emoji-flag text-xl shrink-0">${meta.flag}</span>
+          <div class="min-w-0">
+            <div class="text-sm font-bold text-slate-900 dark:text-white truncate">${coin.country}</div>
+            <div class="text-xs text-slate-600 dark:text-slate-300 truncate">
+              <span class="font-semibold">${formatDenomination(coin.value)}</span> ${coin.currency}
+            </div>
           </div>
-          <span class="font-bold text-slate-700 dark:text-slate-200 shrink-0">${formatDenomination(c.totalQty)} פריטים</span>
         </div>
-        <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 mt-1 overflow-hidden">
-          <div class="h-full rounded-full bg-indigo-500 transition-all duration-300" style="width: ${pct}%"></div>
+        <div class="shrink-0 px-2.5 py-1 rounded-lg bg-amber-100/80 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-xs font-bold">
+          ${coin.year}
         </div>
-        ${breakdownHtml}
       </div>
     `;
   }).join("");
+}
 
-  const sortedLocations = Object.values(locationStats).sort((a, b) => {
-    if (a.isUnassigned && !b.isUnassigned) return 1;
-    if (!a.isUnassigned && b.isUnassigned) return -1;
-    if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
-    return hebrewCollator.compare(a.label, b.label);
-  });
-
-  const locationsHtml = sortedLocations.map(loc => {
-    const isExpanded = !!expandedStatsLocations[loc.key];
-    const countriesList = Object.values(loc.countries).sort((a, b) => {
-      if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
-      return hebrewCollator.compare(a.country, b.country);
-    });
-
-    const countriesAccordionHtml = isExpanded ? `
-      <div class="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 space-y-1.5">
-        ${countriesList.map(cObj => {
-          const cMeta = getCountryMeta(cObj.country);
-          const cKey = `${loc.key}__${cObj.country}`;
-          const isCountryExpanded = !!expandedStatsLocationCountries[cKey];
-          const sortedCountryItems = sortCountryItems(cObj.items, cObj.country);
-
-          const itemsHtml = isCountryExpanded ? `
-            <div class="mt-1.5 mr-4 space-y-1 border-r-2 border-slate-200 dark:border-slate-700 pr-2">
-              ${sortedCountryItems.map(item => {
-                const typeBadge = item.type === "coin" ? "מטבע" : "שטר";
-                const qty = Number(item.quantity) || 1;
-                return `
-                  <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
-                    <div class="flex items-center gap-1.5 min-w-0">
-                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
-                      <span class="font-medium text-slate-800 dark:text-slate-200 truncate">${formatDenomination(item.value)} ${item.currency}</span>
-                      <span class="text-slate-400 text-[11px] shrink-0">(${formatYearText(item.year)})</span>
-                    </div>
-                    <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">×${formatDenomination(qty)}</span>
-                  </div>
-                `;
-              }).join("")}
-            </div>
-          ` : "";
-
-          return `
-            <div class="rounded-xl bg-slate-50/80 dark:bg-slate-800/40 p-2">
-              <div onclick="event.stopPropagation(); toggleStatsLocationCountry('${escapeJsStr(loc.key)}', '${escapeJsStr(cObj.country)}')" class="flex items-center justify-between gap-2 cursor-pointer text-xs">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <span class="text-[11px] text-slate-400 shrink-0">${isCountryExpanded ? "▾" : "▸"}</span>
-                  <span class="emoji-flag text-sm shrink-0">${cMeta.flag}</span>
-                  <span class="font-semibold text-slate-800 dark:text-slate-100 truncate">${cObj.country}</span>
-                </div>
-                <span class="font-semibold text-slate-600 dark:text-slate-300 shrink-0">${formatDenomination(cObj.totalQty)} פריטים</span>
-              </div>
-              ${itemsHtml}
-            </div>
-          `;
-        }).join("")}
-      </div>
-    ` : "";
-
-    return `
-      <div onclick="toggleStatsLocation('${escapeJsStr(loc.key)}')" class="py-1.5 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-900/40 rounded-lg px-1 transition">
-        <div class="flex items-center justify-between gap-2 text-xs">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="text-[11px] text-slate-400 shrink-0">${isExpanded ? "▾" : "▸"}</span>
-            <span class="${loc.isUnassigned ? "text-slate-400 dark:text-slate-500 font-medium" : "font-bold text-slate-800 dark:text-slate-100"} truncate">
-              ${loc.isUnassigned ? loc.label : `📍 ${loc.label}`}
-            </span>
-          </div>
-          <span class="font-bold text-slate-700 dark:text-slate-200 shrink-0">${formatDenomination(loc.totalQty)} פריטים</span>
-        </div>
-        ${countriesAccordionHtml}
-      </div>
-    `;
-  }).join("");
-
-  const sortedDecades = Object.values(decadeStats).sort((a, b) => {
-    if (a.isNoYear && !b.isNoYear) return 1;
-    if (!a.isNoYear && b.isNoYear) return -1;
-    return a.sortDecade - b.sortDecade;
-  });
-
-  const maxDecadeQty = sortedDecades.reduce((max, d) => Math.max(max, d.totalQty), 1);
-
-  const decadesHtml = sortedDecades.map(d => {
-    const pct = Math.max(6, Math.round((d.totalQty / maxDecadeQty) * 100));
-    const isExpanded = !!expandedStatsDecades[d.key];
-    const sortedDecadeItems = [...d.items].sort((a, b) => {
-      const cCmp = hebrewCollator.compare(a.country, b.country);
-      if (cCmp !== 0) return cCmp;
-      if (a.type !== b.type) return a.type === "coin" ? -1 : 1;
-      return (Number(b.value) || 0) - (Number(a.value) || 0);
-    });
-
-    const decadeItemsHtml = isExpanded ? `
-      <div class="mt-2 pt-2 border-t border-slate-200/70 dark:border-slate-800 space-y-1">
-        ${sortedDecadeItems.map(item => {
-          const meta = getCountryMeta(item.country);
-          const typeBadge = item.type === "coin" ? "מטבע" : "שטר";
-          const qty = Number(item.quantity) || 1;
-          return `
-            <div onclick="event.stopPropagation(); openItemModal('${escapeJsStr(item.id)}')" class="flex items-center justify-between gap-2 py-1 px-2 rounded-lg hover:bg-slate-100/80 dark:hover:bg-slate-800/80 cursor-pointer text-xs transition">
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span class="emoji-flag text-sm shrink-0">${meta.flag}</span>
-                <span class="font-semibold text-slate-800 dark:text-slate-200 truncate">${item.country}</span>
-                <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold shrink-0">${typeBadge}</span>
-                <span class="text-slate-700 dark:text-slate-300 truncate">${formatDenomination(item.value)} ${item.currency}</span>
-                <span class="text-slate-400 text-[11px] shrink-0">(${formatYearText(item.year)})</span>
-              </div>
-              <span class="font-bold text-indigo-600 dark:text-indigo-400 shrink-0">×${formatDenomination(qty)}</span>
-            </div>
-          `;
-        }).join("")}
-      </div>
-    ` : "";
-
-    return `
-      <div onclick="toggleStatsDecade('${escapeJsStr(d.key)}')" class="py-1.5 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-900/40 rounded-lg px-1 transition">
-        <div class="flex items-center justify-between gap-2 text-xs">
-          <div class="flex items-center gap-1.5 min-w-0">
-            <span class="font-bold ${d.isNoYear ? "text-slate-400 dark:text-slate-500" : "text-slate-800 dark:text-slate-100"}">${d.label}</span>
-            <span class="text-[11px] text-slate-400">${isExpanded ? "▾" : "▸"}</span>
-          </div>
-          <span class="font-semibold text-slate-600 dark:text-slate-300 shrink-0">${formatDenomination(d.totalQty)} פריטים</span>
-        </div>
-        <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 mt-1 overflow-hidden">
-          <div class="h-full rounded-full bg-emerald-500 transition-all duration-300" style="width: ${pct}%"></div>
-        </div>
-        ${decadeItemsHtml}
-      </div>
-    `;
-  }).join("");
-
-  container.innerHTML = `
-    <div class="space-y-6">
-      <div class="space-y-3">
-        <div class="grid grid-cols-3 gap-2.5">
-          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 text-center">
-            <div class="text-xl font-extrabold text-indigo-600 dark:text-indigo-400">${formatDenomination(totalItems)}</div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">סה״כ פריטים</div>
-          </div>
-          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 text-center">
-            <div class="text-xl font-extrabold text-amber-600 dark:text-amber-400">${formatDenomination(totalCoins)}</div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">מטבעות</div>
-          </div>
-          <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800/70 text-center">
-            <div class="text-xl font-extrabold text-emerald-600 dark:text-emerald-400">${formatDenomination(totalBanknotes)}</div>
-            <div class="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">שטרות</div>
-          </div>
-        </div>
-
-        ${oldestCoinCardHtml}
-      </div>
-
-      <section class="p-3.5 rounded-2xl bg-indigo-50/35 dark:bg-indigo-950/15 border border-indigo-200/60 dark:border-indigo-900/40 space-y-2">
-        <h3 class="text-[15px] font-extrabold text-indigo-950 dark:text-indigo-200 pb-1.5 border-b border-indigo-200/70 dark:border-indigo-800/50">המדינות המובילות</h3>
-        <div class="space-y-1.5">${topCountriesHtml}</div>
-      </section>
-
-      <section class="p-3.5 rounded-2xl bg-violet-50/35 dark:bg-violet-950/15 border border-violet-200/60 dark:border-violet-900/40 space-y-2">
-        <h3 class="text-[15px] font-extrabold text-violet-950 dark:text-violet-200 pb-1.5 border-b border-violet-200/70 dark:border-violet-800/50">מיקומים באוסף</h3>
-        <div class="space-y-1.5">${locationsHtml}</div>
-      </section>
-
-      <section class="p-3.5 rounded-2xl bg-emerald-50/35 dark:bg-emerald-950/15 border border-emerald-200/60 dark:border-emerald-900/40 space-y-2">
-        <h3 class="text-[15px] font-extrabold text-emerald-950 dark:text-emerald-200 pb-1.5 border-b border-emerald-200/70 dark:border-emerald-800/50">התפלגות לפי עשורים</h3>
-        <div class="space-y-1.5">${decadesHtml}</div>
-      </section>
-    </div>
-  `;
+function closeOldestCoinsView() {
+  document.getElementById("view-oldest-coins").classList.add("hidden");
+  document.getElementById("view-stats").classList.remove("hidden");
+  renderStats();
 }
 
 function toggleStatsCountry(countryName) {
@@ -381,82 +74,418 @@ function toggleStatsLocation(locKey) {
 }
 
 function toggleStatsLocationCountry(locKey, countryName) {
-  const cKey = `${locKey}__${countryName}`;
-  expandedStatsLocationCountries[cKey] = !expandedStatsLocationCountries[cKey];
+  const compositeKey = `${locKey}|||${countryName}`;
+  expandedStatsLocationCountries[compositeKey] = !expandedStatsLocationCountries[compositeKey];
   renderStats();
 }
 
-function toggleStatsDecade(decadeKey) {
-  expandedStatsDecades[decadeKey] = !expandedStatsDecades[decadeKey];
+function toggleStatsDecade(decadeStr) {
+  expandedStatsDecades[decadeStr] = !expandedStatsDecades[decadeStr];
   renderStats();
 }
 
-function openOldestCoinsView() {
-  const datedCoins = collection
-    .filter(item => item.type === "coin" && hasValidYear(item.year))
-    .sort((a, b) => {
-      const yearDiff = Number(a.year) - Number(b.year);
-      if (yearDiff !== 0) return yearDiff;
-      return hebrewCollator.compare(a.country, b.country);
-    });
+function renderCountryItemsMiniListHtml(rawItems, countryName) {
+  const sortedItems = sortCountryItems(rawItems, countryName);
+  const coinsCount = sortedItems.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+  const notesCount = sortedItems.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+  const summaryText = formatQuantitySummary(coinsCount, notesCount);
 
-  const top15 = datedCoins.slice(0, 15);
-  const subtitleEl = document.getElementById("oldest-coins-subtitle");
-  if (subtitleEl) {
-    subtitleEl.textContent = datedCoins.length
-      ? `מוצגים ${top15.length} מתוך ${datedCoins.length} מטבעות מתוארכים`
-      : "אין מטבעות מתוארכים באוסף";
-  }
-
-  const listEl = document.getElementById("oldest-coins-list");
-  if (listEl) {
-    if (!top15.length) {
-      listEl.innerHTML = `
-        <div class="py-10 text-center text-xs text-slate-400 dark:text-slate-500">
-          אין מטבעות עם שנת הנפקה להצגה
-        </div>
-      `;
-    } else {
-      listEl.innerHTML = top15.map((item, idx) => {
-        const meta = getCountryMeta(item.country);
-        const qty = Number(item.quantity) || 1;
-        const loc = normalizeLocation(item.location);
-        return `
-          <div onclick="openItemModal('${escapeJsStr(item.id)}')" class="py-2.5 px-2 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/60 cursor-pointer transition">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <span class="w-5 text-xs font-bold text-slate-400 shrink-0">${idx + 1}.</span>
-              <span class="emoji-flag text-xl shrink-0">${meta.flag}</span>
-              <div class="min-w-0">
-                <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
-                  ${formatDenomination(item.value)} ${item.currency} — ${item.country}
-                </div>
-                <div class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <span>שנה: <strong class="text-amber-700 dark:text-amber-300">${Number(item.year)}</strong></span>
-                  ${qty > 1 ? `<span>• כמות: ${formatDenomination(qty)}</span>` : ""}
-                  ${loc ? `<span>• 📍 ${loc}</span>` : ""}
-                </div>
-              </div>
-            </div>
-            <span class="text-slate-400 text-xs shrink-0">עריכה ←</span>
-          </div>
-        `;
-      }).join("");
+  let hasCoinEraTransition = false;
+  for (let i = 1; i < sortedItems.length; i++) {
+    if (sortedItems[i].type === "coin" && sortedItems[i - 1].type === "coin") {
+      if (getItemEraSignature(sortedItems[i - 1], countryName) !== getItemEraSignature(sortedItems[i], countryName)) {
+        hasCoinEraTransition = true;
+        break;
+      }
     }
   }
 
-  document.getElementById("view-collection").classList.add("hidden");
-  document.getElementById("view-stats").classList.add("hidden");
-  document.getElementById("view-oldest-coins").classList.remove("hidden");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  return `
+    <div class="text-[11px] text-slate-500 dark:text-slate-400 pb-1">${summaryText}</div>
+    <div class="divide-y divide-slate-100 dark:divide-slate-900">
+      ${sortedItems.map((item, itemIdx) => {
+        const isCoin = item.type === "coin";
+        const yearHtml = hasValidYear(item.year)
+          ? `<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>`
+          : `<span class="text-[11px] text-slate-400 dark:text-slate-500">ללא שנה</span>`;
+
+        let dividerClass = "";
+        if (itemIdx > 0) {
+          const prevItem = sortedItems[itemIdx - 1];
+          if (isCoin && prevItem.type === "coin") {
+            if (getItemEraSignature(prevItem, countryName) !== getItemEraSignature(item, countryName)) {
+              dividerClass = "era-divider";
+            }
+          } else if (!isCoin && prevItem.type === "coin" && hasCoinEraTransition) {
+            dividerClass = "type-divider";
+          }
+        }
+
+        return `
+          <div class="py-2 flex items-center justify-between gap-2 ${dividerClass}">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
+                ${isCoin ? 'מטבע' : 'שטר'}
+              </span>
+              <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
+                <span class="font-bold">${formatDenomination(item.value)}</span> ${item.currency}
+              </div>
+            </div>
+            <div class="shrink-0">
+              ${yearHtml}
+            </div>
+          </div>
+        `;
+      }).join("")}
+    </div>
+  `;
 }
 
-function closeOldestCoinsView() {
-  document.getElementById("view-oldest-coins").classList.add("hidden");
-  if (currentTab === "stats") {
-    document.getElementById("view-stats").classList.remove("hidden");
-    renderStats();
-  } else {
-    document.getElementById("view-collection").classList.remove("hidden");
+function renderStats() {
+  const container = document.getElementById("stats-container");
+  const totalCoins = collection.filter(i => i.type === "coin").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
+  const totalNotes = collection.filter(i => i.type === "banknote").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
+  const totalItems = totalCoins + totalNotes;
+  const totalCountries = new Set(collection.map(i => i.country)).size;
+
+  const sortedCoins = getSortedCoinsOldestFirst();
+  const oldestCoin = sortedCoins.length ? sortedCoins[0] : null;
+  const oldestMeta = oldestCoin ? getCountryMeta(oldestCoin.country) : null;
+
+  // Top Countries Aggregation
+  const byCountry = {};
+  collection.forEach(i => {
+    byCountry[i.country] = (byCountry[i.country] || 0) + (Number(i.quantity) || 1);
+  });
+  const topCountries = Object.entries(byCountry)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+
+  // Locations Aggregation (Named locations + Unassigned row at bottom if any)
+  const namedLocationsMap = {};
+  const unassignedItems = [];
+  collection.forEach(i => {
+    const loc = normalizeLocation(i.location);
+    if (loc) {
+      if (!namedLocationsMap[loc]) namedLocationsMap[loc] = [];
+      namedLocationsMap[loc].push(i);
+    } else {
+      unassignedItems.push(i);
+    }
+  });
+
+  const sortedNamedLocations = Object.entries(namedLocationsMap)
+    .map(([locName, items]) => ({
+      key: locName,
+      label: locName,
+      isUnassigned: false,
+      items,
+      totalQty: items.reduce((s, x) => s + (Number(x.quantity) || 1), 0)
+    }))
+    .sort((a, b) => {
+      if (b.totalQty !== a.totalQty) return b.totalQty - a.totalQty;
+      return hebrewCollator.compare(a.label, b.label);
+    });
+
+  const locationEntries = [...sortedNamedLocations];
+  if (unassignedItems.length > 0) {
+    locationEntries.push({
+      key: UNASSIGNED_LOCATION_KEY,
+      label: "ללא מיקום מוגדר",
+      isUnassigned: true,
+      items: unassignedItems,
+      totalQty: unassignedItems.reduce((s, x) => s + (Number(x.quantity) || 1), 0)
+    });
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const namedLocationsCount = sortedNamedLocations.length;
+  const locationsHeaderBadge = namedLocationsCount === 1
+    ? "מיקום 1"
+    : `${formatDenomination(namedLocationsCount)} מיקומים`;
+
+  // Decades Aggregation
+  const byDecade = {};
+  collection.forEach(i => {
+    if (hasValidYear(i.year)) {
+      const d = Math.floor(Number(i.year) / 10) * 10;
+      if (!byDecade[d]) byDecade[d] = [];
+      byDecade[d].push(i);
+    }
+  });
+  const decadesList = Object.entries(byDecade)
+    .map(([dec, items]) => ({
+      decade: dec,
+      items,
+      totalQty: items.reduce((s, x) => s + (Number(x.quantity) || 1), 0)
+    }))
+    .sort((a, b) => Number(b.decade) - Number(a.decade));
+
+  const oldestCoinCardHtml = oldestCoin ? `
+    <button type="button" onclick="openOldestCoinsView()" class="w-full text-right p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 transition flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="emoji-flag text-3xl shrink-0">${oldestMeta.flag}</span>
+        <div class="min-w-0">
+          <div class="text-[11px] font-bold text-amber-800 dark:text-amber-300">המטבע הכי ישן באוסף</div>
+          <div class="text-sm font-bold text-slate-900 dark:text-white truncate">
+            ${oldestCoin.country} • <span class="font-semibold">${formatDenomination(oldestCoin.value)} ${oldestCoin.currency}</span>
+          </div>
+          <div class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">שנת הנפקה: <span class="font-bold">${oldestCoin.year}</span></div>
+        </div>
+      </div>
+      <div class="shrink-0 flex items-center gap-1 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-white/80 dark:bg-slate-900/70 px-2.5 py-1.5 rounded-xl border border-amber-200/70 dark:border-amber-800/50">
+        <span>ל-15 הישנים</span>
+        <span>←</span>
+      </div>
+    </button>
+  ` : `
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs text-slate-500">
+      אין מטבעות עם שנת הנפקה להצגת המטבע הכי ישן.
+    </div>
+  `;
+
+  container.innerHTML = `
+    <!-- Top Summary Counters -->
+    <div class="grid grid-cols-3 gap-2.5">
+      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
+        <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${formatDenomination(totalItems)}</div>
+        <div class="text-xs text-slate-500 mt-0.5">סה״כ פריטים</div>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
+        <div class="text-xl font-bold text-amber-600 dark:text-amber-400">${formatDenomination(totalCoins)}</div>
+        <div class="text-xs text-slate-500 mt-0.5">מטבעות</div>
+      </div>
+      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
+        <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400">${formatDenomination(totalNotes)}</div>
+        <div class="text-xs text-slate-500 mt-0.5">שטרות</div>
+      </div>
+    </div>
+
+    ${oldestCoinCardHtml}
+
+    <!-- Top 10 Countries -->
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-sm">המדינות המובילות (עד 10)</h3>
+        <span class="text-xs text-slate-400">מתוך ${totalCountries} מדינות</span>
+      </div>
+      <div class="space-y-2">
+        ${topCountries.map(([cName, count], idx) => {
+          const meta = getCountryMeta(cName);
+          const isExpanded = !!expandedStatsCountries[cName];
+          const countLabel = count === 1 ? "פריט 1" : `${formatDenomination(count)} פריטים`;
+
+          let expandedHtml = "";
+          if (isExpanded) {
+            const countryItems = collection.filter(i => i.country === cName);
+            expandedHtml = `
+              <div class="px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+                ${renderCountryItemsMiniListHtml(countryItems, cName)}
+              </div>
+            `;
+          }
+
+          return `
+            <div class="rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 overflow-hidden transition">
+              <button type="button" onclick="toggleStatsCountry('${escapeJsStr(cName)}')" class="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-right hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="w-4 text-xs text-slate-400 font-semibold shrink-0">${idx + 1}.</span>
+                  <span class="emoji-flag text-lg shrink-0">${meta.flag}</span>
+                  <span class="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">${cName}</span>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300">
+                    ${countLabel}
+                  </span>
+                  <svg class="w-3.5 h-3.5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </button>
+              ${expandedHtml}
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+
+    <!-- Locations in Collection (3-Level Nested Accordion) -->
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-sm">מיקומים באוסף</h3>
+        <span class="text-xs text-slate-400">${locationsHeaderBadge}</span>
+      </div>
+      ${locationEntries.length ? `
+        <div class="space-y-2">
+          ${locationEntries.map((locEntry, idx) => {
+            const isLocExpanded = !!expandedStatsLocations[locEntry.key];
+            const countLabel = locEntry.totalQty === 1 ? "פריט 1" : `${formatDenomination(locEntry.totalQty)} פריטים`;
+            const safeLocKey = escapeJsStr(locEntry.key);
+
+            let locExpandedHtml = "";
+            if (isLocExpanded) {
+              const byLocCountry = {};
+              locEntry.items.forEach(item => {
+                if (!byLocCountry[item.country]) byLocCountry[item.country] = [];
+                byLocCountry[item.country].push(item);
+              });
+
+              const sortedLocCountries = Object.entries(byLocCountry)
+                .map(([cName, cItems]) => ({
+                  country: cName,
+                  items: cItems,
+                  qty: cItems.reduce((s, x) => s + (Number(x.quantity) || 1), 0)
+                }))
+                .sort((a, b) => {
+                  if (b.qty !== a.qty) return b.qty - a.qty;
+                  return hebrewCollator.compare(a.country, b.country);
+                });
+
+              locExpandedHtml = `
+                <div class="px-3 pb-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2 bg-slate-50/60 dark:bg-slate-900/40">
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400">
+                    ${sortedLocCountries.length === 1 ? "מדינה 1 במיקום זה" : `${formatDenomination(sortedLocCountries.length)} מדינות במיקום זה`}
+                  </div>
+                  <div class="space-y-1.5">
+                    ${sortedLocCountries.map(cEntry => {
+                      const cMeta = getCountryMeta(cEntry.country);
+                      const compositeKey = `${locEntry.key}|||${cEntry.country}`;
+                      const isCountryInLocExpanded = !!expandedStatsLocationCountries[compositeKey];
+                      const cCountLabel = cEntry.qty === 1 ? "פריט 1" : `${formatDenomination(cEntry.qty)} פריטים`;
+                      const safeCountryJs = escapeJsStr(cEntry.country);
+
+                      let itemsInLocHtml = "";
+                      if (isCountryInLocExpanded) {
+                        itemsInLocHtml = `
+                          <div class="px-2.5 pb-2.5 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-1">
+                            ${renderCountryItemsMiniListHtml(cEntry.items, cEntry.country)}
+                          </div>
+                        `;
+                      }
+
+                      return `
+                        <div class="rounded-lg bg-white dark:bg-slate-950/80 border border-slate-200/70 dark:border-slate-800 overflow-hidden">
+                          <button type="button" onclick="toggleStatsLocationCountry('${safeLocKey}', '${safeCountryJs}')" class="w-full px-2.5 py-2 flex items-center justify-between gap-2 text-right hover:bg-slate-50 dark:hover:bg-slate-900/70 transition">
+                            <div class="flex items-center gap-2 min-w-0">
+                              <span class="emoji-flag text-base shrink-0">${cMeta.flag}</span>
+                              <span class="font-semibold text-xs text-slate-800 dark:text-slate-100 truncate">${cEntry.country}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                              <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                                ${cCountLabel}
+                              </span>
+                              <svg class="w-3 h-3 text-slate-400 transition-transform ${isCountryInLocExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                          </button>
+                          ${itemsInLocHtml}
+                        </div>
+                      `;
+                    }).join("")}
+                  </div>
+                </div>
+              `;
+            }
+
+            const rankBadgeHtml = locEntry.isUnassigned
+              ? `<span class="w-4 text-xs text-slate-400 font-semibold shrink-0">—</span>`
+              : `<span class="w-4 text-xs text-slate-400 font-semibold shrink-0">${idx + 1}.</span>`;
+
+            const titleClass = locEntry.isUnassigned
+              ? "font-medium text-sm text-slate-500 dark:text-slate-400 truncate"
+              : "font-semibold text-sm text-slate-800 dark:text-slate-100 truncate";
+
+            const badgeClass = locEntry.isUnassigned
+              ? "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+              : "px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 dark:bg-violet-950/70 text-violet-700 dark:text-violet-300";
+
+            return `
+              <div class="rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 overflow-hidden transition">
+                <button type="button" onclick="toggleStatsLocation('${safeLocKey}')" class="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-right hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition">
+                  <div class="flex items-center gap-2 min-w-0">
+                    ${rankBadgeHtml}
+                    <span class="${titleClass}">${locEntry.label}</span>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="${badgeClass}">${countLabel}</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform ${isLocExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  </div>
+                </button>
+                ${locExpandedHtml}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      ` : `<p class="text-xs text-slate-400">אין פריטים באוסף</p>`}
+    </div>
+
+    <!-- Decades Breakdown (Expandable Accordion) -->
+    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
+      <h3 class="font-bold text-sm">התפלגות לפי עשורים</h3>
+      ${decadesList.length ? `
+        <div class="space-y-2">
+          ${decadesList.map(decEntry => {
+            const isDecExpanded = !!expandedStatsDecades[decEntry.decade];
+            const countLabel = decEntry.totalQty === 1 ? "פריט 1" : `${formatDenomination(decEntry.totalQty)} פריטים`;
+
+            let decExpandedHtml = "";
+            if (isDecExpanded) {
+              const sortedDecItems = [...decEntry.items].sort((a, b) => {
+                const yearDiff = Number(a.year) - Number(b.year);
+                if (yearDiff !== 0) return yearDiff;
+                const countryDiff = hebrewCollator.compare(a.country, b.country);
+                if (countryDiff !== 0) return countryDiff;
+                if (a.type !== b.type) return a.type === "coin" ? -1 : 1;
+                return (Number(b.value) || 0) - (Number(a.value) || 0);
+              });
+
+              const coinsCount = sortedDecItems.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+              const notesCount = sortedDecItems.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
+              const summaryText = formatQuantitySummary(coinsCount, notesCount);
+
+              decExpandedHtml = `
+                <div class="px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 pb-1">${summaryText}</div>
+                  <div class="divide-y divide-slate-100 dark:divide-slate-900">
+                    ${sortedDecItems.map(item => {
+                      const isCoin = item.type === "coin";
+                      const cMeta = getCountryMeta(item.country);
+                      return `
+                        <div class="py-2 flex items-center justify-between gap-2">
+                          <div class="flex items-center gap-2 min-w-0">
+                            <span class="emoji-flag text-base shrink-0">${cMeta.flag}</span>
+                            <span class="w-[42px] text-center shrink-0 text-[10px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
+                              ${isCoin ? 'מטבע' : 'שטר'}
+                            </span>
+                            <div class="min-w-0 truncate">
+                              <div class="text-xs font-bold text-slate-900 dark:text-white truncate">${item.country}</div>
+                              <div class="text-xs text-slate-600 dark:text-slate-300 truncate">
+                                <span class="font-semibold">${formatDenomination(item.value)}</span> ${item.currency}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="shrink-0">
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>
+                          </div>
+                        </div>
+                      `;
+                    }).join("")}
+                  </div>
+                </div>
+              `;
+            }
+
+            return `
+              <div class="rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 overflow-hidden transition">
+                <button type="button" onclick="toggleStatsDecade('${decEntry.decade}')" class="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-right hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition">
+                  <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">שנות ה-${decEntry.decade}</span>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300">${countLabel}</span>
+                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform ${isDecExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                  </div>
+                </button>
+                ${decExpandedHtml}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      ` : `<p class="text-xs text-slate-400">אין פריטים עם שנת הנפקה</p>`}
+    </div>
+  `;
 }

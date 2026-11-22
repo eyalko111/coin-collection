@@ -1,4 +1,4 @@
-const CACHE_NAME = 'coin-collection-v8';
+const CACHE_NAME = 'coin-collection-v9';
 const ASSETS = [
   './',
   './index.html',

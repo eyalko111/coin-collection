@@ -1,5 +1,7 @@
 // Statistics View, Top Countries, Locations Accordion, Decades & Top 15 Oldest Coins (stats.js)
 
+const UNASSIGNED_LOCATION_KEY = "__UNASSIGNED_LOCATION__";
+
 function getSortedCoinsOldestFirst() {
   return collection
     .filter(i => i.type === "coin" && hasValidYear(i.year))
@@ -149,6 +151,8 @@ function renderCountryItemsMiniListHtml(rawItems, countryName, options = {}) {
 
 function renderStats() {
   const container = document.getElementById("stats-container");
+  if (!container) return;
+
   const totalCoins = collection.filter(i => i.type === "coin").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
   const totalNotes = collection.filter(i => i.type === "banknote").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
   const totalItems = totalCoins + totalNotes;

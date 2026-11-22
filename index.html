@@ -71,21 +71,11 @@
         </div>
 
         <div class="flex items-center gap-1.5 shrink-0">
-          <!-- Export -->
-          <button type="button" onclick="openExportModal()" title="ייצוא וגיבוי" aria-label="ייצוא וגיבוי" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-slate-800 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"/></svg>
-          </button>
-
-          <!-- Import -->
-          <button type="button" onclick="triggerImportFile()" title="ייבוא מקובץ" aria-label="ייבוא מקובץ" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-slate-800 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M17 8l-5-5m0 0L7 8m5-5v12"/></svg>
+          <!-- Unified Data Management (Gear) -->
+          <button type="button" onclick="openDataMenuModal()" title="ניהול נתונים, ייבוא וייצוא" aria-label="ניהול נתונים, ייבוא וייצוא" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-slate-800 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           </button>
           <input type="file" id="import-file-input" accept=".json,.csv,application/json,text/csv" onchange="handleImportFile(event)" class="hidden" />
-
-          <!-- Reset / Sample -->
-          <button type="button" onclick="openResetModal()" title="איפוס / נתוני דוגמה" aria-label="איפוס או נתוני דוגמה" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-slate-800 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          </button>
 
           <!-- Dark Mode Toggle -->
           <button type="button" onclick="toggleDarkMode()" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-slate-800 transition">
@@ -395,15 +385,17 @@
     </div>
   </div>
 
-  <!-- MODAL 6: EXPORT FORMAT -->
-  <div id="export-modal" onclick="if(event.target===this) closeExportModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+  <!-- MODAL 6: UNIFIED DATA MANAGEMENT (EXPORT / IMPORT / COLLECTION DATA) -->
+  <div id="data-menu-modal" onclick="if(event.target===this) closeDataMenuModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm max-h-[88vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-base font-bold text-slate-900 dark:text-white">ייצוא וגיבוי האוסף</h3>
-        <button type="button" onclick="closeExportModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs">✕</button>
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">ניהול נתונים</h3>
+        <button type="button" onclick="closeDataMenuModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs">✕</button>
       </div>
-      <p class="text-xs text-slate-500 dark:text-slate-400">בחר את פורמט הקובץ להורדה:</p>
+
+      <!-- Export Section -->
       <div class="space-y-2">
+        <div class="text-xs font-bold text-slate-700 dark:text-slate-200">ייצוא וגיבוי</div>
         <button type="button" onclick="executeExport('json')" class="w-full p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 text-right hover:bg-indigo-100/70 transition">
           <div class="text-xs font-bold text-indigo-700 dark:text-indigo-300">קובץ גיבוי מלא (JSON)</div>
           <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">מומלץ לשחזור או העברה למכשיר אחר</div>
@@ -415,6 +407,26 @@
         <button type="button" onclick="executeExport('csv')" class="w-full p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 text-right hover:bg-slate-200/70 transition">
           <div class="text-xs font-bold text-slate-800 dark:text-slate-200">קובץ CSV</div>
           <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">תואם לגיליונות אלקטרוניים וייבוא חוזר</div>
+        </button>
+      </div>
+
+      <!-- Import Section -->
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+        <div class="text-xs font-bold text-slate-700 dark:text-slate-200">ייבוא מקובץ</div>
+        <button type="button" onclick="triggerImportFile()" class="w-full p-3 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-right hover:bg-slate-200/70 dark:hover:bg-slate-800 transition">
+          <div class="text-xs font-bold text-slate-900 dark:text-white">בחר קובץ לייבוא (JSON / CSV)</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">מיזוג עם האוסף הקיים או החלפה מלאה</div>
+        </button>
+      </div>
+
+      <!-- Collection Data Actions -->
+      <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+        <div class="text-xs font-bold text-slate-700 dark:text-slate-200">נתוני האוסף</div>
+        <button type="button" onclick="restoreSampleCollection()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition">
+          טען נתוני דוגמה מחדש
+        </button>
+        <button type="button" onclick="confirmResetCollection()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition">
+          רוקן את האוסף לחלוטין
         </button>
       </div>
     </div>

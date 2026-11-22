@@ -22,6 +22,18 @@ function downloadBlobFile(content, filename, mimeType) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// --- Unified Data Menu Modal ---
+function openDataMenuModal() {
+  const modal = document.getElementById("data-menu-modal");
+  if (modal) {
+    modal.classList.remove("hidden");
+  }
+}
+
+function closeDataMenuModal() {
+  document.getElementById("data-menu-modal")?.classList.add("hidden");
+}
+
 // --- Export Modal & Format Handlers ---
 function openExportModal(defaultFormat = null) {
   pendingExportFormat = defaultFormat;
@@ -30,6 +42,8 @@ function openExportModal(defaultFormat = null) {
     modal.classList.remove("hidden");
   } else if (defaultFormat) {
     executeExport(defaultFormat);
+  } else {
+    openDataMenuModal();
   }
 }
 
@@ -57,6 +71,7 @@ function executeExport(format) {
   if (!collection.length) {
     showToast("האוסף ריק — אין פריטים לייצוא");
     closeExportModal();
+    closeDataMenuModal();
     return;
   }
 
@@ -69,6 +84,7 @@ function executeExport(format) {
     exportCollectionExcel();
   }
   closeExportModal();
+  closeDataMenuModal();
 }
 
 function exportCollectionJSON() {
@@ -238,6 +254,7 @@ function handleImportFile(event) {
       }
 
       pendingImportItems = parsedItems;
+      closeDataMenuModal();
       openImportConfirmModal(parsedItems);
     } catch (err) {
       showToast(err?.message || "שגיאה בקריאת הקובץ");
@@ -430,6 +447,7 @@ function confirmImportMerge() {
   });
 
   closeImportConfirmModal();
+  closeDataMenuModal();
   finalizeCollectionMutation(`הייבוא הושלם: ${addedCount} נוספו, ${mergedCount} אוחדו`, "");
 }
 
@@ -446,6 +464,7 @@ function confirmImportReplace() {
   });
 
   closeImportConfirmModal();
+  closeDataMenuModal();
   finalizeCollectionMutation(`האוסף הוחלף (${formatDenomination(collection.length)} רשומות)`, "");
 }
 
@@ -466,11 +485,13 @@ function closeResetModal() {
 function confirmResetCollection() {
   collection = [];
   closeResetModal();
+  closeDataMenuModal();
   finalizeCollectionMutation("האוסף נוקה לחלוטין", "");
 }
 
 function restoreSampleCollection() {
   collection = SAMPLE_DATA.map(item => ({ ...item, location: normalizeLocation(item.location) }));
   closeResetModal();
+  closeDataMenuModal();
   finalizeCollectionMutation("נטענו נתוני הדוגמה מחדש", "");
 }

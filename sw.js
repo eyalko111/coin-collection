@@ -1,7 +1,9 @@
-const CACHE_NAME = 'coin-collection-v6';
+const CACHE_NAME = 'coin-collection-v7';
 const ASSETS = [
   './',
   './index.html',
+  './countries-data.js',
+  './series-data.js',
   './manifest.json',
   './icon.svg'
 ];

@@ -40,6 +40,13 @@
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .era-divider {
+      border-top-width: 2.5px !important;
+      border-top-color: #6366f1 !important;
+    }
+    .dark .era-divider {
+      border-top-color: #818cf8 !important;
+    }
   </style>
 </head>
 <body class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-24 transition-colors">
@@ -75,29 +82,23 @@
 
   <!-- COLLECTION VIEW -->
   <main id="view-collection" class="max-w-xl mx-auto px-4 pt-3 space-y-3">
-    <!-- Search & Filters -->
-    <div class="space-y-2.5">
+    <!-- Search & Filters (Layout A + Single Toggle Collapse Button) -->
+    <div class="space-y-2">
+      <!-- Row 1: Search -->
       <div class="relative">
         <input id="search-input" type="text" oninput="renderCollection()" placeholder="חיפוש מדינה, מטבע, ערך או שנה..." class="w-full pr-9 pl-8 py-2.5 text-sm rounded-xl bg-slate-100 dark:bg-slate-900 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 outline-none transition" />
         <svg class="w-4 h-4 text-slate-400 absolute right-3 top-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
         <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5">✕</button>
       </div>
 
-      <!-- Type Filter Pills + Grouping Mode Toggle -->
-      <div class="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="setTypeFilter('all')" data-type="all" class="type-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition">הכל</button>
-          <button onclick="setTypeFilter('coin')" data-type="coin" class="type-pill px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">מטבעות</button>
-          <button onclick="setTypeFilter('banknote')" data-type="banknote" class="type-pill px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition">שטרות</button>
-        </div>
-
-        <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-900 shrink-0">
-          <button onclick="setGroupMode('alpha')" data-group="alpha" class="group-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs transition">לפי א'-ב'</button>
-          <button onclick="setGroupMode('continent')" data-group="continent" class="group-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">לפי יבשות</button>
-        </div>
+      <!-- Row 2: Type Filter Bar (Edge-to-Edge 3 equal columns) -->
+      <div class="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900">
+        <button onclick="setTypeFilter('all')" data-type="all" class="type-pill py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition">הכל</button>
+        <button onclick="setTypeFilter('coin')" data-type="coin" class="type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">מטבעות</button>
+        <button onclick="setTypeFilter('banknote')" data-type="banknote" class="type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">שטרות</button>
       </div>
 
-      <!-- Custom Dropdown Filters -->
+      <!-- Row 3: Custom Dropdown Filters (Edge-to-Edge 3 equal columns) -->
       <div id="filter-dropdowns-bar" class="grid grid-cols-3 gap-2">
         <!-- Continent Filter -->
         <div class="relative" data-filter-wrap="continent">
@@ -142,16 +143,19 @@
         </div>
       </div>
 
-      <!-- Collapse All / Expand All Controls -->
-      <div id="collapse-controls-bar" class="flex items-center justify-end gap-1.5 pt-0.5">
-        <button type="button" onclick="collapseAll()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/></svg>
-          <span>כווץ הכול</span>
-        </button>
-        <button type="button" onclick="expandAll()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
-          <span>פתח הכול</span>
-        </button>
+      <!-- Row 4: Unified Display Bar (Grouping Toggle + Single Collapse/Expand Toggle) -->
+      <div class="flex items-center justify-between gap-2 pt-0.5">
+        <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-900 shrink-0">
+          <button onclick="setGroupMode('alpha')" data-group="alpha" class="group-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs transition">לפי א'-ב'</button>
+          <button onclick="setGroupMode('continent')" data-group="continent" class="group-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">לפי יבשות</button>
+        </div>
+
+        <div id="collapse-controls-bar" class="flex items-center shrink-0">
+          <button type="button" id="btn-toggle-collapse-all" onclick="toggleCollapseAll()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+            <svg id="icon-toggle-collapse" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/></svg>
+            <span id="label-toggle-collapse">כווץ הכול</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -185,7 +189,7 @@
     <span>הוסף פריט</span>
   </button>
 
-  <!-- ADD / EDIT / DUPLICATE ITEM MODAL (Top-anchored for stable mobile keyboard) -->
+  <!-- ADD / EDIT / DUPLICATE ITEM MODAL -->
   <div id="item-modal" onclick="handleModalBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-10 px-3 overflow-y-auto">
     <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[88dvh] overflow-hidden">
       <!-- Sticky Header -->
@@ -262,7 +266,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label for="form-value" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">ערך נקוב</label>
-            <input id="form-value" type="number" step="any" min="0" inputmode="decimal" required placeholder="למשל: 5 או 0.5" onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+            <input id="form-value" type="text" inputmode="decimal" required placeholder="למשל: 5 או 1,000" onfocus="onValueFieldFocus(this); scrollFieldIntoView(this)" onblur="onValueFieldBlur(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
           </div>
           <div>
             <label for="form-year" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שנת הנפקה (אופציונלי)</label>
@@ -430,197 +434,11 @@
   <!-- Toast Notification -->
   <div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-medium shadow-lg"></div>
 
+  <!-- Modular Static Data Files -->
+  <script src="./countries-data.js"></script>
+  <script src="./series-data.js"></script>
+
   <script>
-    // Comprehensive World & Historical Countries Database
-    const COUNTRIES_DB = [
-      // אסיה
-      { name: "ישראל", continent: "אסיה", flag: "🇮🇱", former: false, currencies: ["שקל חדש", "אגורות", "שקל (ישן)", "לירה ישראלית", "אגורות (לירה)", "פרוטה", "מיל ארץ-ישראלי"] },
-      { name: "אוזבקיסטן", continent: "אסיה", flag: "🇺🇿", former: false, currencies: ["סום אוזבקי", "טיין"] },
-      { name: "אזרבייג'ן", continent: "אסיה", flag: "🇦🇿", former: false, currencies: ["מאנאט אזרי", "קפיק"] },
-      { name: "איחוד האמירויות", continent: "אסיה", flag: "🇦🇪", former: false, currencies: ["דירהם", "פילס"] },
-      { name: "אינדונזיה", continent: "אסיה", flag: "🇮🇩", former: false, currencies: ["רופיה אינדונזית", "סן"] },
-      { name: "איראן", continent: "אסיה", flag: "🇮🇷", former: false, currencies: ["ריאל איראני", "תומאן"] },
-      { name: "אפגניסטן", continent: "אסיה", flag: "🇦🇫", former: false, currencies: ["אפגני", "פול"] },
-      { name: "ארמניה", continent: "אסיה", flag: "🇦🇲", former: false, currencies: ["דראם ארמני", "לומה"] },
-      { name: "בהוטן", continent: "אסיה", flag: "🇧🇹", former: false, currencies: ["נגולטרום", "צ'הטרום"] },
-      { name: "בחריין", continent: "אסיה", flag: "🇧🇭", former: false, currencies: ["דינר בחרייני", "פילס"] },
-      { name: "בנגלדש", continent: "אסיה", flag: "🇧🇩", former: false, currencies: ["טאקה", "פויסה"] },
-      { name: "ברוניי", continent: "אסיה", flag: "🇧🇳", former: false, currencies: ["דולר ברוניי", "סנט"] },
-      { name: "גאורגיה", continent: "אסיה", flag: "🇬🇪", former: false, currencies: ["לארי גאורגי", "תתרי"] },
-      { name: "הודו", continent: "אסיה", flag: "🇮🇳", former: false, currencies: ["רופי הודי", "פאיסה"] },
-      { name: "הונג קונג", continent: "אסיה", flag: "🇭🇰", former: false, currencies: ["דולר הונג קונגי", "סנט"] },
-      { name: "וייטנאם", continent: "אסיה", flag: "🇻🇳", former: false, currencies: ["דונג וייטנאמי", "האו", "שו"] },
-      { name: "טאיוואן", continent: "אסיה", flag: "🇹🇼", former: false, currencies: ["דולר טאיוואני חדש", "ג'יאו", "פן"] },
-      { name: "טג'יקיסטן", continent: "אסיה", flag: "🇹🇯", former: false, currencies: ["סומוני", "דיראם"] },
-      { name: "טורקמניסטן", continent: "אסיה", flag: "🇹🇲", former: false, currencies: ["מאנאט טורקמני", "טנגה"] },
-      { name: "יפן", continent: "אסיה", flag: "🇯🇵", former: false, currencies: ["ין יפני", "סן"] },
-      { name: "ירדן", continent: "אסיה", flag: "🇯🇴", former: false, currencies: ["דינר ירדני", "קירש", "פילס"] },
-      { name: "כווית", continent: "אסיה", flag: "🇰🇼", former: false, currencies: ["דינר כוויתי", "פילס"] },
-      { name: "לאוס", continent: "אסיה", flag: "🇱🇦", former: false, currencies: ["קיפ לאי", "אט"] },
-      { name: "לבנון", continent: "אסיה", flag: "🇱🇧", former: false, currencies: ["לירה לבנונית", "פיאסטר"] },
-      { name: "מאלדיביים", continent: "אסיה", flag: "🇲🇻", former: false, currencies: ["רופיה מלדיבית", "לארי"] },
-      { name: "מונגוליה", continent: "אסיה", flag: "🇲🇳", former: false, currencies: ["טוגרוג", "מונגו"] },
-      { name: "מזרח טימור", continent: "אסיה", flag: "🇹🇱", former: false, currencies: ["סנטאבו", "דולר אמריקאי"] },
-      { name: "מיאנמר", continent: "אסיה", flag: "🇲🇲", former: false, currencies: ["קיאט", "פיה"] },
-      { name: "מלזיה", continent: "אסיה", flag: "🇲🇾", former: false, currencies: ["רינגיט מלזי", "סן"] },
-      { name: "מקאו", continent: "אסיה", flag: "🇲🇴", former: false, currencies: ["פטאקה", "אבו"] },
-      { name: "נפאל", continent: "אסיה", flag: "🇳🇵", former: false, currencies: ["רופי נפאלי", "פאיסה"] },
-      { name: "סוריה", continent: "אסיה", flag: "🇸🇾", former: false, currencies: ["לירה סורית", "פיאסטר"] },
-      { name: "סין", continent: "אסיה", flag: "🇨🇳", former: false, currencies: ["יואן (רנמינבי)", "ג'יאו", "פן"] },
-      { name: "סינגפור", continent: "אסיה", flag: "🇸🇬", former: false, currencies: ["דולר סינגפורי", "סנט"] },
-      { name: "סרי לנקה", continent: "אסיה", flag: "🇱🇰", former: false, currencies: ["רופי סרי לנקי", "סנט"] },
-      { name: "עומאן", continent: "אסיה", flag: "🇴🇲", former: false, currencies: ["ריאל עומאני", "באיזה"] },
-      { name: "עיראק", continent: "אסיה", flag: "🇮🇶", former: false, currencies: ["דינר עיראקי", "פילס"] },
-      { name: "ערב הסעודית", continent: "אסיה", flag: "🇸🇦", former: false, currencies: ["ריאל סעודי", "הלאלה"] },
-      { name: "פיליפינים", continent: "אסיה", flag: "🇵🇭", former: false, currencies: ["פזו פיליפיני", "סנטימו"] },
-      { name: "פקיסטן", continent: "אסיה", flag: "🇵🇰", former: false, currencies: ["רופי פקיסטני", "פאיסה"] },
-      { name: "קזחסטן", continent: "אסיה", flag: "🇰🇿", former: false, currencies: ["טנגה קזחי", "טיין"] },
-      { name: "קטאר", continent: "אסיה", flag: "🇶🇦", former: false, currencies: ["ריאל קטארי", "דירהם"] },
-      { name: "קירגיזסטן", continent: "אסיה", flag: "🇰🇬", former: false, currencies: ["סום קירגיזי", "טיין"] },
-      { name: "קמבודיה", continent: "אסיה", flag: "🇰🇭", former: false, currencies: ["ריאל קמבודי", "סן"] },
-      { name: "קוריאה הדרומית", continent: "אסיה", flag: "🇰🇷", former: false, currencies: ["וון דרום קוריאני", "ג'ון"] },
-      { name: "קוריאה הצפונית", continent: "אסיה", flag: "🇰🇵", former: false, currencies: ["וון צפון קוריאני", "צ'ון"] },
-      { name: "תאילנד", continent: "אסיה", flag: "🇹🇭", former: false, currencies: ["באט תאילנדי", "סאטאנג"] },
-      { name: "תימן", continent: "אסיה", flag: "🇾🇪", former: false, currencies: ["ריאל תימני", "פילס"] },
-
-      // אירופה
-      { name: "אוסטריה", continent: "אירופה", flag: "🇦🇹", former: false, currencies: ["אירו", "אירו סנט", "שילינג אוסטרי", "גרושן"] },
-      { name: "אוקראינה", continent: "אירופה", flag: "🇺🇦", former: false, currencies: ["הריבניה", "קופיקה", "קרבובנץ"] },
-      { name: "איטליה", continent: "אירופה", flag: "🇮🇹", former: false, currencies: ["אירו", "אירו סנט", "לירה איטלקית", "צ'נטזימו"] },
-      { name: "איסלנד", continent: "אירופה", flag: "🇮🇸", former: false, currencies: ["קרונה איסלנדית", "איירר"] },
-      { name: "אירלנד", continent: "אירופה", flag: "🇮🇪", former: false, currencies: ["אירו", "אירו סנט", "לירה אירית", "פני"] },
-      { name: "אלבניה", continent: "אירופה", flag: "🇦🇱", former: false, currencies: ["לק אלבני", "צ'ינדארקה"] },
-      { name: "אנדורה", continent: "אירופה", flag: "🇦🇩", former: false, currencies: ["אירו", "אירו סנט"] },
-      { name: "אסטוניה", continent: "אירופה", flag: "🇪🇪", former: false, currencies: ["אירו", "אירו סנט", "קרון אסטוני", "סנט"] },
-      { name: "בולגריה", continent: "אירופה", flag: "🇧🇬", former: false, currencies: ["לב בולגרי", "סטוטינקי", "אירו", "אירו סנט"] },
-      { name: "בוסניה והרצגובינה", continent: "אירופה", flag: "🇧🇦", former: false, currencies: ["מארק סחיר", "פניג"] },
-      { name: "בלארוס", continent: "אירופה", flag: "🇧🇾", former: false, currencies: ["רובל בלארוסי", "קופיקה"] },
-      { name: "בלגיה", continent: "אירופה", flag: "🇧🇪", former: false, currencies: ["אירו", "אירו סנט", "פרנק בלגי", "סנטים"] },
-      { name: "בריטניה", continent: "אירופה", flag: "🇬🇧", former: false, currencies: ["לירה שטרלינג", "פני / פנס", "שילינג", "פארתינג"] },
-      { name: "גרמניה", continent: "אירופה", flag: "🇩🇪", former: false, currencies: ["אירו", "אירו סנט", "מארק גרמני", "פפניג"] },
-      { name: "דנמרק", continent: "אירופה", flag: "🇩🇰", former: false, currencies: ["כתר דני (קרונה)", "אורה"] },
-      { name: "הולנד", continent: "אירופה", flag: "🇳🇱", former: false, currencies: ["אירו", "אירו סנט", "גילדן הולנדי", "סנט"] },
-      { name: "הונגריה", continent: "אירופה", flag: "🇭🇺", former: false, currencies: ["פורינט", "פילר"] },
-      { name: "ותיקן", continent: "אירופה", flag: "🇻🇦", former: false, currencies: ["אירו", "אירו סנט", "לירה ותיקנית"] },
-      { name: "טורקיה", continent: "אירופה", flag: "🇹🇷", former: false, currencies: ["לירה טורקית", "קורוש"] },
-      { name: "יוון", continent: "אירופה", flag: "🇬🇷", former: false, currencies: ["אירו", "אירו סנט", "דרכמה יוונית", "לפטה"] },
-      { name: "לוקסמבורג", continent: "אירופה", flag: "🇱🇺", former: false, currencies: ["אירו", "אירו סנט", "פרנק לוקסמבורגי"] },
-      { name: "לטביה", continent: "אירופה", flag: "🇱🇻", former: false, currencies: ["אירו", "אירו סנט", "לאטס לטבי", "סנטימס"] },
-      { name: "ליטא", continent: "אירופה", flag: "🇱🇹", former: false, currencies: ["אירו", "אירו סנט", "ליטאס ליטאי", "סנטאס"] },
-      { name: "ליכטנשטיין", continent: "אירופה", flag: "🇱🇮", former: false, currencies: ["פרנק שווייצרי", "ראפן"] },
-      { name: "מולדובה", continent: "אירופה", flag: "🇲🇩", former: false, currencies: ["לאו מולדובי", "באן"] },
-      { name: "מונטנגרו", continent: "אירופה", flag: "🇲🇪", former: false, currencies: ["אירו", "אירו סנט"] },
-      { name: "מונקו", continent: "אירופה", flag: "🇲🇨", former: false, currencies: ["אירו", "אירו סנט", "פרנק מונגאסקי"] },
-      { name: "מלטה", continent: "אירופה", flag: "🇲🇹", former: false, currencies: ["אירו", "אירו סנט", "לירה מלטזית", "סנט"] },
-      { name: "מקדוניה הצפונית", continent: "אירופה", flag: "🇲🇰", former: false, currencies: ["דינר מקדוני", "דני"] },
-      { name: "נורווגיה", continent: "אירופה", flag: "🇳🇴", former: false, currencies: ["כתר נורווגי (קרונה)", "אורה"] },
-      { name: "סן מרינו", continent: "אירופה", flag: "🇸🇲", former: false, currencies: ["אירו", "אירו סנט", "לירה סן מרינזית"] },
-      { name: "סלובניה", continent: "אירופה", flag: "🇸🇮", former: false, currencies: ["אירו", "אירו סנט", "טולאר סלובני", "סטוטין"] },
-      { name: "סלובקיה", continent: "אירופה", flag: "🇸🇰", former: false, currencies: ["אירו", "אירו סנט", "קורונה סלובקית", "הלייר"] },
-      { name: "ספרד", continent: "אירופה", flag: "🇪🇸", former: false, currencies: ["אירו", "אירו סנט", "פזטה ספרדית", "סנטימו"] },
-      { name: "סרביה", continent: "אירופה", flag: "🇷🇸", former: false, currencies: ["דינר סרבי", "פארה"] },
-      { name: "פולין", continent: "אירופה", flag: "🇵🇱", former: false, currencies: ["זלוטי", "גרוש"] },
-      { name: "פורטוגל", continent: "אירופה", flag: "🇵🇹", former: false, currencies: ["אירו", "אירו סנט", "אסקודו פורטוגלי", "סנטאבו"] },
-      { name: "פינלנד", continent: "אירופה", flag: "🇫🇮", former: false, currencies: ["אירו", "אירו סנט", "מארקה פינית", "פני"] },
-      { name: "צ'כיה", continent: "אירופה", flag: "🇨🇿", former: false, currencies: ["קורונה צ'כית", "הלר"] },
-      { name: "צרפת", continent: "אירופה", flag: "🇫🇷", former: false, currencies: ["אירו", "אירו סנט", "פרנק צרפתי", "סנטים"] },
-      { name: "קוסובו", continent: "אירופה", flag: "🇽🇰", former: false, currencies: ["אירו", "אירו סנט"] },
-      { name: "קפריסין", continent: "אירופה", flag: "🇨🇾", former: false, currencies: ["אירו", "אירו סנט", "לירה קפריסאית", "סנט"] },
-      { name: "קרואטיה", continent: "אירופה", flag: "🇭🇷", former: false, currencies: ["אירו", "אירו סנט", "קונה קרואטית", "ליפה"] },
-      { name: "רומניה", continent: "אירופה", flag: "🇷🇴", former: false, currencies: ["לאו רומני", "באן"] },
-      { name: "רוסיה", continent: "אירופה", flag: "🇷🇺", former: false, currencies: ["רובל רוסי", "קופיקה"] },
-      { name: "שוודיה", continent: "אירופה", flag: "🇸🇪", former: false, currencies: ["כתר שוודי (קרונה)", "אורה"] },
-      { name: "שווייץ", continent: "אירופה", flag: "🇨🇭", former: false, currencies: ["פרנק שווייצרי", "ראפן / סנטים"] },
-
-      // אמריקה הצפונית והמרכזית
-      { name: "אל סלוודור", continent: "אמריקה הצפונית", flag: "🇸🇻", former: false, currencies: ["דולר אמריקאי", "סנט", "קולון סלוודורי"] },
-      { name: "ארה״ב", continent: "אמריקה הצפונית", flag: "🇺🇸", former: false, currencies: ["דולר אמריקאי", "סנט"] },
-      { name: "בהאמה", continent: "אמריקה הצפונית", flag: "🇧🇸", former: false, currencies: ["דולר בהאמי", "סנט"] },
-      { name: "בליז", continent: "אמריקה הצפונית", flag: "🇧🇿", former: false, currencies: ["דולר בליזי", "סנט"] },
-      { name: "ברבדוס", continent: "אמריקה הצפונית", flag: "🇧🇧", former: false, currencies: ["דולר ברבדי", "סנט"] },
-      { name: "ג'מייקה", continent: "אמריקה הצפונית", flag: "🇯🇲", former: false, currencies: ["דולר ג'מייקני", "סנט"] },
-      { name: "גואטמלה", continent: "אמריקה הצפונית", flag: "🇬🇹", former: false, currencies: ["קצאל", "סנטאבו"] },
-      { name: "האיטי", continent: "אמריקה הצפונית", flag: "🇭🇹", former: false, currencies: ["גורד", "סנטים"] },
-      { name: "הונדורס", continent: "אמריקה הצפונית", flag: "🇭🇳", former: false, currencies: ["למפירה", "סנטאבו"] },
-      { name: "הרפובליקה הדומיניקנית", continent: "אמריקה הצפונית", flag: "🇩🇴", former: false, currencies: ["פזו דומיניקני", "סנטאבו"] },
-      { name: "טרינידד וטובגו", continent: "אמריקה הצפונית", flag: "🇹🇹", former: false, currencies: ["דולר טרינידדי", "סנט"] },
-      { name: "מקסיקו", continent: "אמריקה הצפונית", flag: "🇲🇽", former: false, currencies: ["פזו מקסיקני", "סנטאבו"] },
-      { name: "ניקרגואה", continent: "אמריקה הצפונית", flag: "🇳🇮", former: false, currencies: ["קורדובה", "סנטאבו"] },
-      { name: "פנמה", continent: "אמריקה הצפונית", flag: "🇵🇦", former: false, currencies: ["בלבואה", "סנטסימו", "דולר אמריקאי"] },
-      { name: "קובה", continent: "אמריקה הצפונית", flag: "🇨🇺", former: false, currencies: ["פזו קובני", "סנטאבו"] },
-      { name: "קוסטה ריקה", continent: "אמריקה הצפונית", flag: "🇨🇷", former: false, currencies: ["קולון קוסטה ריקני", "סנטימו"] },
-      { name: "קנדה", continent: "אמריקה הצפונית", flag: "🇨🇦", former: false, currencies: ["דולר קנדי", "סנט"] },
-
-      // אמריקה הדרומית
-      { name: "אורוגוואי", continent: "אמריקה הדרומית", flag: "🇺🇾", former: false, currencies: ["פזו אורוגוואי", "סנטסימו"] },
-      { name: "אקוודור", continent: "אמריקה הדרומית", flag: "🇪🇨", former: false, currencies: ["דולר אמריקאי", "סנטאבו", "סוקרה"] },
-      { name: "ארגנטינה", continent: "אמריקה הדרומית", flag: "🇦🇷", former: false, currencies: ["פזו ארגנטינאי", "סנטאבו", "אאוסטרל"] },
-      { name: "בוליביה", continent: "אמריקה הדרומית", flag: "🇧🇴", former: false, currencies: ["בוליביאנו", "סנטאבו"] },
-      { name: "ברזיל", continent: "אמריקה הדרומית", flag: "🇧🇷", former: false, currencies: ["ריאל ברזילאי", "סנטאבו", "קרוזיירו"] },
-      { name: "גיאנה", continent: "אמריקה הדרומית", flag: "🇬🇾", former: false, currencies: ["דולר גיאני", "סנט"] },
-      { name: "ונצואלה", continent: "אמריקה הדרומית", flag: "🇻🇪", former: false, currencies: ["בוליבר", "סנטימו"] },
-      { name: "סורינאם", continent: "אמריקה הדרומית", flag: "🇸🇷", former: false, currencies: ["דולר סורינאמי", "סנט"] },
-      { name: "פרו", continent: "אמריקה הדרומית", flag: "🇵🇪", former: false, currencies: ["סול פרואני", "סנטימו", "אינטי"] },
-      { name: "פרגוואי", continent: "אמריקה הדרומית", flag: "🇵🇾", former: false, currencies: ["גוארני", "סנטימו"] },
-      { name: "צ'ילה", continent: "אמריקה הדרומית", flag: "🇨🇱", former: false, currencies: ["פזו צ'יליאני", "סנטאבו"] },
-      { name: "קולומביה", continent: "אמריקה הדרומית", flag: "🇨🇴", former: false, currencies: ["פזו קולומביאני", "סנטאבו"] },
-
-      // אפריקה
-      { name: "אוגנדה", continent: "אפריקה", flag: "🇺🇬", former: false, currencies: ["שילינג אוגנדי", "סנט"] },
-      { name: "אלג'יריה", continent: "אפריקה", flag: "🇩🇿", former: false, currencies: ["דינר אלג'יראי", "סנטים"] },
-      { name: "אנגולה", continent: "אפריקה", flag: "🇦🇴", former: false, currencies: ["קואנזה", "סנטימו"] },
-      { name: "אסוואטיני", continent: "אפריקה", flag: "🇸🇿", former: false, currencies: ["לילנגני", "סנט"] },
-      { name: "אריתריאה", continent: "אפריקה", flag: "🇪🇷", former: false, currencies: ["נאקפה", "סנט"] },
-      { name: "אתיופיה", continent: "אפריקה", flag: "🇪🇹", former: false, currencies: ["ביר אתיופי", "סנטים"] },
-      { name: "בוטסואנה", continent: "אפריקה", flag: "🇧🇼", former: false, currencies: ["פולה", "תבה"] },
-      { name: "גאנה", continent: "אפריקה", flag: "🇬🇭", former: false, currencies: ["סדי גאנאי", "פסווה"] },
-      { name: "דרום אפריקה", continent: "אפריקה", flag: "🇿🇦", former: false, currencies: ["ראנד דרום אפריקאי", "סנט"] },
-      { name: "זימבבואה", continent: "אפריקה", flag: "🇿🇼", former: false, currencies: ["דולר זימבבואי", "סנט"] },
-      { name: "זמביה", continent: "אפריקה", flag: "🇿🇲", former: false, currencies: ["קוואצ'ה זמבית", "נגווה"] },
-      { name: "חוף השנהב", continent: "אפריקה", flag: "🇨🇮", former: false, currencies: ["פרנק CFA", "סנטים"] },
-      { name: "טנזניה", continent: "אפריקה", flag: "🇹🇿", former: false, currencies: ["שילינג טנזני", "סנט"] },
-      { name: "כף ורדה", continent: "אפריקה", flag: "🇨🇻", former: false, currencies: ["אסקודו כף ורדה", "סנטאבו"] },
-      { name: "לוב", continent: "אפריקה", flag: "🇱🇾", former: false, currencies: ["דינר לובי", "דירהם"] },
-      { name: "מאוריציוס", continent: "אפריקה", flag: "🇲🇺", former: false, currencies: ["רופי מאוריצי", "סנט"] },
-      { name: "מדגסקר", continent: "אפריקה", flag: "🇲🇬", former: false, currencies: ["אריארי", "איראימבילאנג'ה"] },
-      { name: "מוזמביק", continent: "אפריקה", flag: "🇲🇿", former: false, currencies: ["מטיקל", "סנטאבו"] },
-      { name: "מלאווי", continent: "אפריקה", flag: "🇲🇼", former: false, currencies: ["קוואצ'ה מלאווית", "טמבאלה"] },
-      { name: "מצרים", continent: "אפריקה", flag: "🇪🇬", former: false, currencies: ["לירה מצרית", "קירש / פיאסטר", "מילים"] },
-      { name: "מרוקו", continent: "אפריקה", flag: "🇲🇦", former: false, currencies: ["דירהם מרוקאי", "סנטים"] },
-      { name: "ניגריה", continent: "אפריקה", flag: "🇳🇬", former: false, currencies: ["נאירה", "קובו"] },
-      { name: "נמיביה", continent: "אפריקה", flag: "🇳🇦", former: false, currencies: ["דולר נמיבי", "סנט"] },
-      { name: "סודאן", continent: "אפריקה", flag: "🇸🇩", former: false, currencies: ["לירה סודאנית", "קירש"] },
-      { name: "סיישל", continent: "אפריקה", flag: "🇸🇨", former: false, currencies: ["רופי סיישלי", "סנט"] },
-      { name: "סנגל", continent: "אפריקה", flag: "🇸🇳", former: false, currencies: ["פרנק CFA", "סנטים"] },
-      { name: "קמרון", continent: "אפריקה", flag: "🇨🇲", former: false, currencies: ["פרנק CFA", "סנטים"] },
-      { name: "קניה", continent: "אפריקה", flag: "🇰🇪", former: false, currencies: ["שילינג קנייתי", "סנט"] },
-      { name: "רואנדה", continent: "אפריקה", flag: "🇷🇼", former: false, currencies: ["פרנק רואנדי", "סנטים"] },
-      { name: "תוניסיה", continent: "אפריקה", flag: "🇹🇳", former: false, currencies: ["דינר תוניסאי", "מילים"] },
-
-      // אוקיאניה
-      { name: "אוסטרליה", continent: "אוקיאניה", flag: "🇦🇺", former: false, currencies: ["דולר אוסטרלי", "סנט", "לירה אוסטרלית", "שילינג", "פני"] },
-      { name: "ונואטו", continent: "אוקיאניה", flag: "🇻🇺", former: false, currencies: ["ואטו"] },
-      { name: "טונגה", continent: "אוקיאניה", flag: "🇹🇴", former: false, currencies: ["פאנגה", "סניטי"] },
-      { name: "ניו זילנד", continent: "אוקיאניה", flag: "🇳🇿", former: false, currencies: ["דולר ניו זילנדי", "סנט"] },
-      { name: "סמואה", continent: "אוקיאניה", flag: "🇼🇸", former: false, currencies: ["טאלה", "סנה"] },
-      { name: "פיג'י", continent: "אוקיאניה", flag: "🇫🇯", former: false, currencies: ["דולר פיג'יאני", "סנט"] },
-      { name: "פפואה גינאה החדשה", continent: "אוקיאניה", flag: "🇵🇬", former: false, currencies: ["קינה", "טואיה"] },
-
-      // מדינות עבר היסטוריות
-      { name: "ברית המועצות", continent: "אירופה", flag: "🚩", former: true, currencies: ["רובל סובייטי", "קופיקה"] },
-      { name: "גרמניה המזרחית", continent: "אירופה", flag: "🇩🇪", former: true, currencies: ["מארק מזרח גרמני", "פפניג"] },
-      { name: "גרמניה המערבית", continent: "אירופה", flag: "🇩🇪", former: true, currencies: ["מארק גרמני", "פפניג"] },
-      { name: "יוגוסלביה", continent: "אירופה", flag: "🏳️", former: true, currencies: ["דינר יוגוסלבי", "פארה"] },
-      { name: "צ'כוסלובקיה", continent: "אירופה", flag: "🇨🇿", former: true, currencies: ["קורונה צ'כוסלובקית", "הלייר"] },
-      { name: "האימפריה האוסטרו-הונגרית", continent: "אירופה", flag: "👑", former: true, currencies: ["קרונה אוסטרו-הונגרית", "הלר", "פילר"] },
-      { name: "האימפריה העות'מאנית", continent: "אסיה", flag: "🌙", former: true, currencies: ["לירה עות'מאנית", "קורוש", "פארה"] }
-    ];
-
-    const hebrewCollator = new Intl.Collator('he');
-    COUNTRIES_DB.sort((a, b) => hebrewCollator.compare(a.name, b.name));
-
-    const CONTINENT_ORDER = ["אסיה", "אירופה", "אמריקה הצפונית", "אמריקה הדרומית", "אפריקה", "אוקיאניה"];
-
     function escapeJsStr(str) {
       return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
     }
@@ -629,769 +447,36 @@
       return String(str).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
     }
 
-    // 1. Era Rank per Country (Older currency era -> Newer currency era)
-    const ERA_MAP = {
-      "ישראל": {
-        "מיל ארץ-ישראלי": 1, "פרוטה": 2,
-        "לירה ישראלית": 3, "אגורות (לירה)": 3,
-        "שקל (ישן)": 4,
-        "שקל חדש": 5, "אגורות": 5
-      },
-      // 7 Additional historical currency countries
-      "אוסטרליה": {
-        "לירה אוסטרלית": 1, "שילינג": 1, "פני": 1,
-        "דולר אוסטרלי": 2, "סנט": 2
-      },
-      "אוקראינה": {
-        "קרבובנץ": 1,
-        "הריבניה": 2, "קופיקה": 2
-      },
-      "אל סלוודור": {
-        "קולון סלוודורי": 1,
-        "דולר אמריקאי": 2, "סנט": 2
-      },
-      "אקוודור": {
-        "סוקרה": 1,
-        "דולר אמריקאי": 2, "סנטאבו": 2
-      },
-      "ארגנטינה": {
-        "אאוסטרל": 1,
-        "פזו ארגנטינאי": 2, "סנטאבו": 2
-      },
-      "ברזיל": {
-        "קרוזיירו": 1,
-        "ריאל ברזילאי": 2, "סנטאבו": 2
-      },
-      "פרו": {
-        "אינטי": 1,
-        "סול פרואני": 2, "סנטימו": 2
-      },
-      // Eurozone countries
-      "גרמניה": { "מארק גרמני": 1, "פפניג": 1, "אירו": 2, "אירו סנט": 2 },
-      "צרפת": { "פרנק צרפתי": 1, "סנטים": 1, "אירו": 2, "אירו סנט": 2 },
-      "איטליה": { "לירה איטלקית": 1, "צ'נטזימו": 1, "אירו": 2, "אירו סנט": 2 },
-      "ספרד": { "פזטה ספרדית": 1, "סנטימו": 1, "אירו": 2, "אירו סנט": 2 },
-      "הולנד": { "גילדן הולנדי": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 },
-      "בלגיה": { "פרנק בלגי": 1, "סנטים": 1, "אירו": 2, "אירו סנט": 2 },
-      "אוסטריה": { "שילינג אוסטרי": 1, "גרושן": 1, "אירו": 2, "אירו סנט": 2 },
-      "יוון": { "דרכמה יוונית": 1, "לפטה": 1, "אירו": 2, "אירו סנט": 2 },
-      "פורטוגל": { "אסקודו פורטוגלי": 1, "סנטאבו": 1, "אירו": 2, "אירו סנט": 2 },
-      "אירלנד": { "לירה אירית": 1, "פני": 1, "אירו": 2, "אירו סנט": 2 },
-      "פינלנד": { "מארקה פינית": 1, "פני": 1, "אירו": 2, "אירו סנט": 2 },
-      "אסטוניה": { "קרון אסטוני": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 },
-      "לטביה": { "לאטס לטבי": 1, "סנטימס": 1, "אירו": 2, "אירו סנט": 2 },
-      "ליטא": { "ליטאס ליטאי": 1, "סנטאס": 1, "אירו": 2, "אירו סנט": 2 },
-      "סלובקיה": { "קורונה סלובקית": 1, "הלייר": 1, "אירו": 2, "אירו סנט": 2 },
-      "סלובניה": { "טולאר סלובני": 1, "סטוטין": 1, "אירו": 2, "אירו סנט": 2 },
-      "קרואטיה": { "קונה קרואטית": 1, "ליפה": 1, "אירו": 2, "אירו סנט": 2 },
-      "קפריסין": { "לירה קפריסאית": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 },
-      "מלטה": { "לירה מלטזית": 1, "סנט": 1, "אירו": 2, "אירו סנט": 2 },
-      "בולגריה": { "לב בולגרי": 1, "סטוטינקי": 1, "אירו": 2, "אירו סנט": 2 },
-      "ותיקן": { "לירה ותיקנית": 1, "אירו": 2, "אירו סנט": 2 },
-      "לוקסמבורג": { "פרנק לוקסמבורגי": 1, "אירו": 2, "אירו סנט": 2 },
-      "מונקו": { "פרנק מונגאסקי": 1, "אירו": 2, "אירו סנט": 2 },
-      "סן מרינו": { "לירה סן מרינזית": 1, "אירו": 2, "אירו סנט": 2 }
-    };
-
-    function getEraRank(countryName, currencyName) {
-      const c = (currencyName || "").trim();
-      if (ERA_MAP[countryName] && ERA_MAP[countryName][c] !== undefined) {
-        return ERA_MAP[countryName][c];
-      }
-      const countryObj = COUNTRIES_DB.find(x => x.name === countryName);
-      if (countryObj && countryObj.currencies.includes("אירו")) {
-        if (c === "אירו" || c === "אירו סנט") return 2;
-        if (countryObj.currencies.includes(c)) return 1;
-      }
-      return 10;
+    // Number formatting with commas for large denominations (1,000, 1,000,000) without affecting decimals or raw values
+    function formatDenomination(val) {
+      if (val === null || val === undefined || val === "") return "";
+      const str = String(val).trim().replace(/,/g, "");
+      const num = Number(str);
+      if (isNaN(num)) return String(val);
+      const parts = str.split(".");
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return parts.join(".");
     }
 
-    // 2. Country-Specific Unit Hierarchy (0 = Main currency, 1 = Primary sub-unit, 2 = Secondary sub-unit)
-    const COUNTRY_UNIT_TIERS = {
-      // ישראל
-      "ישראל": {
-        "שקל חדש": 0, "אגורות": 1,
-        "שקל (ישן)": 0,
-        "לירה ישראלית": 0, "אגורות (לירה)": 1,
-        "פרוטה": 0, "מיל ארץ-ישראלי": 0
-      },
-      // אסיה
-      "אוזבקיסטן": { "סום אוזבקי": 0, "טיין": 1 },
-      "אזרבייג'ן": { "מאנאט אזרי": 0, "קפיק": 1 },
-      "איחוד האמירויות": { "דירהם": 0, "פילס": 1 },
-      "אינדונזיה": { "רופיה אינדונזית": 0, "סן": 1 },
-      "איראן": { "ריאל איראני": 0, "תומאן": 1 },
-      "אפגניסטן": { "אפגני": 0, "פול": 1 },
-      "ארמניה": { "דראם ארמני": 0, "לומה": 1 },
-      "בהוטן": { "נגולטרום": 0, "צ'הטרום": 1 },
-      "בחריין": { "דינר בחרייני": 0, "פילס": 1 },
-      "בנגלדש": { "טאקה": 0, "פויסה": 1 },
-      "ברוניי": { "דולר ברוניי": 0, "סנט": 1 },
-      "גאורגיה": { "לארי גאורגי": 0, "תתרי": 1 },
-      "הודו": { "רופי הודי": 0, "פאיסה": 1 },
-      "הונג קונג": { "דולר הונג קונגי": 0, "סנט": 1 },
-      "וייטנאם": { "דונג וייטנאמי": 0, "האו": 1, "שו": 2 },
-      "טאיוואן": { "דולר טאיוואני חדש": 0, "ג'יאו": 1, "פן": 2 },
-      "טג'יקיסטן": { "סומוני": 0, "דיראם": 1 },
-      "טורקמניסטן": { "מאנאט טורקמני": 0, "טנגה": 1 },
-      "יפן": { "ין יפני": 0, "סן": 1 },
-      "ירדן": { "דינר ירדני": 0, "קירש": 1, "פילס": 2 },
-      "כווית": { "דינר כוויתי": 0, "פילס": 1 },
-      "לאוס": { "קיפ לאי": 0, "אט": 1 },
-      "לבנון": { "לירה לבנונית": 0, "פיאסטר": 1 },
-      "מאלדיביים": { "רופיה מלדיבית": 0, "לארי": 1 },
-      "מונגוליה": { "טוגרוג": 0, "מונגו": 1 },
-      "מזרח טימור": { "דולר אמריקאי": 0, "סנטאבו": 1 },
-      "מיאנמר": { "קיאט": 0, "פיה": 1 },
-      "מלזיה": { "רינגיט מלזי": 0, "סן": 1 },
-      "מקאו": { "פטאקה": 0, "אבו": 1 },
-      "נפאל": { "רופי נפאלי": 0, "פאיסה": 1 },
-      "סוריה": { "לירה סורית": 0, "פיאסטר": 1 },
-      "סין": { "יואן (רנמינבי)": 0, "ג'יאו": 1, "פן": 2 },
-      "סינגפור": { "דולר סינגפורי": 0, "סנט": 1 },
-      "סרי לנקה": { "רופי סרי לנקי": 0, "סנט": 1 },
-      "עומאן": { "ריאל עומאני": 0, "באיזה": 1 },
-      "עיראק": { "דינר עיראקי": 0, "פילס": 1 },
-      "ערב הסעודית": { "ריאל סעודי": 0, "הלאלה": 1 },
-      "פיליפינים": { "פזו פיליפיני": 0, "סנטימו": 1 },
-      "פקיסטן": { "רופי פקיסטני": 0, "פאיסה": 1 },
-      "קזחסטן": { "טנגה קזחי": 0, "טיין": 1 },
-      "קטאר": { "ריאל קטארי": 0, "דירהם": 1 },
-      "קירגיזסטן": { "סום קירגיזי": 0, "טיין": 1 },
-      "קמבודיה": { "ריאל קמבודי": 0, "סן": 1 },
-      "קוריאה הדרומית": { "וון דרום קוריאני": 0, "ג'ון": 1 },
-      "קוריאה הצפונית": { "וון צפון קוריאני": 0, "צ'ון": 1 },
-      "תאילנד": { "באט תאילנדי": 0, "סאטאנג": 1 },
-      "תימן": { "ריאל תימני": 0, "פילס": 1 },
-
-      // אירופה
-      "אוסטריה": { "אירו": 0, "אירו סנט": 1, "שילינג אוסטרי": 0, "גרושן": 1 },
-      "אוקראינה": { "הריבניה": 0, "קופיקה": 1, "קרבובנץ": 0 },
-      "איטליה": { "אירו": 0, "אירו סנט": 1, "לירה איטלקית": 0, "צ'נטזימו": 1 },
-      "איסלנד": { "קרונה איסלנדית": 0, "איירר": 1 },
-      "אירלנד": { "אירו": 0, "אירו סנט": 1, "לירה אירית": 0, "פני": 1 },
-      "אלבניה": { "לק אלבני": 0, "צ'ינדארקה": 1 },
-      "אנדורה": { "אירו": 0, "אירו סנט": 1 },
-      "אסטוניה": { "אירו": 0, "אירו סנט": 1, "קרון אסטוני": 0, "סנט": 1 },
-      "בולגריה": { "לב בולגרי": 0, "סטוטינקי": 1, "אירו": 0, "אירו סנט": 1 },
-      "בוסניה והרצגובינה": { "מארק סחיר": 0, "פניג": 1 },
-      "בלארוס": { "רובל בלארוסי": 0, "קופיקה": 1 },
-      "בלגיה": { "אירו": 0, "אירו סנט": 1, "פרנק בלגי": 0, "סנטים": 1 },
-      "בריטניה": { "לירה שטרלינג": 0, "שילינג": 1, "פני / פנס": 1, "פארתינג": 2 },
-      "גרמניה": { "אירו": 0, "אירו סנט": 1, "מארק גרמני": 0, "פפניג": 1 },
-      "דנמרק": { "כתר דני (קרונה)": 0, "אורה": 1 },
-      "הולנד": { "אירו": 0, "אירו סנט": 1, "גילדן הולנדי": 0, "סנט": 1 },
-      "הונגריה": { "פורינט": 0, "פילר": 1 },
-      "ותיקן": { "אירו": 0, "אירו סנט": 1, "לירה ותיקנית": 0 },
-      "טורקיה": { "לירה טורקית": 0, "קורוש": 1 },
-      "יוון": { "אירו": 0, "אירו סנט": 1, "דרכמה יוונית": 0, "לפטה": 1 },
-      "לוקסמבורג": { "אירו": 0, "אירו סנט": 1, "פרנק לוקסמבורגי": 0 },
-      "לטביה": { "אירו": 0, "אירו סנט": 1, "לאטס לטבי": 0, "סנטימס": 1 },
-      "ליטא": { "אירו": 0, "אירו סנט": 1, "ליטאס ליטאי": 0, "סנטאס": 1 },
-      "ליכטנשטיין": { "פרנק שווייצרי": 0, "ראפן": 1 },
-      "מולדובה": { "לאו מולדובי": 0, "באן": 1 },
-      "מונטנגרו": { "אירו": 0, "אירו סנט": 1 },
-      "מונקו": { "אירו": 0, "אירו סנט": 1, "פרנק מונגאסקי": 0 },
-      "מלטה": { "אירו": 0, "אירו סנט": 1, "לירה מלטזית": 0, "סנט": 1 },
-      "מקדוניה הצפונית": { "דינר מקדוני": 0, "דני": 1 },
-      "נורווגיה": { "כתר נורווגי (קרונה)": 0, "אורה": 1 },
-      "סן מרינו": { "אירו": 0, "אירו סנט": 1, "לירה סן מרינזית": 0 },
-      "סלובניה": { "אירו": 0, "אירו סנט": 1, "טולאר סלובני": 0, "סטוטין": 1 },
-      "סלובקיה": { "אירו": 0, "אירו סנט": 1, "קורונה סלובקית": 0, "הלייר": 1 },
-      "ספרד": { "אירו": 0, "אירו סנט": 1, "פזטה ספרדית": 0, "סנטימו": 1 },
-      "סרביה": { "דינר סרבי": 0, "פארה": 1 },
-      "פולין": { "זלוטי": 0, "גרוש": 1 },
-      "פורטוגל": { "אירו": 0, "אירו סנט": 1, "אסקודו פורטוגלי": 0, "סנטאבו": 1 },
-      "פינלנד": { "אירו": 0, "אירו סנט": 1, "מארקה פינית": 0, "פני": 1 },
-      "צ'כיה": { "קורונה צ'כית": 0, "הלר": 1 },
-      "צרפת": { "אירו": 0, "אירו סנט": 1, "פרנק צרפתי": 0, "סנטים": 1 },
-      "קוסובו": { "אירו": 0, "אירו סנט": 1 },
-      "קפריסין": { "אירו": 0, "אירו סנט": 1, "לירה קפריסאית": 0, "סנט": 1 },
-      "קרואטיה": { "אירו": 0, "אירו סנט": 1, "קונה קרואטית": 0, "ליפה": 1 },
-      "רומניה": { "לאו רומני": 0, "באן": 1 },
-      "רוסיה": { "רובל רוסי": 0, "קופיקה": 1 },
-      "שוודיה": { "כתר שוודי (קרונה)": 0, "אורה": 1 },
-      "שווייץ": { "פרנק שווייצרי": 0, "ראפן / סנטים": 1 },
-
-      // אמריקה הצפונית והמרכזית
-      "אל סלוודור": { "דולר אמריקאי": 0, "סנט": 1, "קולון סלוודורי": 0 },
-      "ארה״ב": { "דולר אמריקאי": 0, "סנט": 1 },
-      "בהאמה": { "דולר בהאמי": 0, "סנט": 1 },
-      "בליז": { "דולר בליזי": 0, "סנט": 1 },
-      "ברבדוס": { "דולר ברבדי": 0, "סנט": 1 },
-      "ג'מייקה": { "דולר ג'מייקני": 0, "סנט": 1 },
-      "גואטמלה": { "קצאל": 0, "סנטאבו": 1 },
-      "האיטי": { "גורד": 0, "סנטים": 1 },
-      "הונדורס": { "למפירה": 0, "סנטאבו": 1 },
-      "הרפובליקה הדומיניקנית": { "פזו דומיניקני": 0, "סנטאבו": 1 },
-      "טרינידד וטובגו": { "דולר טרינידדי": 0, "סנט": 1 },
-      "מקסיקו": { "פזו מקסיקני": 0, "סנטאבו": 1 },
-      "ניקרגואה": { "קורדובה": 0, "סנטאבו": 1 },
-      "פנמה": { "בלבואה": 0, "דולר אמריקאי": 0, "סנטסימו": 1 },
-      "קובה": { "פזו קובני": 0, "סנטאבו": 1 },
-      "קוסטה ריקה": { "קולון קוסטה ריקני": 0, "סנטימו": 1 },
-      "קנדה": { "דולר קנדי": 0, "סנט": 1 },
-
-      // אמריקה הדרומית
-      "אורוגוואי": { "פזו אורוגוואי": 0, "סנטסימו": 1 },
-      "אקוודור": { "דולר אמריקאי": 0, "סנטאבו": 1, "סוקרה": 0 },
-      "ארגנטינה": { "פזו ארגנטינאי": 0, "סנטאבו": 1, "אאוסטרל": 0 },
-      "בוליביה": { "בוליביאנו": 0, "סנטאבו": 1 },
-      "ברזיל": { "ריאל ברזילאי": 0, "סנטאבו": 1, "קרוזיירו": 0 },
-      "גיאנה": { "דולר גיאני": 0, "סנט": 1 },
-      "ונצואלה": { "בוליבר": 0, "סנטימו": 1 },
-      "סורינאם": { "דולר סורינאמי": 0, "סנט": 1 },
-      "פרו": { "סול פרואני": 0, "סנטימו": 1, "אינטי": 0 },
-      "פרגוואי": { "גוארני": 0, "סנטימו": 1 },
-      "צ'ילה": { "פזו צ'יליאני": 0, "סנטאבו": 1 },
-      "קולומביה": { "פזו קולומביאני": 0, "סנטאבו": 1 },
-
-      // אפריקה
-      "אוגנדה": { "שילינג אוגנדי": 0, "סנט": 1 },
-      "אלג'יריה": { "דינר אלג'יראי": 0, "סנטים": 1 },
-      "אנגולה": { "קואנזה": 0, "סנטימו": 1 },
-      "אסוואטיני": { "לילנגני": 0, "סנט": 1 },
-      "אריתריאה": { "נאקפה": 0, "סנט": 1 },
-      "אתיופיה": { "ביר אתיופי": 0, "סנטים": 1 },
-      "בוטסואנה": { "פולה": 0, "תבה": 1 },
-      "גאנה": { "סדי גאנאי": 0, "פסווה": 1 },
-      "דרום אפריקה": { "ראנד דרום אפריקאי": 0, "סנט": 1 },
-      "זימבבואה": { "דולר זימבבואי": 0, "סנט": 1 },
-      "זמביה": { "קוואצ'ה זמבית": 0, "נגווה": 1 },
-      "חוף השנהב": { "פרנק CFA": 0, "סנטים": 1 },
-      "טנזניה": { "שילינג טנזני": 0, "סנט": 1 },
-      "כף ורדה": { "אסקודו כף ורדה": 0, "סנטאבו": 1 },
-      "לוב": { "דינר לובי": 0, "דירהם": 1 },
-      "מאוריציוס": { "רופי מאוריצי": 0, "סנט": 1 },
-      "מדגסקר": { "אריארי": 0, "איראימבילאנג'ה": 1 },
-      "מוזמביק": { "מטיקל": 0, "סנטאבו": 1 },
-      "מלאווי": { "קוואצ'ה מלאווית": 0, "טמבאלה": 1 },
-      "מצרים": { "לירה מצרית": 0, "קירש / פיאסטר": 1, "מילים": 2 },
-      "מרוקו": { "דירהם מרוקאי": 0, "סנטים": 1 },
-      "ניגריה": { "נאירה": 0, "קובו": 1 },
-      "נמיביה": { "דולר נמיבי": 0, "סנט": 1 },
-      "סודאן": { "לירה סודאנית": 0, "קירש": 1 },
-      "סיישל": { "רופי סיישלי": 0, "סנט": 1 },
-      "סנגל": { "פרנק CFA": 0, "סנטים": 1 },
-      "קמרון": { "פרנק CFA": 0, "סנטים": 1 },
-      "קניה": { "שילינג קנייתי": 0, "סנט": 1 },
-      "רואנדה": { "פרנק רואנדי": 0, "סנטים": 1 },
-      "תוניסיה": { "דינר תוניסאי": 0, "מילים": 1 },
-
-      // אוקיאניה
-      "אוסטרליה": { "דולר אוסטרלי": 0, "סנט": 1, "לירה אוסטרלית": 0, "שילינג": 1, "פני": 2 },
-      "ונואטו": { "ואטו": 0 },
-      "טונגה": { "פאנגה": 0, "סניטי": 1 },
-      "ניו זילנד": { "דולר ניו זילנדי": 0, "סנט": 1 },
-      "סמואה": { "טאלה": 0, "סנה": 1 },
-      "פיג'י": { "דולר פיג'יאני": 0, "סנט": 1 },
-      "פפואה גינאה החדשה": { "קינה": 0, "טואיה": 1 },
-
-      // מדינות עבר היסטוריות
-      "ברית המועצות": { "רובל סובייטי": 0, "קופיקה": 1 },
-      "גרמניה המזרחית": { "מארק מזרח גרמני": 0, "פפניג": 1 },
-      "גרמניה המערבית": { "מארק גרמני": 0, "פפניג": 1 },
-      "יוגוסלביה": { "דינר יוגוסלבי": 0, "פארה": 1 },
-      "צ'כוסלובקיה": { "קורונה צ'כוסלובקית": 0, "הלייר": 1 },
-      "האימפריה האוסטרו-הונגרית": { "קרונה אוסטרו-הונגרית": 0, "הלר": 1, "פילר": 1 },
-      "האימפריה העות'מאנית": { "לירה עות'מאנית": 0, "קורוש": 1, "פארה": 2 }
-    };
-
-    function getUnitRank(countryName, currencyName) {
-      const c = (currencyName || "").trim();
-      const countryMap = COUNTRY_UNIT_TIERS[countryName];
-      if (countryMap && countryMap[c] !== undefined) {
-        return countryMap[c];
-      }
-      if (c === "אירו") return 0;
-      if (c === "אירו סנט") return 1;
-      const fallbackSub = [
-        "אגורות", "פרוטה", "מיל", "סנט", "סנטים", "סנטאבו", "סנטסימו", "סנטימו",
-        "פפניג", "פני", "פנס", "פארתינג", "שילינג", "אורה", "קופיקה", "גרושן", "גרוש",
-        "לפטה", "הלר", "הלייר", "פילר", "קורוש", "פאיסה", "פילס", "הלאלה", "סאטאנג",
-        "סן", "באן", "סטוטינקי", "סטוטין", "ליפה", "ראפן", "טיין", "אגורה",
-        "צ'נטזימו", "איירר", "צ'ינדארקה", "פניג", "דני", "פארה", "קפיק", "פול",
-        "לומה", "צ'הטרום", "פויסה", "תתרי", "האו", "שו", "ג'יאו", "פן", "קירש",
-        "אט", "פיאסטר", "מונגו", "פיה", "אבו", "באיזה", "ג'ון", "צ'ון", "תבה",
-        "פסווה", "נגווה", "איראימבילאנג'ה", "טמבאלה", "קובו", "סניטי", "סנה", "טואיה"
-      ];
-      return fallbackSub.some(k => c.includes(k)) ? 1 : 0;
+    function parseDenomination(rawStr) {
+      if (rawStr === null || rawStr === undefined) return NaN;
+      const cleaned = String(rawStr).trim().replace(/,/g, "");
+      if (cleaned === "") return NaN;
+      return parseFloat(cleaned);
     }
 
-    // 3. Automatic Series Sorting & Info (ⓘ) for 45 Countries (19 Series-by-Year + 26 Currency-Eras)
-    const SERIES_INFO_DB = {
-      // --- 19 Countries with Series-by-Year Sorting (including Commonwealth portraits & Euro transitions) ---
-      "הולנד": {
-        currencies: ["גילדן הולנדי", "סנט"],
-        description: "מטבעות הגילדן והסנט ההולנדיים ממוינים אוטומטית לפי תקופת המלכה שעל המטבע בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
-        ranges: [
-          { years: "עד 1948", label: "המלכה וילהלמינה", maxYear: 1948 },
-          { years: "1949–1980", label: "המלכה יוליאנה", maxYear: 1980 },
-          { years: "1981–2001", label: "המלכה ביאטריקס", maxYear: 2099 }
-        ],
-        infoRows: [
-          { years: "עד 1948", label: "המלכה וילהלמינה" },
-          { years: "1949–1980", label: "המלכה יוליאנה" },
-          { years: "1981–2001", label: "המלכה ביאטריקס" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף סדרת הגילדן (או בסוף סדרת האירו)."
-      },
-      "בלגיה": {
-        currencies: ["פרנק בלגי", "סנטים"],
-        description: "מטבעות הפרנק הבלגי ממוינים אוטומטית לפי המלך וסדרת העיצוב בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
-        ranges: [
-          { years: "עד 1950", label: "לאופולד השלישי והעוצר שארל", maxYear: 1950 },
-          { years: "1951–1985", label: "בודואן — סדרה קלאסית", maxYear: 1985 },
-          { years: "1986–1993", label: "בודואן — סדרה מודרנית", maxYear: 1993 },
-          { years: "1994–2001", label: "אלברט השני", maxYear: 2099 }
-        ],
-        infoRows: [
-          { years: "עד 1950", label: "לאופולד השלישי והעוצר שארל" },
-          { years: "1951–1985", label: "בודואן — סדרה קלאסית" },
-          { years: "1986–1993", label: "בודואן — סדרה מודרנית" },
-          { years: "1994–2001", label: "אלברט השני" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף סדרת הפרנק (או בסוף סדרת האירו)."
-      },
-      "בריטניה": {
-        currencies: ["לירה שטרלינג", "שילינג", "פני / פנס", "פארתינג"],
-        description: "המטבעות הבריטיים ממוינים אוטומטית לפי השליט, דיוקן המלכה והמעבר לשיטה העשרונית (1971) בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1952", label: "ג'ורג' החמישי / ג'ורג' השישי (טרום-עשרוני)", maxYear: 1952 },
-          { years: "1953–1967", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק, טרום-עשרוני)", maxYear: 1967 },
-          { years: "1968–1970", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין, טרום-עשרוני)", maxYear: 1970 },
-          { years: "1971–1984", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין, עשרוני)", maxYear: 1984 },
-          { years: "1985–1997", label: "אליזבת השנייה — דיוקן שלישי (רפאל מקלוף)", maxYear: 1997 },
-          { years: "1998–2015", label: "אליזבת השנייה — דיוקן רביעי (איאן ראנק-ברודלי)", maxYear: 2015 },
-          { years: "2015–2022", label: "אליזבת השנייה — דיוקן חמישי (ג'ודי קלארק)", maxYear: 2022 },
-          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
-        ],
-        note: "בתוך כל סדרה מופיעים קודם לירה, אחריה שילינג, ואחריו פני. פריטים ללא שנה מופיעים בסוף."
-      },
-      "אוסטרליה": {
-        currencies: ["לירה אוסטרלית", "שילינג", "פני", "דולר אוסטרלי", "סנט"],
-        description: "המטבעות האוסטרליים ממוינים אוטומטית מתקופת הלירה לדולר ולפי דיוקן השליט בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1952", label: "ג'ורג' החמישי / ג'ורג' השישי (תקופת הלירה)", maxYear: 1952 },
-          { years: "1953–1964", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק, תקופת הלירה)", maxYear: 1964 },
-          { years: "1966–1984", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין, דולר עשרוני)", maxYear: 1984 },
-          { years: "1985–1998", label: "אליזבת השנייה — דיוקן שלישי (רפאל מקלוף)", maxYear: 1998 },
-          { years: "1999–2019", label: "אליזבת השנייה — דיוקן רביעי (איאן ראנק-ברודלי)", maxYear: 2019 },
-          { years: "2019–2023", label: "אליזבת השנייה — דיוקן חמישי (ג'ודי קלארק)", maxYear: 2023 },
-          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
-        ],
-        note: "מטבעות לירה, שילינג ופני מופיעים ראשונים כתקופה קודמת, ובתוך הדולר המיון ממשיך לפי הדיוקן."
-      },
-      "קנדה": {
-        currencies: ["דולר קנדי", "סנט"],
-        description: "מטבעות הדולר הקנדי ממוינים אוטומטית לפי השליט ודיוקן המלכה (כולל העיצובים הקנדיים) בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1952", label: "ג'ורג' השישי", maxYear: 1952 },
-          { years: "1953–1964", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק)", maxYear: 1964 },
-          { years: "1965–1989", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין)", maxYear: 1989 },
-          { years: "1990–2002", label: "אליזבת השנייה — דיוקן שלישי (דורה דה פדרי-האנט, עיצוב קנדי)", maxYear: 2002 },
-          { years: "2003–2023", label: "אליזבת השנייה — דיוקן רביעי (סוזנה בלאנט, עיצוב קנדי)", maxYear: 2023 },
-          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "ניו זילנד": {
-        currencies: ["דולר ניו זילנדי", "סנט"],
-        description: "מטבעות הדולר הניו זילנדי ממוינים אוטומטית לפי השליט ודיוקן המלכה בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1952", label: "ג'ורג' החמישי / ג'ורג' השישי", maxYear: 1952 },
-          { years: "1953–1965", label: "אליזבת השנייה — דיוקן ראשון (מרי גיליק)", maxYear: 1965 },
-          { years: "1967–1985", label: "אליזבת השנייה — דיוקן שני (ארנולד מייצ'ין)", maxYear: 1985 },
-          { years: "1986–1998", label: "אליזבת השנייה — דיוקן שלישי (רפאל מקלוף)", maxYear: 1998 },
-          { years: "1999–2018", label: "אליזבת השנייה — דיוקן רביעי (איאן ראנק-ברודלי)", maxYear: 2018 },
-          { years: "2019–2022", label: "אליזבת השנייה — דיוקן חמישי (ג'ודי קלארק)", maxYear: 2022 },
-          { years: "משנת 2023", label: "צ'ארלס השלישי", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "שוודיה": {
-        currencies: ["כתר שוודי (קרונה)", "אורה"],
-        description: "מטבעות הכתר השוודי ממוינים אוטומטית לפי המלך שעל המטבע בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1950", label: "גוסטב החמישי", maxYear: 1950 },
-          { years: "1951–1973", label: "גוסטב השישי אדולף", maxYear: 1973 },
-          { years: "משנת 1974", label: "קרל השישה עשר גוסטב", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "דנמרק": {
-        currencies: ["כתר דני (קרונה)", "אורה"],
-        description: "מטבעות הכתר הדני ממוינים אוטומטית לפי המלך/המלכה בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1947", label: "כריסטיאן העשירי", maxYear: 1947 },
-          { years: "1948–1972", label: "פרדריק התשיעי", maxYear: 1972 },
-          { years: "1973–2023", label: "מרגרטה השנייה", maxYear: 2023 },
-          { years: "משנת 2024", label: "פרדריק העשירי", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "נורווגיה": {
-        currencies: ["כתר נורווגי (קרונה)", "אורה"],
-        description: "מטבעות הכתר הנורווגי ממוינים אוטומטית לפי המלך בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1957", label: "הוקון השביעי", maxYear: 1957 },
-          { years: "1958–1991", label: "אולף החמישי", maxYear: 1991 },
-          { years: "משנת 1992", label: "הארלד החמישי", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "ספרד": {
-        currencies: ["פזטה ספרדית", "סנטימו"],
-        description: "מטבעות הפזטה הספרדית ממוינים אוטומטית לפי התקופה ההיסטורית בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
-        ranges: [
-          { years: "עד 1939", label: "הרפובליקה הספרדית", maxYear: 1939 },
-          { years: "1940–1975", label: "תקופת פרנקו", maxYear: 1975 },
-          { years: "1976–2001", label: "המלך חואן קרלוס הראשון", maxYear: 2099 }
-        ],
-        infoRows: [
-          { years: "עד 1939", label: "הרפובליקה הספרדית" },
-          { years: "1940–1975", label: "תקופת פרנקו" },
-          { years: "1976–2001", label: "המלך חואן קרלוס הראשון" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף סדרת הפזטה (או בסוף סדרת האירו)."
-      },
-      "איטליה": {
-        currencies: ["לירה איטלקית", "צ'נטזימו"],
-        description: "מטבעות הלירה האיטלקית ממוינים אוטומטית לפי התקופה ההיסטורית בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
-        ranges: [
-          { years: "עד 1945", label: "ממלכת איטליה (ויטוריו עמנואלה השלישי)", maxYear: 1945 },
-          { years: "1946–2001", label: "הרפובליקה האיטלקית", maxYear: 2099 }
-        ],
-        infoRows: [
-          { years: "עד 1945", label: "ממלכת איטליה (ויטוריו עמנואלה השלישי)" },
-          { years: "1946–2001", label: "הרפובליקה האיטלקית" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף סדרת הלירה (או בסוף סדרת האירו)."
-      },
-      "צרפת": {
-        currencies: ["פרנק צרפתי", "סנטים"],
-        description: "מטבעות הפרנק הצרפתי ממוינים אוטומטית לפי רפורמת הפרנק החדש (1960) בהתאם לשנת ההנפקה (ולאחר מכן מופיע האירו):",
-        ranges: [
-          { years: "עד 1959", label: "הפרנק הישן (Ancien Franc)", maxYear: 1959 },
-          { years: "1960–2001", label: "הפרנק החדש (Nouveau Franc)", maxYear: 2099 }
-        ],
-        infoRows: [
-          { years: "עד 1959", label: "הפרנק הישן (Ancien Franc)" },
-          { years: "1960–2001", label: "הפרנק החדש (Nouveau Franc)" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף סדרת הפרנק (או בסוף סדרת האירו)."
-      },
-      "יפן": {
-        currencies: ["ין יפני", "סן"],
-        description: "המטבעות היפניים ממוינים אוטומטית לפי תקופת הקיסר בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1988", label: "תקופת שווה (הירוהיטו)", maxYear: 1988 },
-          { years: "1989–2018", label: "תקופת הייסי (אקיהיטו)", maxYear: 2018 },
-          { years: "משנת 2019", label: "תקופת רייווה (נארוהיטו)", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "תאילנד": {
-        currencies: ["באט תאילנדי", "סאטאנג"],
-        description: "מטבעות הבאט התאילנדי ממוינים אוטומטית לפי תקופת המלך בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1946", label: "ראמה השמיני", maxYear: 1946 },
-          { years: "1947–2017", label: "ראמה התשיעי (פומיפון)", maxYear: 2017 },
-          { years: "משנת 2018", label: "ראמה העשירי", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "ארה״ב": {
-        currencies: ["דולר אמריקאי", "סנט"],
-        description: "המטבעות האמריקאיים ממוינים אוטומטית לפי סדרות ההטבעה העיקריות בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1964", label: "סדרות קלאסיות / עידן הכסף", maxYear: 1964 },
-          { years: "1965–1998", label: "סדרות נחושת-ניקל מודרניות", maxYear: 1998 },
-          { years: "משנת 1999", label: "סדרות ההנצחה המודרניות (50 המדינות והפארקים)", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "פולין": {
-        currencies: ["זלוטי", "גרוש"],
-        description: "מטבעות הזלוטי הפולני ממוינים אוטומטית לפי רפורמת מחיקת האפסים (1995) בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1994", label: "הזלוטי הקודם", maxYear: 1994 },
-          { years: "משנת 1995", label: "הזלוטי החדש", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "רומניה": {
-        currencies: ["לאו רומני", "באן"],
-        description: "מטבעות הלאו הרומני ממוינים אוטומטית לפי רפורמת הלאו החדש (2005) בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 2004", label: "הלאו הקודם", maxYear: 2004 },
-          { years: "משנת 2005", label: "הלאו החדש", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "רוסיה": {
-        currencies: ["רובל רוסי", "קופיקה"],
-        description: "מטבעות הרובל הרוסי ממוינים אוטומטית לפי רפורמת 1998 בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 1997", label: "רובל הפדרציה הרוסית הראשון", maxYear: 1997 },
-          { years: "משנת 1998", label: "הרובל הרוסי המחודש", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
-      "טורקיה": {
-        currencies: ["לירה טורקית", "קורוש"],
-        description: "מטבעות הלירה הטורקית ממוינים אוטומטית לפי רפורמת 2005 בהתאם לשנת ההנפקה:",
-        ranges: [
-          { years: "עד 2004", label: "הלירה הישנה", maxYear: 2004 },
-          { years: "משנת 2005", label: "הלירה המחודשת", maxYear: 2099 }
-        ],
-        note: "פריטים ללא שנה מופיעים בסוף הרשימה."
-      },
+    function onValueFieldFocus(el) {
+      if (!el) return;
+      el.value = el.value.replace(/,/g, "");
+    }
 
-      // --- 26 Additional Countries with Multiple Currency Eras (Chronological Era Info) ---
-      "ישראל": {
-        eraOnly: true,
-        description: "הפריטים מישראל ממוינים בסדר כרונולוגי לפי תקופת המטבע ההיסטורית (מהישן לחדש):",
-        infoRows: [
-          { years: "1927–1948", label: "מיל ארץ-ישראלי (תקופת המנדט)" },
-          { years: "1948–1960", label: "פרוטה" },
-          { years: "1952–1980", label: "לירה ישראלית / אגורות (לירה)" },
-          { years: "1980–1985", label: "שקל (ישן)" },
-          { years: "משנת 1985", label: "שקל חדש / אגורות" }
-        ],
-        note: "בתוך כל תקופה מופיע המטבע השלם לפני יחידת המשנה שלו, ללא תלות בשנת ההנפקה."
-      },
-      "אוקראינה": {
-        eraOnly: true,
-        description: "המטבעות והשטרות מאוקראינה ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
-        infoRows: [
-          { years: "1992–1996", label: "קרבובנץ" },
-          { years: "משנת 1996", label: "הריבניה / קופיקה" }
-        ],
-        note: "המטבע ההיסטורי מופיע ראשון, ולאחריו המטבע הנוכחי."
-      },
-      "אל סלוודור": {
-        eraOnly: true,
-        description: "הפריטים מאל סלוודור ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
-        infoRows: [
-          { years: "עד 2001", label: "קולון סלוודורי" },
-          { years: "משנת 2001", label: "דולר אמריקאי / סנט" }
-        ],
-        note: "הקולון הסלוודורי מופיע ראשון, ולאחריו הדולר האמריקאי."
-      },
-      "אקוודור": {
-        eraOnly: true,
-        description: "הפריטים מאקוודור ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
-        infoRows: [
-          { years: "עד 2000", label: "סוקרה" },
-          { years: "משנת 2000", label: "דולר אמריקאי / סנטאבו" }
-        ],
-        note: "הסוקרה ההיסטורי מופיע ראשון, ולאחריו הדולר והסנטאבו."
-      },
-      "ארגנטינה": {
-        eraOnly: true,
-        description: "הפריטים מארגנטינה ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
-        infoRows: [
-          { years: "1985–1991", label: "אאוסטרל" },
-          { years: "משנת 1992", label: "פזו ארגנטינאי / סנטאבו" }
-        ],
-        note: "האאוסטרל מופיע ראשון, ולאחריו הפזו הארגנטינאי."
-      },
-      "ברזיל": {
-        eraOnly: true,
-        description: "הפריטים מברזיל ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
-        infoRows: [
-          { years: "עד 1994", label: "קרוזיירו" },
-          { years: "משנת 1994", label: "ריאל ברזילאי / סנטאבו" }
-        ],
-        note: "הקרוזיירו ההיסטורי מופיע ראשון, ולאחריו הריאל הברזילאי."
-      },
-      "פרו": {
-        eraOnly: true,
-        description: "הפריטים מפרו ממוינים בסדר כרונולוגי לפי תקופת המטבע:",
-        infoRows: [
-          { years: "1985–1991", label: "אינטי" },
-          { years: "משנת 1991", label: "סול פרואני / סנטימו" }
-        ],
-        note: "האינטי מופיע ראשון, ולאחריו הסול הפרואני."
-      },
-      "אוסטריה": {
-        eraOnly: true,
-        description: "הפריטים מאוסטריה ממוינים בסדר כרונולוגי מהמטבע הלאומי הישן לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "שילינג אוסטרי / גרושן" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "בתוך כל תקופה מופיע המטבע השלם לפני יחידת המשנה (שילינג לפני גרושן, אירו לפני אירו סנט)."
-      },
-      "אירלנד": {
-        eraOnly: true,
-        description: "הפריטים מאירלנד ממוינים בסדר כרונולוגי מהמטבע הלאומי הישן לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "לירה אירית / פני" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "הלירה האירית מופיעה ראשונה, ולאחריה האירו."
-      },
-      "גרמניה": {
-        eraOnly: true,
-        description: "הפריטים מגרמניה ממוינים בסדר כרונולוגי מהמארק הגרמני לאירו:",
-        infoRows: [
-          { years: "1948–2001", label: "מארק גרמני / פפניג" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "המארק הגרמני והפפניג מופיעים ראשונים, ולאחריהם האירו."
-      },
-      "ותיקן": {
-        eraOnly: true,
-        description: "הפריטים מהותיקן ממוינים בסדר כרונולוגי מהלירה הותיקנית לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "לירה ותיקנית" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "הלירה הותיקנית מופיעה ראשונה, ולאחריה האירו."
-      },
-      "יוון": {
-        eraOnly: true,
-        description: "הפריטים מיוון ממוינים בסדר כרונולוגי מהדרכמה היוונית לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "דרכמה יוונית / לפטה" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "הדרכמה והלפטה מופיעות ראשונות, ולאחריהן האירו."
-      },
-      "לוקסמבורג": {
-        eraOnly: true,
-        description: "הפריטים מלוקסמבורג ממוינים בסדר כרונולוגי מהפרנק הלוקסמבורגי לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "פרנק לוקסמבורגי" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "הפרנק הלוקסמבורגי מופיע ראשון, ולאחריו האירו."
-      },
-      "מונקו": {
-        eraOnly: true,
-        description: "הפריטים ממונקו ממוינים בסדר כרונולוגי מהפרנק המונגאסקי לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "פרנק מונגאסקי" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "הפרנק המונגאסקי מופיע ראשון, ולאחריו האירו."
-      },
-      "סן מרינו": {
-        eraOnly: true,
-        description: "הפריטים מסן מרינו ממוינים בסדר כרונולוגי מהלירה הסן מרינזית לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "לירה סן מרינזית" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "הלירה הסן מרינזית מופיעה ראשונה, ולאחריה האירו."
-      },
-      "פורטוגל": {
-        eraOnly: true,
-        description: "הפריטים מפורטוגל ממוינים בסדר כרונולוגי מהאסקודו הפורטוגלי לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "אסקודו פורטוגלי / סנטאבו" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "האסקודו והסנטאבו מופיעים ראשונים, ולאחריהם האירו."
-      },
-      "פינלנד": {
-        eraOnly: true,
-        description: "הפריטים מפינלנד ממוינים בסדר כרונולוגי מהמארקה הפינית לאירו:",
-        infoRows: [
-          { years: "עד 2001", label: "מארקה פינית / פני" },
-          { years: "משנת 2002", label: "אירו / אירו סנט" }
-        ],
-        note: "המארקה והפני מופיעים ראשונים, ולאחריהם האירו."
-      },
-      "סלובניה": {
-        eraOnly: true,
-        description: "הפריטים מסלובניה ממוינים בסדר כרונולוגי מהטולאר הסלובני לאירו:",
-        infoRows: [
-          { years: "1991–2006", label: "טולאר סלובני / סטוטין" },
-          { years: "משנת 2007", label: "אירו / אירו סנט" }
-        ],
-        note: "הטולאר והסטוטין מופיעים ראשונים, ולאחריהם האירו."
-      },
-      "מלטה": {
-        eraOnly: true,
-        description: "הפריטים ממלטה ממוינים בסדר כרונולוגי מהלירה המלטזית לאירו:",
-        infoRows: [
-          { years: "עד 2007", label: "לירה מלטזית / סנט" },
-          { years: "משנת 2008", label: "אירו / אירו סנט" }
-        ],
-        note: "הלירה המלטזית מופיעה ראשונה, ולאחריה האירו."
-      },
-      "קפריסין": {
-        eraOnly: true,
-        description: "הפריטים מקפריסין ממוינים בסדר כרונולוגי מהלירה הקפריסאית לאירו:",
-        infoRows: [
-          { years: "עד 2007", label: "לירה קפריסאית / סנט" },
-          { years: "משנת 2008", label: "אירו / אירו סנט" }
-        ],
-        note: "הלירה הקפריסאית מופיעה ראשונה, ולאחריה האירו."
-      },
-      "סלובקיה": {
-        eraOnly: true,
-        description: "הפריטים מסלובקיה ממוינים בסדר כרונולוגי מהקורונה הסלובקית לאירו:",
-        infoRows: [
-          { years: "1993–2008", label: "קורונה סלובקית / הלייר" },
-          { years: "משנת 2009", label: "אירו / אירו סנט" }
-        ],
-        note: "הקורונה וההלייר מופיעים ראשונים, ולאחריהם האירו."
-      },
-      "אסטוניה": {
-        eraOnly: true,
-        description: "הפריטים מאסטוניה ממוינים בסדר כרונולוגי מהקרון האסטוני לאירו:",
-        infoRows: [
-          { years: "1992–2010", label: "קרון אסטוני / סנט" },
-          { years: "משנת 2011", label: "אירו / אירו סנט" }
-        ],
-        note: "הקרון האסטוני מופיע ראשון, ולאחריו האירו."
-      },
-      "לטביה": {
-        eraOnly: true,
-        description: "הפריטים מלטביה ממוינים בסדר כרונולוגי מהלאטס הלטבי לאירו:",
-        infoRows: [
-          { years: "1993–2013", label: "לאטס לטבי / סנטימס" },
-          { years: "משנת 2014", label: "אירו / אירו סנט" }
-        ],
-        note: "הלאטס והסנטימס מופיעים ראשונים, ולאחריהם האירו."
-      },
-      "ליטא": {
-        eraOnly: true,
-        description: "הפריטים מליטא ממוינים בסדר כרונולוגי מהליטאס הליטאי לאירו:",
-        infoRows: [
-          { years: "1993–2014", label: "ליטאס ליטאי / סנטאס" },
-          { years: "משנת 2015", label: "אירו / אירו סנט" }
-        ],
-        note: "הליטאס והסנטאס מופיעים ראשונים, ולאחריהם האירו."
-      },
-      "קרואטיה": {
-        eraOnly: true,
-        description: "הפריטים מקרואטיה ממוינים בסדר כרונולוגי מהקונה הקרואטית לאירו:",
-        infoRows: [
-          { years: "1994–2022", label: "קונה קרואטית / ליפה" },
-          { years: "משנת 2023", label: "אירו / אירו סנט" }
-        ],
-        note: "הקונה והליפה מופיעות ראשונות, ולאחריהן האירו."
-      },
-      "בולגריה": {
-        eraOnly: true,
-        description: "הפריטים מבולגריה ממוינים בסדר כרונולוגי מהלב הבולגרי לאירו:",
-        infoRows: [
-          { years: "עד 2025", label: "לב בולגרי / סטוטינקי" },
-          { years: "משנת 2026", label: "אירו / אירו סנט" }
-        ],
-        note: "הלב הבולגרי והסטוטינקי מופיעים ראשונים, ולאחריהם האירו."
+    function onValueFieldBlur(el) {
+      if (!el) return;
+      const num = parseDenomination(el.value);
+      if (!isNaN(num) && num >= 0) {
+        el.value = formatDenomination(num);
       }
-    };
+    }
 
     function getSeriesRank(countryName, currencyName, year) {
       const info = SERIES_INFO_DB[countryName];
@@ -1465,6 +550,7 @@
 
     const STORAGE_KEY = "world_coin_collection_v1";
     let collection = [];
+    let currentTab = "collection";
     let currentTypeFilter = "all";
     let currentGroupMode = "alpha";
     let selectedContinentFilter = "all";
@@ -1472,6 +558,7 @@
     let selectedDecadeFilter = "all";
     let collapsedContinents = {};
     let collapsedCountries = {};
+    let isAllCollapsed = false;
     let expandedStatsCountries = {};
     let pendingDuplicate = null;
     let pendingExportFormat = null;
@@ -1692,9 +779,9 @@
       currentTypeFilter = type;
       document.querySelectorAll(".type-pill").forEach(btn => {
         if (btn.dataset.type === type) {
-          btn.className = "type-pill px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shrink-0 transition";
+          btn.className = "type-pill py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition";
         } else {
-          btn.className = "type-pill px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 shrink-0 transition";
+          btn.className = "type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
         }
       });
       renderCollection();
@@ -1712,6 +799,27 @@
       renderCollection();
     }
 
+    function updateCollapseToggleButton() {
+      const labelEl = document.getElementById("label-toggle-collapse");
+      const iconEl = document.getElementById("icon-toggle-collapse");
+      if (!labelEl || !iconEl) return;
+      if (isAllCollapsed) {
+        labelEl.textContent = "פתח הכול";
+        iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>`;
+      } else {
+        labelEl.textContent = "כווץ הכול";
+        iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/>`;
+      }
+    }
+
+    function toggleCollapseAll() {
+      if (isAllCollapsed) {
+        expandAll();
+      } else {
+        collapseAll();
+      }
+    }
+
     function collapseAll() {
       CONTINENT_ORDER.forEach(c => {
         collapsedContinents[c] = true;
@@ -1723,12 +831,16 @@
         }
         collapsedCountries[item.country] = true;
       });
+      isAllCollapsed = true;
+      updateCollapseToggleButton();
       renderCollection();
     }
 
     function expandAll() {
       collapsedContinents = {};
       collapsedCountries = {};
+      isAllCollapsed = false;
+      updateCollapseToggleButton();
       renderCollection();
     }
 
@@ -1740,21 +852,15 @@
     function formatQuantitySummary(coinsCount, notesCount) {
       const parts = [];
       if (coinsCount > 0) {
-        parts.push(coinsCount === 1 ? "מטבע 1" : `${coinsCount} מטבעות`);
+        parts.push(coinsCount === 1 ? "מטבע 1" : `${formatDenomination(coinsCount)} מטבעות`);
       }
       if (notesCount > 0) {
-        parts.push(notesCount === 1 ? "שטר 1" : `${notesCount} שטרות`);
+        parts.push(notesCount === 1 ? "שטר 1" : `${formatDenomination(notesCount)} שטרות`);
       }
       return parts.join(", ");
     }
 
-    // 6-Level Internal Sorting per Country:
-    // 1. Type (Coin before Banknote)
-    // 2. Currency Era (Older currency before newer currency)
-    // 3. Series by Year (for countries with identical currency names across series/portraits)
-    // 4. Unit Hierarchy (Main currency before sub-units)
-    // 5. Face Value (Highest to lowest)
-    // 6. Issue Year (Oldest to newest, 'ללא שנה' last)
+    // 6-Level Internal Sorting per Country
     function sortCountryItems(items, countryName) {
       return [...items].sort((a, b) => {
         if (a.type !== b.type) {
@@ -1790,6 +896,13 @@
         }
         return 0;
       });
+    }
+
+    // Determine era/series key for visual 2.5px colored divider between coin eras
+    function getItemEraSignature(item, countryName) {
+      const era = getEraRank(countryName, item.currency);
+      const series = item.type === "coin" ? getSeriesRank(countryName, item.currency, item.year) : 0;
+      return `${item.type}|${era}|${series}`;
     }
 
     function renderCountryBlockHtml(cName, rawItems) {
@@ -1828,21 +941,32 @@
 
       if (!isCountryCollapsed) {
         block += `<div class="divide-y divide-slate-100 dark:divide-slate-900 px-1">`;
-        items.forEach(item => {
+        items.forEach((item, idx) => {
           const isCoin = item.type === "coin";
           const qty = Number(item.quantity) || 1;
+          const formattedValue = formatDenomination(item.value);
           const yearHtml = hasValidYear(item.year)
             ? `<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>`
             : `<span class="text-[11px] text-slate-400 dark:text-slate-500">ללא שנה</span>`;
 
+          // Apply 2.5px colored divider on era/series transition between coins
+          let eraDividerClass = "";
+          if (idx > 0 && isCoin && items[idx - 1].type === "coin") {
+            const prevSig = getItemEraSignature(items[idx - 1], cName);
+            const currSig = getItemEraSignature(item, cName);
+            if (prevSig !== currSig) {
+              eraDividerClass = "era-divider";
+            }
+          }
+
           block += `
-            <div class="py-2.5 px-1.5 flex items-center justify-between gap-2 transition">
+            <div class="py-2.5 px-1.5 flex items-center justify-between gap-2 transition ${eraDividerClass}">
               <div class="flex items-center gap-2.5 min-w-0">
                 <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
                   ${isCoin ? 'מטבע' : 'שטר'}
                 </span>
                 <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                  <span class="font-bold">${item.value}</span> ${item.currency}
+                  <span class="font-bold">${formattedValue}</span> ${item.currency}
                   ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
                 </div>
               </div>
@@ -1864,12 +988,13 @@
 
     function renderCollection() {
       const search = document.getElementById("search-input").value.trim().toLowerCase();
+      const searchNumericClean = search.replace(/,/g, "");
       document.getElementById("clear-search-btn").classList.toggle("hidden", !search);
 
       const totalItems = collection.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
       const uniqueCountries = new Set(collection.map(i => i.country)).size;
       document.getElementById("header-subtitle").textContent =
-        `${totalItems} פריטים • ${uniqueCountries} מדינות`;
+        `${formatDenomination(totalItems)} פריטים • ${uniqueCountries} מדינות`;
 
       const filtered = collection.filter(item => {
         if (currentTypeFilter !== "all" && item.type !== currentTypeFilter) return false;
@@ -1883,8 +1008,9 @@
         }
         if (search) {
           const yearStr = hasValidYear(item.year) ? String(item.year) : "ללא שנה";
-          const hay = `${item.country} ${item.currency} ${item.value} ${yearStr}`.toLowerCase();
-          if (!hay.includes(search)) return false;
+          const formattedVal = formatDenomination(item.value);
+          const hay = `${item.country} ${item.currency} ${item.value} ${formattedVal} ${yearStr}`.toLowerCase();
+          if (!hay.includes(search) && !hay.replace(/,/g, "").includes(searchNumericClean)) return false;
         }
         return true;
       });
@@ -1904,6 +1030,7 @@
       }
 
       collapseBar.classList.remove("hidden");
+      updateCollapseToggleButton();
 
       if (currentGroupMode === "alpha") {
         const byCountry = {};
@@ -1949,7 +1076,7 @@
                 <span>${cont}</span>
                 <span class="text-[11px] font-normal text-slate-400">(${countryNames.length} מדינות)</span>
               </div>
-              <span class="text-[11px] font-medium">${contTotal} פריטים</span>
+              <span class="text-[11px] font-medium">${formatDenomination(contTotal)} פריטים</span>
             </button>
         `;
 
@@ -1991,16 +1118,29 @@
 
     function toggleContinent(cont) {
       collapsedContinents[cont] = !collapsedContinents[cont];
+      if (!collapsedContinents[cont]) {
+        isAllCollapsed = false;
+      }
       renderCollection();
     }
 
     function toggleCountry(cName) {
       collapsedCountries[cName] = !collapsedCountries[cName];
+      if (!collapsedCountries[cName]) {
+        isAllCollapsed = false;
+      }
       renderCollection();
     }
 
-    // Tabs & Oldest Coins Sub-view
+    // Tabs & Oldest Coins Sub-view (with scroll-to-top on active tab re-click)
     function switchTab(tab) {
+      const oldestViewHidden = document.getElementById("view-oldest-coins").classList.contains("hidden");
+      if (currentTab === tab && oldestViewHidden) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      currentTab = tab;
       document.getElementById("view-oldest-coins").classList.add("hidden");
       const isCol = tab === "collection";
       document.getElementById("view-collection").classList.toggle("hidden", !isCol);
@@ -2014,6 +1154,7 @@
         ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
         : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
 
+      window.scrollTo({ top: 0, behavior: "smooth" });
       if (!isCol) renderStats();
     }
 
@@ -2032,10 +1173,11 @@
       document.getElementById("view-stats").classList.add("hidden");
       document.getElementById("view-collection").classList.add("hidden");
       document.getElementById("view-oldest-coins").classList.remove("hidden");
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
       const totalCoinQty = coins.reduce((s, c) => s + (Number(c.quantity) || 1), 0);
       document.getElementById("oldest-coins-subtitle").textContent =
-        `${coins.length} רשומות מטבעות עם שנה (${totalCoinQty} יחידות)`;
+        `${coins.length} רשומות מטבעות עם שנה (${formatDenomination(totalCoinQty)} יחידות)`;
 
       const listEl = document.getElementById("oldest-coins-list");
       if (!coins.length) {
@@ -2052,7 +1194,7 @@
               <div class="min-w-0">
                 <div class="text-sm font-bold text-slate-900 dark:text-white truncate">${coin.country}</div>
                 <div class="text-xs text-slate-600 dark:text-slate-300 truncate">
-                  <span class="font-semibold">${coin.value}</span> ${coin.currency}
+                  <span class="font-semibold">${formatDenomination(coin.value)}</span> ${coin.currency}
                 </div>
               </div>
             </div>
@@ -2110,7 +1252,7 @@
             <div class="min-w-0">
               <div class="text-[11px] font-bold text-amber-800 dark:text-amber-300">המטבע הכי ישן באוסף</div>
               <div class="text-sm font-bold text-slate-900 dark:text-white truncate">
-                ${oldestCoin.country} • <span class="font-semibold">${oldestCoin.value} ${oldestCoin.currency}</span>
+                ${oldestCoin.country} • <span class="font-semibold">${formatDenomination(oldestCoin.value)} ${oldestCoin.currency}</span>
               </div>
               <div class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">שנת הנפקה: <span class="font-bold">${oldestCoin.year}</span></div>
             </div>
@@ -2129,15 +1271,15 @@
       container.innerHTML = `
         <div class="grid grid-cols-3 gap-2.5">
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-            <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${totalItems}</div>
+            <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${formatDenomination(totalItems)}</div>
             <div class="text-xs text-slate-500 mt-0.5">סה״כ פריטים</div>
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-            <div class="text-xl font-bold text-amber-600 dark:text-amber-400">${totalCoins}</div>
+            <div class="text-xl font-bold text-amber-600 dark:text-amber-400">${formatDenomination(totalCoins)}</div>
             <div class="text-xs text-slate-500 mt-0.5">מטבעות</div>
           </div>
           <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400">${totalNotes}</div>
+            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400">${formatDenomination(totalNotes)}</div>
             <div class="text-xs text-slate-500 mt-0.5">שטרות</div>
           </div>
         </div>
@@ -2153,7 +1295,7 @@
             ${topCountries.map(([cName, count], idx) => {
               const meta = getCountryMeta(cName);
               const isExpanded = !!expandedStatsCountries[cName];
-              const countLabel = count === 1 ? "פריט 1" : `${count} פריטים`;
+              const countLabel = count === 1 ? "פריט 1" : `${formatDenomination(count)} פריטים`;
 
               let expandedHtml = "";
               if (isExpanded) {
@@ -2169,20 +1311,27 @@
                   <div class="px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
                     <div class="text-[11px] text-slate-500 dark:text-slate-400 pb-1">${summaryText}</div>
                     <div class="divide-y divide-slate-100 dark:divide-slate-900">
-                      ${countryItems.map(item => {
+                      ${countryItems.map((item, itemIdx) => {
                         const isCoin = item.type === "coin";
                         const yearHtml = hasValidYear(item.year)
                           ? `<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>`
                           : `<span class="text-[11px] text-slate-400 dark:text-slate-500">ללא שנה</span>`;
 
+                        let eraDividerClass = "";
+                        if (itemIdx > 0 && isCoin && countryItems[itemIdx - 1].type === "coin") {
+                          if (getItemEraSignature(countryItems[itemIdx - 1], cName) !== getItemEraSignature(item, cName)) {
+                            eraDividerClass = "era-divider";
+                          }
+                        }
+
                         return `
-                          <div class="py-2 flex items-center justify-between gap-2">
+                          <div class="py-2 flex items-center justify-between gap-2 ${eraDividerClass}">
                             <div class="flex items-center gap-2.5 min-w-0">
                               <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
                                 ${isCoin ? 'מטבע' : 'שטר'}
                               </span>
                               <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                                <span class="font-bold">${item.value}</span> ${item.currency}
+                                <span class="font-bold">${formatDenomination(item.value)}</span> ${item.currency}
                               </div>
                             </div>
                             <div class="shrink-0">
@@ -2223,7 +1372,7 @@
           ${decadesList.length ? `
             <div class="space-y-2">
               ${decadesList.map(([dec, count]) => {
-                const countLabel = count === 1 ? "פריט 1" : `${count} פריטים`;
+                const countLabel = count === 1 ? "פריט 1" : `${formatDenomination(count)} פריטים`;
                 return `
                   <div class="px-3 py-2.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2">
                     <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">שנות ה-${dec}</span>
@@ -2447,7 +1596,7 @@
         setCountryInputVisualState(item.country, meta.flag);
         onFormCountryChange(item.currency);
 
-        document.getElementById("form-value").value = item.value;
+        document.getElementById("form-value").value = formatDenomination(item.value);
         document.getElementById("form-year").value = hasValidYear(item.year) ? item.year : "";
         document.getElementById("form-quantity").value = item.quantity || 1;
       } else {
@@ -2553,12 +1702,12 @@
         return null;
       }
 
-      const value = parseFloat(document.getElementById("form-value").value);
+      const value = parseDenomination(document.getElementById("form-value").value);
       const yearRaw = document.getElementById("form-year").value.trim();
       const year = yearRaw === "" ? null : parseInt(yearRaw, 10);
       const quantity = parseInt(document.getElementById("form-quantity").value, 10) || 1;
 
-      if (isNaN(value)) {
+      if (isNaN(value) || value < 0) {
         showToast("נא למלא ערך נקוב תקין");
         return null;
       }
@@ -2595,7 +1744,7 @@
           data,
           title: "שמירה כפריט חדש",
           message: changed
-            ? `לשמור את ${data.value} ${data.currency} (${data.country}, ${formatYearText(data.year)}) כפריט חדש באוסף ולהשאיר את הפריט המקורי ללא שינוי?`
+            ? `לשמור את ${formatDenomination(data.value)} ${data.currency} (${data.country}, ${formatYearText(data.year)}) כפריט חדש באוסף ולהשאיר את הפריט המקורי ללא שינוי?`
             : `לא בוצעו שינויים מול הפריט המקורי. ליצור עותק זהה כפריט חדש באוסף?`,
           btnText: "שמור כפריט חדש"
         });
@@ -2619,7 +1768,7 @@
           action: "update",
           data,
           title: "אישור עדכון פריט",
-          message: `לעדכן את הפריט הקיים ל-${data.value} ${data.currency} (${data.country}, ${formatYearText(data.year)}, כמות: ${data.quantity})?`,
+          message: `לעדכן את הפריט הקיים ל-${formatDenomination(data.value)} ${data.currency} (${data.country}, ${formatYearText(data.year)}, כמות: ${data.quantity})?`,
           btnText: "אשר ועדכן"
         });
         return;
@@ -2673,7 +1822,7 @@
         pendingDuplicate = { existingId: existing.id, addQty: quantity };
         const typeLabel = type === "coin" ? "מטבע" : "שטר";
         document.getElementById("duplicate-message").textContent =
-          `${typeLabel} של ${value} ${currency} (${country}, ${formatYearText(normalizedYear)}) כבר נמצא באוסף שלך (כמות נוכחית: ${existing.quantity || 1}). האם להוסיף אליו עוד ${quantity}?`;
+          `${typeLabel} של ${formatDenomination(value)} ${currency} (${country}, ${formatYearText(normalizedYear)}) כבר נמצא באוסף שלך (כמות נוכית: ${existing.quantity || 1}). האם להוסיף אליו עוד ${quantity}?`;
         document.getElementById("duplicate-modal").classList.remove("hidden");
         return;
       }
@@ -2713,7 +1862,7 @@
       if (!editId) return;
       const item = collection.find(i => i.id === editId);
       const label = item
-        ? `${item.value} ${item.currency} • ${item.country} (${formatYearText(item.year)})`
+        ? `${formatDenomination(item.value)} ${item.currency} • ${item.country} (${formatYearText(item.year)})`
         : "הפריט הנבחר";
       document.getElementById("delete-confirm-message").textContent =
         `האם אתה בטוח שברצונך למחוק לצמיתות את ${label}?`;
@@ -2742,6 +1891,7 @@
           collapsedContinents[meta.continent] = false;
         }
         collapsedCountries[targetCountry] = false;
+        isAllCollapsed = false;
       }
 
       renderCollection();
@@ -2876,7 +2026,7 @@
                 type: (r["סוג"] === "שטר" || r.type === "banknote") ? "banknote" : "coin",
                 country: String(r["מדינה"] || r.country || "").trim(),
                 currency: String(r["שם מטבע"] || r.currency || "").trim(),
-                value: parseFloat(r["ערך"] ?? r.value ?? 0),
+                value: parseDenomination(r["ערך"] ?? r.value ?? 0) || 0,
                 year: isNaN(parsedY) ? null : parsedY,
                 quantity: parseInt(r["כמות"] ?? r.quantity ?? 1, 10) || 1
               };

@@ -462,11 +462,11 @@ function renderStats() {
                         return `
                           <div class="py-2 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
-                              <span class="emoji-flag text-base shrink-0">${cMeta.flag}</span>
-                              <span class="text-xs font-bold text-slate-800 dark:text-slate-100 shrink-0">${item.country}</span>
                               <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
                                 ${isCoin ? 'מטבע' : 'שטר'}
                               </span>
+                              <span class="emoji-flag text-base shrink-0">${cMeta.flag}</span>
+                              <span class="text-xs font-bold text-slate-800 dark:text-slate-100 shrink-0">${item.country}</span>
                               <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                                 <span class="font-bold">${formatDenomination(item.value)}</span> ${item.currency}
                               </div>

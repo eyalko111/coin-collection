@@ -466,7 +466,6 @@ function renderStats() {
                                 ${isCoin ? 'מטבע' : 'שטר'}
                               </span>
                               <span class="emoji-flag text-base shrink-0">${cMeta.flag}</span>
-                              <span class="text-xs font-bold text-slate-800 dark:text-slate-100 shrink-0">${item.country}</span>
                               <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                                 <span class="font-bold">${formatDenomination(item.value)}</span> ${item.currency}
                               </div>

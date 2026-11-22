@@ -1,6 +1,5 @@
 // Item Details Modal, Add/Edit Form Modal, Dropdowns & Confirmation Dialogs (modals.js)
 
-let pendingEditAction = null;
 
 // --- Location Datalist Suggestions ---
 function populateLocationSuggestions() {

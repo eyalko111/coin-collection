@@ -3,292 +3,335 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>אוסף מטבעות ושטרות</title>
   <meta name="theme-color" content="#4f46e5" />
-  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="האוסף שלי" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="אוסף מטבעות" />
+  <title>אוסף מטבעות ושטרות</title>
   <link rel="manifest" href="./manifest.json" />
-  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
-  <link rel="apple-touch-icon" href="./icon.svg" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: { sans: ['Rubik', 'sans-serif'] }
+          fontFamily: {
+            sans: ['Heebo', 'Assistant', 'system-ui', '-apple-system', 'sans-serif']
+          }
         }
       }
-    }
+    };
   </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     body {
-      font-family: 'Rubik', sans-serif;
+      font-family: 'Heebo', system-ui, -apple-system, sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
     .emoji-flag {
-      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Samsung Color Emoji", sans-serif;
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
       line-height: 1;
     }
-    select, input, option {
-      direction: rtl;
-      text-align: right;
-    }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .era-divider {
-      border-top-width: 1.5px !important;
-      border-top-color: #cbd5e1 !important;
+      border-top: 2px dashed rgba(99, 102, 241, 0.35) !important;
+      margin-top: 2px;
     }
     .dark .era-divider {
-      border-top-color: #334155 !important;
+      border-top-color: rgba(129, 140, 248, 0.32) !important;
+    }
+    .type-divider {
+      border-top: 2px solid rgba(16, 185, 129, 0.38) !important;
+      margin-top: 3px;
+    }
+    .dark .type-divider {
+      border-top-color: rgba(52, 211, 153, 0.32) !important;
+    }
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 9999px;
     }
   </style>
 </head>
-<body class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen pb-24 transition-colors">
+<body class="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen pb-24 transition-colors duration-200">
 
-  <!-- Top Header -->
-  <header id="app-header" class="sticky top-0 z-30 bg-white/95 dark:bg-slate-950/95 backdrop-blur border-b border-slate-200 dark:border-slate-800">
-    <div class="max-w-xl mx-auto px-4 py-3 flex items-center justify-between">
-      <div>
-        <h1 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">אוסף מטבעות ושטרות</h1>
-        <p id="header-subtitle" class="text-xs text-slate-500 dark:text-slate-400">טוען נתונים...</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <button onclick="openDataModal()" title="ייצוא, ייבוא וגיבוי" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3"/></svg>
-        </button>
-        <button onclick="toggleDarkMode()" title="מצב תצוגה" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
-          <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
-          <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        </button>
-      </div>
-    </div>
+  <!-- Sticky Top Header -->
+  <header id="app-header" class="sticky top-0 z-30 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
+    <div class="max-w-2xl mx-auto px-4 pt-3">
+      <div class="flex items-center justify-between gap-2 pb-2.5">
+        <div class="min-w-0">
+          <h1 class="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white truncate">אוסף מטבעות ושטרות</h1>
+          <p id="header-subtitle" class="text-xs text-slate-500 dark:text-slate-400 font-medium">טוען נתונים...</p>
+        </div>
 
-    <!-- Navigation Tabs -->
-    <div id="main-tabs" class="max-w-xl mx-auto px-4 flex border-t border-slate-100 dark:border-slate-900">
-      <button id="tab-collection" onclick="switchTab('collection')" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition">
-        האוסף שלי
-      </button>
-      <button id="tab-stats" onclick="switchTab('stats')" class="flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 transition">
-        סיכומים ונתונים
-      </button>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Export -->
+          <button type="button" onclick="openExportModal()" title="ייצוא וגיבוי" aria-label="ייצוא וגיבוי" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-slate-800 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3"/></svg>
+          </button>
+
+          <!-- Import -->
+          <button type="button" onclick="triggerImportFile()" title="ייבוא מקובץ" aria-label="ייבוא מקובץ" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-slate-800 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M17 8l-5-5m0 0L7 8m5-5v12"/></svg>
+          </button>
+          <input type="file" id="import-file-input" accept=".json,.csv,application/json,text/csv" onchange="handleImportFile(event)" class="hidden" />
+
+          <!-- Reset / Sample -->
+          <button type="button" onclick="openResetModal()" title="איפוס / נתוני דוגמה" aria-label="איפוס או נתוני דוגמה" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-slate-800 transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          </button>
+
+          <!-- Dark Mode Toggle -->
+          <button type="button" onclick="toggleDarkMode()" title="מצב כהה / בהיר" aria-label="מצב כהה או בהיר" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-slate-800 transition">
+            <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex border-t border-slate-100 dark:border-slate-900">
+        <button type="button" id="tab-collection" onclick="switchTab('collection')" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition">
+          האוסף שלי
+        </button>
+        <button type="button" id="tab-stats" onclick="switchTab('stats')" class="flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition">
+          סטטיסטיקות
+        </button>
+      </nav>
     </div>
   </header>
 
-  <!-- COLLECTION VIEW -->
-  <main id="view-collection" class="max-w-xl mx-auto px-4 pt-3 space-y-3">
-    <!-- Search & Filters (Layout A + Single Toggle Collapse Button) -->
-    <div class="space-y-2">
-      <!-- Row 1: Search -->
+  <!-- Main Content -->
+  <main class="max-w-2xl mx-auto px-4 pt-4">
+
+    <!-- VIEW 1: COLLECTION -->
+    <section id="view-collection" class="space-y-3.5">
+      <!-- Search Bar -->
       <div class="relative">
-        <input id="search-input" type="text" oninput="renderCollection()" placeholder="חיפוש מדינה, מטבע, ערך או שנה..." class="w-full pr-9 pl-8 py-2.5 text-sm rounded-xl bg-slate-100 dark:bg-slate-900 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 outline-none transition" />
-        <svg class="w-4 h-4 text-slate-400 absolute right-3 top-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
-        <button id="clear-search-btn" onclick="clearSearch()" class="hidden absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5">✕</button>
+        <svg class="w-4 h-4 text-slate-400 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"/></svg>
+        <input type="text" id="search-input" oninput="renderCollection()" placeholder="חיפוש מדינה, מטבע, ערך, שנה או מיקום..." class="w-full pr-10 pl-9 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-900 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 border border-transparent focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-950 outline-none transition" />
+        <button type="button" id="clear-search-btn" onclick="clearSearch()" title="נקה חיפוש" class="hidden absolute left-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs flex items-center justify-center hover:bg-slate-300 transition">✕</button>
       </div>
 
-      <!-- Row 2: Type Filter Bar (Edge-to-Edge 3 equal columns) -->
-      <div class="grid grid-cols-3 gap-1 p-1 rounded-xl bg-slate-100 dark:bg-slate-900">
-        <button onclick="setTypeFilter('all')" data-type="all" class="type-pill py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition">הכל</button>
-        <button onclick="setTypeFilter('coin')" data-type="coin" class="type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">מטבעות</button>
-        <button onclick="setTypeFilter('banknote')" data-type="banknote" class="type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">שטרות</button>
+      <!-- Type Filter Pills -->
+      <div class="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900">
+        <button type="button" data-type="all" onclick="setTypeFilter('all')" class="type-pill py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition">הכול</button>
+        <button type="button" data-type="coin" onclick="setTypeFilter('coin')" class="type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">מטבעות</button>
+        <button type="button" data-type="banknote" onclick="setTypeFilter('banknote')" class="type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">שטרות</button>
       </div>
 
-      <!-- Row 3: Custom Dropdown Filters (Edge-to-Edge 3 equal columns) -->
-      <div id="filter-dropdowns-bar" class="grid grid-cols-3 gap-2">
+      <!-- Dropdown Filters: Continent / Country / Decade -->
+      <div class="grid grid-cols-3 gap-2">
         <!-- Continent Filter -->
-        <div class="relative" data-filter-wrap="continent">
-          <button
-            type="button"
-            id="filter-continent-trigger"
-            onclick="toggleFilterDropdown('continent')"
-            class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between gap-1 text-right transition"
-          >
+        <div class="relative" data-filter-wrap>
+          <button type="button" id="filter-continent-trigger" onclick="toggleFilterDropdown('continent')" class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between gap-1 text-right transition">
             <span id="filter-continent-display" class="truncate">כל היבשות</span>
             <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          <div id="filter-continent-menu" class="hidden absolute right-0 mt-1 w-44 z-40 max-h-56 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl divide-y divide-slate-100 dark:divide-slate-700/60"></div>
+          <div id="filter-continent-menu" class="hidden absolute right-0 mt-1.5 w-44 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 py-1 z-30"></div>
         </div>
 
         <!-- Country Filter -->
-        <div class="relative" data-filter-wrap="country">
-          <button
-            type="button"
-            id="filter-country-trigger"
-            onclick="toggleFilterDropdown('country')"
-            class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between gap-1 text-right transition"
-          >
+        <div class="relative" data-filter-wrap>
+          <button type="button" id="filter-country-trigger" onclick="toggleFilterDropdown('country')" class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between gap-1 text-right transition">
             <span id="filter-country-display" class="truncate">כל המדינות</span>
             <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          <div id="filter-country-menu" class="hidden absolute right-1/2 translate-x-1/2 mt-1 w-48 z-40 max-h-56 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl divide-y divide-slate-100 dark:divide-slate-700/60"></div>
+          <div id="filter-country-menu" class="hidden absolute right-0 mt-1.5 w-52 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 py-1 z-30"></div>
         </div>
 
         <!-- Decade Filter -->
-        <div class="relative" data-filter-wrap="decade">
-          <button
-            type="button"
-            id="filter-decade-trigger"
-            onclick="toggleFilterDropdown('decade')"
-            class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between gap-1 text-right transition"
-          >
+        <div class="relative" data-filter-wrap>
+          <button type="button" id="filter-decade-trigger" onclick="toggleFilterDropdown('decade')" class="w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between gap-1 text-right transition">
             <span id="filter-decade-display" class="truncate">כל העשורים</span>
             <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
-          <div id="filter-decade-menu" class="hidden absolute left-0 mt-1 w-40 z-40 max-h-56 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl divide-y divide-slate-100 dark:divide-slate-700/60"></div>
+          <div id="filter-decade-menu" class="hidden absolute left-0 mt-1.5 w-44 max-h-64 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 py-1 z-30"></div>
         </div>
       </div>
 
-      <!-- Row 4: Unified Display Bar (Grouping Toggle + Single Collapse/Expand Toggle) -->
+      <!-- Group Mode & Collapse/Expand Controls -->
       <div class="flex items-center justify-between gap-2 pt-0.5">
-        <div class="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-900 shrink-0">
-          <button onclick="setGroupMode('alpha')" data-group="alpha" class="group-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs transition">לפי א'-ב'</button>
-          <button onclick="setGroupMode('continent')" data-group="continent" class="group-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">לפי יבשות</button>
+        <div class="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-900">
+          <button type="button" data-group="alpha" onclick="setGroupMode('alpha')" class="group-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs transition">לפי א-ב</button>
+          <button type="button" data-group="continent" onclick="setGroupMode('continent')" class="group-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">לפי יבשות</button>
         </div>
 
-        <div id="collapse-controls-bar" class="flex items-center shrink-0">
-          <button type="button" id="btn-toggle-collapse-all" onclick="toggleCollapseAll()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+        <div id="collapse-controls-bar">
+          <button type="button" onclick="toggleCollapseAll()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition">
             <svg id="icon-toggle-collapse" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/></svg>
             <span id="label-toggle-collapse">כווץ הכול</span>
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Collection List Container -->
-    <div id="collection-container" class="pt-0.5"></div>
-  </main>
+      <!-- Collection List Container -->
+      <div id="collection-container" class="pt-1"></div>
+    </section>
 
-  <!-- STATS VIEW -->
-  <main id="view-stats" class="hidden max-w-xl mx-auto px-4 pt-4 space-y-5">
-    <div id="stats-container" class="space-y-5"></div>
-  </main>
+    <!-- VIEW 2: STATISTICS -->
+    <section id="view-stats" class="hidden">
+      <div id="stats-container" class="space-y-4"></div>
+    </section>
 
-  <!-- OLDEST COINS BY YEAR VIEW -->
-  <main id="view-oldest-coins" class="hidden max-w-xl mx-auto px-4 pt-3 space-y-3">
-    <div class="flex items-center justify-between gap-2 pb-1 border-b border-slate-200 dark:border-slate-800">
-      <button onclick="closeOldestCoinsView()" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 transition">
-        <span>←</span>
-        <span>חזרה לסיכומים</span>
-      </button>
-      <div class="text-right">
-        <h2 class="text-sm font-bold text-slate-900 dark:text-white">מטבעות לפי שנת הנפקה (מהישן לחדש)</h2>
-        <p id="oldest-coins-subtitle" class="text-[11px] text-slate-500 dark:text-slate-400"></p>
+    <!-- VIEW 3: TOP 15 OLDEST COINS -->
+    <section id="view-oldest-coins" class="hidden space-y-3">
+      <div class="flex items-center justify-between gap-2 pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div>
+          <h2 class="text-base font-bold text-slate-900 dark:text-white">15 המטבעות הישנים באוסף</h2>
+          <p id="oldest-coins-subtitle" class="text-xs text-slate-500 dark:text-slate-400"></p>
+        </div>
+        <button type="button" onclick="closeOldestCoinsView()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+          חזרה לסטטיסטיקות →
+        </button>
       </div>
-    </div>
-    <div id="oldest-coins-list" class="divide-y divide-slate-100 dark:divide-slate-900"></div>
+      <div id="oldest-coins-list" class="divide-y divide-slate-100 dark:divide-slate-900"></div>
+    </section>
+
   </main>
 
-  <!-- Floating Add Button -->
-  <button id="fab-add-item" onclick="openItemModal()" class="fixed bottom-5 left-5 z-30 flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
-    <span>הוסף פריט</span>
+  <!-- Floating Action Button (+) -->
+  <button type="button" onclick="openItemModal()" title="הוסף מטבע או שטר" aria-label="הוסף מטבע או שטר" class="fixed bottom-6 left-6 z-30 w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-lg shadow-indigo-600/30 flex items-center justify-center text-2xl font-bold transition">
+    +
   </button>
 
-  <!-- ADD / EDIT / DUPLICATE ITEM MODAL -->
-  <div id="item-modal" onclick="handleModalBackdropClick(event)" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-start justify-center pt-4 sm:pt-10 px-3 overflow-y-auto">
-    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[88dvh] overflow-hidden">
-      <!-- Sticky Header -->
-      <div class="px-4 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between shrink-0 bg-white dark:bg-slate-900">
-        <h2 id="modal-title" class="font-bold text-base">הוספת פריט חדש</h2>
-        <button type="button" onclick="closeItemModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
+  <!-- MODAL 1: ITEM DETAILS (READ-ONLY) -->
+  <div id="item-details-modal" onclick="if(event.target===this) closeItemDetailsModal()" class="hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-slate-200/80 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="details-flag" class="emoji-flag text-3xl shrink-0"></span>
+          <div class="min-w-0">
+            <h3 id="details-country" class="font-bold text-base text-slate-900 dark:text-white truncate"></h3>
+            <span id="details-type-badge" class="inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"></span>
+          </div>
+        </div>
+        <button type="button" onclick="closeItemDetailsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-sm">✕</button>
       </div>
 
-      <!-- Scrollable Form Body -->
-      <form id="item-form" onsubmit="handleSaveItem(event, 'update')" class="p-4 space-y-3.5 overflow-y-auto flex-1">
-        <input type="hidden" id="edit-item-id" value="" />
+      <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/70 border border-slate-100 dark:border-slate-800 space-y-2.5 text-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400">ערך ומטבע</span>
+          <span id="details-value-currency" class="font-bold text-slate-900 dark:text-white"></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400">שנת הנפקה</span>
+          <span id="details-year" class="font-semibold text-slate-800 dark:text-slate-100"></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-slate-500 dark:text-slate-400">כמות באוסף</span>
+          <span id="details-quantity" class="font-semibold text-slate-800 dark:text-slate-100"></span>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <span class="text-slate-500 dark:text-slate-400 shrink-0">מיקום</span>
+          <span id="details-location" class="truncate text-left"></span>
+        </div>
+      </div>
 
-        <!-- Type Toggle -->
+      <div class="flex items-center gap-2 pt-1">
+        <button type="button" id="details-edit-btn" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition">
+          ערוך פריט
+        </button>
+        <button type="button" id="details-delete-btn" class="px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 hover:bg-rose-100 text-sm font-semibold transition">
+          מחק
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: ADD / EDIT ITEM -->
+  <div id="item-modal" onclick="if(event.target===this) closeItemModal()" class="hidden fixed inset-0 z-40 bg-slate-950/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-md max-h-[92vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl p-5 shadow-2xl border border-slate-200/80 dark:border-slate-800">
+      <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 dark:border-slate-800">
+        <h3 id="item-modal-title" class="text-base font-bold text-slate-900 dark:text-white">הוספת פריט חדש</h3>
+        <button type="button" onclick="closeItemModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-sm">✕</button>
+      </div>
+
+      <form onsubmit="handleItemFormSubmit(event)" class="space-y-3.5">
+        <input type="hidden" id="form-item-id" />
+        <input type="hidden" id="form-type" value="coin" />
+
+        <!-- Item Type Toggle -->
         <div>
-          <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">סוג פריט</label>
-          <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
-            <button type="button" id="btn-type-coin" onclick="selectFormType('coin')" class="py-2 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition">מטבע</button>
-            <button type="button" id="btn-type-banknote" onclick="selectFormType('banknote')" class="py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition">שטר</button>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">סוג פריט</label>
+          <div class="flex gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-950">
+            <button type="button" data-form-type="coin" onclick="setFormType('coin')" class="form-type-pill flex-1 py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow-xs transition">מטבע</button>
+            <button type="button" data-form-type="banknote" onclick="setFormType('banknote')" class="form-type-pill flex-1 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 transition">שטר</button>
           </div>
-          <input type="hidden" id="form-type" value="coin" />
         </div>
 
-        <!-- Custom Searchable Country Dropdown -->
-        <div class="relative">
-          <div class="flex items-center justify-between mb-1">
-            <label for="form-country-input" class="block text-xs font-medium text-slate-500 dark:text-slate-400">מדינה / ישות</label>
+        <!-- Country Searchable Selector -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label for="form-country-input" class="text-xs font-semibold text-slate-600 dark:text-slate-300">מדינה</label>
             <button type="button" id="btn-form-series-info" onclick="openCurrentFormCountrySeriesInfo()" class="hidden inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-              <span>ⓘ</span>
-              <span>הסבר תקופות וסדרות</span>
+              <span>ⓘ סדרות ותקופות במדינה זו</span>
             </button>
           </div>
-          <div class="relative flex items-center">
-            <span id="form-country-flag" class="emoji-flag text-lg absolute right-3 pointer-events-none hidden"></span>
-            <input
-              id="form-country-input"
-              type="text"
-              autocomplete="off"
-              placeholder="הקלד או בחר מדינה..."
-              onfocus="openCountryDropdown()"
-              oninput="onCountryInputChange()"
-              class="w-full pr-3 pl-14 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none"
-            />
-            <div class="absolute left-2 flex items-center gap-0.5">
-              <button type="button" id="btn-clear-country" onclick="clearCountryField()" aria-label="נקה מדינה" class="hidden p-1 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 text-xs font-bold">
-                ✕
-              </button>
-              <button type="button" onclick="toggleCountryDropdown()" aria-label="פתח רשימת מדינות" class="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-              </button>
+          <div class="relative">
+            <input type="hidden" id="form-country" />
+            <input type="text" id="form-country-input" autocomplete="off" onfocus="onCountryInputFocus()" oninput="onCountryInputChange()" placeholder="הקלד או בחר מדינה..." class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-100 border border-transparent focus:border-indigo-500 outline-none transition" />
+            <div id="form-country-dropdown" class="hidden absolute right-0 left-0 mt-1.5 max-h-56 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 py-1 z-40"></div>
+          </div>
+        </div>
+
+        <!-- Currency Selector -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">מטבע</label>
+          <div class="relative">
+            <input type="hidden" id="form-currency" />
+            <button type="button" id="form-currency-trigger" onclick="toggleCurrencyDropdown()" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-100 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between text-right transition">
+              <span id="form-currency-display" class="truncate">בחר מטבע...</span>
+              <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div id="form-currency-dropdown" class="hidden absolute right-0 left-0 mt-1.5 max-h-52 overflow-y-auto rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 py-1 z-40"></div>
+          </div>
+          <div id="form-currency-custom-wrap" class="hidden mt-2">
+            <input type="text" id="form-currency-custom-input" oninput="onCustomCurrencyInputChange()" placeholder="הזן שם מטבע (למשל: פרנק שווייצרי)" class="w-full px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-100 border border-indigo-300 dark:border-indigo-800 outline-none" />
+          </div>
+        </div>
+
+        <!-- Denomination & Year -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label for="form-value" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">ערך נקוב</label>
+            <input type="text" id="form-value" inputmode="decimal" onfocus="onValueFieldFocus(this)" onblur="onValueFieldBlur(this)" placeholder="למשל: 5 או 0.5" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-100 border border-transparent focus:border-indigo-500 outline-none transition" />
+          </div>
+          <div>
+            <label for="form-year" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">שנת הנפקה (רשות)</label>
+            <input type="number" id="form-year" inputmode="numeric" placeholder="ללא שנה" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-100 border border-transparent focus:border-indigo-500 outline-none transition" />
+          </div>
+        </div>
+
+        <!-- Quantity & Storage Location -->
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label for="form-quantity" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">כמות</label>
+            <div class="flex items-center rounded-xl bg-slate-100 dark:bg-slate-950 p-1">
+              <button type="button" onclick="adjustFormQuantity(-1)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-base flex items-center justify-center shadow-2xs">−</button>
+              <input type="number" id="form-quantity" min="1" value="1" class="w-full text-center bg-transparent text-sm font-bold text-slate-900 dark:text-white outline-none" />
+              <button type="button" onclick="adjustFormQuantity(1)" class="w-8 h-8 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-base flex items-center justify-center shadow-2xs">+</button>
             </div>
           </div>
-          <input type="hidden" id="form-country" value="" />
-          <div id="country-dropdown-menu" class="hidden absolute left-0 right-0 mt-1 z-40 max-h-48 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl divide-y divide-slate-100 dark:divide-slate-700/60"></div>
-        </div>
 
-        <!-- Custom Currency Dropdown + Custom Input -->
-        <div class="relative">
-          <label for="form-currency-trigger" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שם המטבע / היחידה</label>
-          <button
-            type="button"
-            id="form-currency-trigger"
-            onclick="toggleCurrencyDropdown()"
-            class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none flex items-center justify-between text-right"
-          >
-            <span id="form-currency-display" class="truncate">בחר מטבע...</span>
-            <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-          <input type="hidden" id="form-currency-select" value="" />
-          <div id="currency-dropdown-menu" class="hidden absolute left-0 right-0 mt-1 z-40 max-h-44 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl divide-y divide-slate-100 dark:divide-slate-700/60"></div>
-          <input id="form-currency-custom" type="text" placeholder="הזן שם מטבע מותאם אישית..." onfocus="scrollFieldIntoView(this)" class="hidden mt-2 w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
-        </div>
-
-        <!-- Value & Year -->
-        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label for="form-value" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">ערך נקוב</label>
-            <input id="form-value" type="text" inputmode="decimal" required placeholder="למשל: 5 או 1,000" onfocus="onValueFieldFocus(this); scrollFieldIntoView(this)" onblur="onValueFieldBlur(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
-          </div>
-          <div>
-            <label for="form-year" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">שנת הנפקה (אופציונלי)</label>
-            <input id="form-year" type="number" inputmode="numeric" min="100" max="2099" placeholder="ללא שנה" onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
+            <label for="form-location" class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1.5">מיקום אחסון (רשות)</label>
+            <input type="text" id="form-location" list="location-suggestions" placeholder="למשל: אלבום 1" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 text-sm text-slate-900 dark:text-slate-100 border border-transparent focus:border-indigo-500 outline-none transition" />
+            <datalist id="location-suggestions"></datalist>
           </div>
         </div>
 
-        <!-- Quantity -->
-        <div>
-          <label for="form-quantity" class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">כמות באוסף</label>
-          <input id="form-quantity" type="number" inputmode="numeric" min="1" value="1" required onfocus="scrollFieldIntoView(this)" class="w-full px-3 py-2.5 rounded-xl text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none" />
-        </div>
-
-        <!-- Sticky Footer Actions inside Form -->
-        <div id="form-actions-bar" class="pt-2 flex items-center gap-2 sticky bottom-0 bg-white dark:bg-slate-900 pb-1">
-          <button type="submit" id="btn-save-main" class="flex-1 py-2.5 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition truncate">
+        <!-- Submit & Delete Buttons -->
+        <div class="flex items-center gap-2 pt-2">
+          <button type="submit" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-sm transition">
             שמור פריט
           </button>
-          <button type="button" id="btn-save-as-new" onclick="handleSaveAsNewClick()" class="hidden shrink-0 py-2.5 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 hover:bg-indigo-100 dark:hover:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-semibold text-xs sm:text-sm transition">
-            שמור כחדש
-          </button>
-          <button type="button" id="btn-delete-item" onclick="openDeleteConfirmModal()" class="hidden shrink-0 px-3 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 text-rose-600 dark:text-rose-400 font-medium text-xs sm:text-sm transition">
+          <button type="button" id="btn-delete-item" onclick="deleteCurrentEditingItem()" class="hidden px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 hover:bg-rose-100 text-sm font-semibold transition">
             מחק
           </button>
         </div>
@@ -296,1768 +339,133 @@
     </div>
   </div>
 
-  <!-- SERIES & ERAS INFO MODAL (ⓘ) -->
-  <div id="series-info-modal" onclick="if(event.target.id==='series-info-modal') closeSeriesInfoModal()" class="hidden fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85dvh]">
-      <div class="flex items-center justify-between gap-2 shrink-0">
-        <div class="flex items-center gap-2 min-w-0">
-          <span id="series-info-flag" class="emoji-flag text-2xl shrink-0"></span>
+  <!-- MODAL 3: SERIES & ERAS INFO -->
+  <div id="series-info-modal" onclick="if(event.target===this) closeSeriesInfoModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-md max-h-[85vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+      <div class="flex items-start justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span id="series-info-flag" class="emoji-flag text-3xl shrink-0"></span>
           <div class="min-w-0">
-            <h3 id="series-info-title" class="font-bold text-base truncate"></h3>
+            <h3 id="series-info-title" class="text-sm font-bold text-slate-900 dark:text-white leading-snug"></h3>
             <p id="series-info-subtitle" class="text-[11px] text-indigo-600 dark:text-indigo-400 font-medium"></p>
           </div>
         </div>
-        <button type="button" onclick="closeSeriesInfoModal()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">✕</button>
+        <button type="button" onclick="closeSeriesInfoModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs shrink-0">✕</button>
       </div>
-
-      <div class="mt-3 space-y-3 overflow-y-auto flex-1 pr-0.5">
-        <p id="series-info-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
-        <div id="series-info-list" class="space-y-1.5"></div>
-        <p id="series-info-note" class="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed"></p>
-      </div>
-
-      <button type="button" onclick="closeSeriesInfoModal()" class="mt-3.5 w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-semibold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">
-        סגור
-      </button>
+      <p id="series-info-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <div id="series-info-list" class="space-y-1.5"></div>
+      <p id="series-info-note" class="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed"></p>
     </div>
   </div>
 
-  <!-- EDIT / SAVE CONFIRMATION MODAL -->
-  <div id="edit-confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <div class="flex items-start gap-3">
-        <div class="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 font-bold text-base">?</div>
-        <div>
-          <h3 id="edit-confirm-title" class="font-bold text-base">אישור שמירה</h3>
-          <p id="edit-confirm-message" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed"></p>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 pt-1">
-        <button id="edit-confirm-btn" onclick="executeConfirmedEditAction()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
-          אישור
-        </button>
-        <button onclick="closeEditConfirmModal()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-200 transition">
-          ביטול
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- DELETE CONFIRMATION MODAL -->
-  <div id="delete-confirm-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <div class="flex items-start gap-3">
-        <div class="w-9 h-9 rounded-xl bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 font-bold text-base">!</div>
-        <div>
-          <h3 class="font-bold text-base">מחיקת פריט מהאוסף</h3>
-          <p id="delete-confirm-message" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed"></p>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 pt-1">
-        <button onclick="confirmDeleteItem()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm transition">
-          מחק לצמיתות
-        </button>
-        <button onclick="closeDeleteConfirmModal()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-200 transition">
-          ביטול
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- DUPLICATE WARNING MODAL -->
-  <div id="duplicate-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <div class="flex items-start gap-3">
-        <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 font-bold text-lg">!</div>
-        <div>
-          <h3 class="font-bold text-base">פריט זהה כבר קיים באוסף</h3>
-          <p id="duplicate-message" class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed"></p>
-        </div>
-      </div>
-      <div class="flex flex-col gap-2 pt-1">
-        <button onclick="confirmMergeDuplicate()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition">
-          הוסף את הכמות לפריט הקיים
-        </button>
-        <button onclick="closeDuplicateModal()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm hover:bg-slate-200 transition">
-          ביטול
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- DATA EXPORT / IMPORT MODAL -->
-  <div id="data-modal" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-2xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="font-bold text-base">ייצוא, שיתוף וגיבוי</h3>
-        <button onclick="closeDataModal()" class="p-1 text-slate-400 hover:text-slate-600">✕</button>
-      </div>
-
+  <!-- MODAL 4: DUPLICATE CONFIRMATION -->
+  <div id="duplicate-modal" onclick="if(event.target===this) closeDuplicateModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">פריט זהה כבר קיים באוסף</h3>
+      <p id="duplicate-modal-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
       <div class="space-y-2">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">ייצוא האוסף (שיתוף לאפליקציה או הורדה):</p>
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="promptExportFormat('xlsx')" class="py-2.5 px-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-700 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 transition">
-            Excel (.xlsx)
-          </button>
-          <button onclick="promptExportFormat('csv')" class="py-2.5 px-2 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-700 dark:text-sky-300 text-xs font-semibold hover:bg-sky-100 transition">
-            CSV (.csv)
-          </button>
-          <button onclick="promptExportFormat('json')" class="py-2.5 px-2 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-indigo-700 dark:text-indigo-300 text-xs font-semibold hover:bg-indigo-100 transition">
-            JSON (.json)
-          </button>
-        </div>
+        <button type="button" onclick="confirmDuplicateMerge()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+          אחד כמויות לפריט הקיים (מומלץ)
+        </button>
+        <button type="button" onclick="confirmDuplicateSeparate()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition">
+          שמור כרשומה נפרדת
+        </button>
+        <button type="button" onclick="closeDuplicateModal()" class="w-full py-2 text-xs text-slate-400 hover:text-slate-600 transition">
+          ביטול
+        </button>
       </div>
+    </div>
+  </div>
 
-      <!-- Export Choice Sub-panel -->
-      <div id="export-choice-panel" class="hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2">
-        <p id="export-choice-title" class="text-xs font-semibold text-slate-700 dark:text-slate-200"></p>
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="executeExport('share')" class="py-2 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
-            📤 שיתוף / שליחה
-          </button>
-          <button onclick="executeExport('download')" class="py-2 px-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-100 transition">
-            📥 הורדה למכשיר
-          </button>
-        </div>
+  <!-- MODAL 5: DELETE CONFIRMATION -->
+  <div id="delete-confirm-modal" onclick="if(event.target===this) closeDeleteConfirmModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">מחיקת פריט</h3>
+      <p id="delete-confirm-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="confirmDeleteItem()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition">
+          כן, מחק פריט
+        </button>
+        <button type="button" onclick="closeDeleteConfirmModal()" class="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold transition">
+          ביטול
+        </button>
       </div>
+    </div>
+  </div>
 
-      <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
-        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">שחזור / ייבוא מקובץ (JSON / CSV / Excel):</p>
-        <label class="block w-full py-2.5 px-3 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center text-xs font-medium text-slate-600 dark:text-slate-300 hover:border-indigo-500 cursor-pointer transition">
-          בחר קובץ לייבוא לאוסף
-          <input type="file" accept=".json,.csv,.xlsx,.xls" onchange="handleImportFile(event)" class="hidden" />
-        </label>
+  <!-- MODAL 6: EXPORT FORMAT -->
+  <div id="export-modal" onclick="if(event.target===this) closeExportModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">ייצוא וגיבוי האוסף</h3>
+        <button type="button" onclick="closeExportModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 dark:text-slate-400">בחר את פורמט הקובץ להורדה:</p>
+      <div class="space-y-2">
+        <button type="button" onclick="executeExport('json')" class="w-full p-3 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/60 text-right hover:bg-indigo-100/70 transition">
+          <div class="text-xs font-bold text-indigo-700 dark:text-indigo-300">קובץ גיבוי מלא (JSON)</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">מומלץ לשחזור או העברה למכשיר אחר</div>
+        </button>
+        <button type="button" onclick="executeExport('excel')" class="w-full p-3 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60 text-right hover:bg-emerald-100/70 transition">
+          <div class="text-xs font-bold text-emerald-700 dark:text-emerald-300">גיליון Excel (.xls)</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">טבלה מעוצבת בעברית לפתיחה באקסל</div>
+        </button>
+        <button type="button" onclick="executeExport('csv')" class="w-full p-3 rounded-2xl bg-slate-100/80 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700 text-right hover:bg-slate-200/70 transition">
+          <div class="text-xs font-bold text-slate-800 dark:text-slate-200">קובץ CSV</div>
+          <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">תואם לגיליונות אלקטרוניים וייבוא חוזר</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 7: IMPORT CONFIRMATION -->
+  <div id="import-modal" onclick="if(event.target===this) closeImportConfirmModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">ייבוא פריטים מקובץ</h3>
+      <p id="import-modal-desc" class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed"></p>
+      <div class="space-y-2">
+        <button type="button" onclick="confirmImportMerge()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition">
+          מזג עם האוסף הקיים (אחד כפילויות)
+        </button>
+        <button type="button" onclick="confirmImportReplace()" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition">
+          החלף את כל האוסף בקובץ המיובא
+        </button>
+        <button type="button" onclick="closeImportConfirmModal()" class="w-full py-2 text-xs text-slate-400 hover:text-slate-600 transition">
+          ביטול
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 8: RESET / RESTORE SAMPLE -->
+  <div id="reset-modal" onclick="if(event.target===this) closeResetModal()" class="hidden fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white">ניהול נתוני האוסף</h3>
+        <button type="button" onclick="closeResetModal()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xs">✕</button>
+      </div>
+      <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">מומלץ לייצא גיבוי JSON לפני מחיקה או איפוס של האוסף.</p>
+      <div class="space-y-2">
+        <button type="button" onclick="restoreSampleCollection()" class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold transition">
+          טען נתוני דוגמה מחדש
+        </button>
+        <button type="button" onclick="confirmResetCollection()" class="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold transition">
+          רוקן את האוסף לחלוטין
+        </button>
       </div>
     </div>
   </div>
 
   <!-- Toast Notification -->
-  <div id="toast" class="hidden fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-medium shadow-lg"></div>
+  <div id="toast" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold shadow-xl whitespace-nowrap"></div>
 
-  <!-- Modular Static Data Files -->
+  <!-- Modular Application Scripts -->
   <script src="./countries-data.js"></script>
   <script src="./series-data.js"></script>
-
-  <script>
-    function escapeJsStr(str) {
-      return String(str).replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, "&quot;");
-    }
-
-    function escapeHtmlAttr(str) {
-      return String(str).replace(/&/g, "&amp;").replace(/"/g, "&quot;");
-    }
-
-    // Number formatting with commas for large denominations (1,000, 1,000,000) without affecting decimals or raw values
-    function formatDenomination(val) {
-      if (val === null || val === undefined || val === "") return "";
-      const str = String(val).trim().replace(/,/g, "");
-      const num = Number(str);
-      if (isNaN(num)) return String(val);
-      const parts = str.split(".");
-      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-      return parts.join(".");
-    }
-
-    function parseDenomination(rawStr) {
-      if (rawStr === null || rawStr === undefined) return NaN;
-      const cleaned = String(rawStr).trim().replace(/,/g, "");
-      if (cleaned === "") return NaN;
-      return parseFloat(cleaned);
-    }
-
-    function onValueFieldFocus(el) {
-      if (!el) return;
-      el.value = el.value.replace(/,/g, "");
-    }
-
-    function onValueFieldBlur(el) {
-      if (!el) return;
-      const num = parseDenomination(el.value);
-      if (!isNaN(num) && num >= 0) {
-        el.value = formatDenomination(num);
-      }
-    }
-
-    function getSeriesRank(countryName, currencyName, year) {
-      const info = SERIES_INFO_DB[countryName];
-      if (!info || info.eraOnly || !info.ranges || !info.currencies) return 0;
-      const c = (currencyName || "").trim();
-      if (!info.currencies.includes(c)) return 0;
-      if (!hasValidYear(year)) return 99;
-      const y = Number(year);
-      for (let i = 0; i < info.ranges.length; i++) {
-        if (y <= info.ranges[i].maxYear) {
-          return i + 1;
-        }
-      }
-      return info.ranges.length;
-    }
-
-    function openSeriesInfoModal(countryName) {
-      const info = SERIES_INFO_DB[countryName];
-      if (!info) return;
-      const meta = getCountryMeta(countryName);
-      const rows = info.infoRows || info.ranges || [];
-      document.getElementById("series-info-flag").textContent = meta.flag;
-      document.getElementById("series-info-title").textContent = info.eraOnly
-        ? `${countryName} — תקופות מטבע`
-        : `${countryName} — סדרות מטבע`;
-      document.getElementById("series-info-subtitle").textContent = info.eraOnly
-        ? "מיון כרונולוגי לפי תקופות מטבע"
-        : "מיון אוטומטי לפי סדרות ושנת הנפקה";
-      document.getElementById("series-info-desc").textContent = info.description;
-      document.getElementById("series-info-list").innerHTML = rows.map((r, idx) => `
-        <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 flex items-center justify-between gap-2 text-xs">
-          <div class="flex items-start gap-2 min-w-0">
-            <span class="w-4 text-slate-400 font-bold shrink-0">${idx + 1}.</span>
-            <span class="font-semibold text-slate-800 dark:text-slate-100 leading-snug">${r.label}</span>
-          </div>
-          <span class="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 font-semibold text-[11px] shrink-0">${r.years}</span>
-        </div>
-      `).join("");
-      document.getElementById("series-info-note").textContent = info.note || "";
-      document.getElementById("series-info-modal").classList.remove("hidden");
-    }
-
-    function closeSeriesInfoModal() {
-      document.getElementById("series-info-modal").classList.add("hidden");
-    }
-
-    function openCurrentFormCountrySeriesInfo() {
-      const cName = document.getElementById("form-country").value.trim();
-      if (cName && SERIES_INFO_DB[cName]) {
-        openSeriesInfoModal(cName);
-      }
-    }
-
-    function updateFormSeriesInfoButton(countryName) {
-      const btn = document.getElementById("btn-form-series-info");
-      if (!btn) return;
-      btn.classList.toggle("hidden", !SERIES_INFO_DB[countryName]);
-    }
-
-    function hasValidYear(y) {
-      return y !== null && y !== undefined && y !== "" && !isNaN(Number(y));
-    }
-
-    function normalizeYear(y) {
-      return hasValidYear(y) ? Number(y) : null;
-    }
-
-    function formatYearText(y) {
-      return hasValidYear(y) ? String(y) : "ללא שנה";
-    }
-
-    const STORAGE_KEY = "world_coin_collection_v1";
-    let collection = [];
-    let currentTab = "collection";
-    let currentTypeFilter = "all";
-    let currentGroupMode = "alpha";
-    let selectedContinentFilter = "all";
-    let selectedCountryFilter = "all";
-    let selectedDecadeFilter = "all";
-    let collapsedContinents = {};
-    let collapsedCountries = {};
-    let isAllCollapsed = false;
-    let expandedStatsCountries = {};
-    let pendingDuplicate = null;
-    let pendingExportFormat = null;
-    let currentCurrencyOptions = [];
-    let originalEditingItem = null;
-    let pendingEditAction = null;
-
-    const SAMPLE_DATA = [
-      { id: "1", type: "coin", country: "ישראל", currency: "לירה ישראלית", value: 5, year: 1978, quantity: 1 },
-      { id: "2", type: "coin", country: "ישראל", currency: "אגורות (לירה)", value: 50, year: 1975, quantity: 2 },
-      { id: "3", type: "coin", country: "ישראל", currency: "שקל חדש", value: 5, year: 2015, quantity: 1 },
-      { id: "4", type: "coin", country: "ישראל", currency: "אגורות", value: 50, year: 1992, quantity: 3 },
-      { id: "5", type: "banknote", country: "ישראל", currency: "שקל חדש", value: 20, year: 2017, quantity: 1 },
-      { id: "6", type: "coin", country: "יפן", currency: "ין יפני", value: 500, year: 2019, quantity: 1 },
-      { id: "7", type: "coin", country: "יפן", currency: "ין יפני", value: 100, year: 2012, quantity: 2 },
-      { id: "8", type: "coin", country: "גרמניה", currency: "מארק גרמני", value: 2, year: 1988, quantity: 1 },
-      { id: "9", type: "coin", country: "גרמניה", currency: "אירו", value: 2, year: 2002, quantity: 1 },
-      { id: "10", type: "banknote", country: "ארה״ב", currency: "דולר אמריקאי", value: 1, year: 2013, quantity: 2 }
-    ];
-
-    function init() {
-      const savedTheme = localStorage.getItem("coin_theme");
-      if (savedTheme === "dark") document.documentElement.classList.add("dark");
-
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        try {
-          collection = JSON.parse(raw);
-        } catch (e) {
-          collection = [...SAMPLE_DATA];
-        }
-      } else {
-        collection = [...SAMPLE_DATA];
-        saveCollection();
-      }
-
-      updateFilterDropdowns();
-      renderCollection();
-
-      document.addEventListener("click", (e) => {
-        const countryWrap = document.getElementById("form-country-input")?.closest(".relative")?.parentElement;
-        if (countryWrap && !countryWrap.contains(e.target)) {
-          closeCountryDropdown();
-        }
-        const currWrap = document.getElementById("form-currency-trigger")?.closest(".relative");
-        if (currWrap && !currWrap.contains(e.target)) {
-          closeCurrencyDropdown();
-        }
-        if (!e.target.closest("[data-filter-wrap]")) {
-          closeAllFilterDropdowns();
-        }
-      });
-
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      }
-    }
-
-    function saveCollection() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(collection));
-    }
-
-    function toggleDarkMode() {
-      const isDark = document.documentElement.classList.toggle("dark");
-      localStorage.setItem("coin_theme", isDark ? "dark" : "light");
-    }
-
-    function showToast(msg) {
-      const el = document.getElementById("toast");
-      el.textContent = msg;
-      el.classList.remove("hidden");
-      clearTimeout(window._toastTimer);
-      window._toastTimer = setTimeout(() => el.classList.add("hidden"), 2600);
-    }
-
-    function getCountryMeta(name) {
-      return COUNTRIES_DB.find(c => c.name === name) || {
-        name,
-        continent: "אחר",
-        flag: "🏳️",
-        former: false,
-        currencies: []
-      };
-    }
-
-    // Custom Filter Dropdowns Logic
-    function closeAllFilterDropdowns(exceptType = null) {
-      ["continent", "country", "decade"].forEach(type => {
-        if (type !== exceptType) {
-          document.getElementById(`filter-${type}-menu`)?.classList.add("hidden");
-        }
-      });
-    }
-
-    function toggleFilterDropdown(type) {
-      const menu = document.getElementById(`filter-${type}-menu`);
-      if (!menu) return;
-      const isHidden = menu.classList.contains("hidden");
-      closeAllFilterDropdowns(type);
-      if (isHidden) {
-        updateFilterDropdowns();
-        menu.classList.remove("hidden");
-      } else {
-        menu.classList.add("hidden");
-      }
-    }
-
-    function setTriggerActiveStyle(triggerId, isActive) {
-      const el = document.getElementById(triggerId);
-      if (!el) return;
-      if (isActive) {
-        el.className = "w-full px-2.5 py-2 rounded-xl text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 outline-none flex items-center justify-between gap-1 text-right transition";
-      } else {
-        el.className = "w-full px-2.5 py-2 rounded-xl text-xs font-medium bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-transparent focus:border-indigo-500 outline-none flex items-center justify-between gap-1 text-right transition";
-      }
-    }
-
-    function updateFilterDropdowns() {
-      const contMenu = document.getElementById("filter-continent-menu");
-      const contOptions = [
-        { value: "all", label: "כל היבשות" },
-        ...CONTINENT_ORDER.map(c => ({ value: c, label: c }))
-      ];
-      contMenu.innerHTML = contOptions.map(opt => {
-        const active = opt.value === selectedContinentFilter;
-        return `
-          <button type="button" onclick="selectFilterOption('continent', '${escapeJsStr(opt.value)}')" class="w-full px-3 py-2 text-right text-xs flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${active ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'}">
-            <span class="truncate">${opt.label}</span>
-            ${active ? `<span class="text-xs shrink-0">✓</span>` : ""}
-          </button>
-        `;
-      }).join("");
-      document.getElementById("filter-continent-display").textContent =
-        selectedContinentFilter === "all" ? "כל היבשות" : selectedContinentFilter;
-      setTriggerActiveStyle("filter-continent-trigger", selectedContinentFilter !== "all");
-
-      const countriesInCollection = Array.from(new Set(collection.map(i => i.country)))
-        .filter(cName => selectedContinentFilter === "all" || getCountryMeta(cName).continent === selectedContinentFilter)
-        .sort((a, b) => hebrewCollator.compare(a, b));
-
-      if (selectedCountryFilter !== "all" && !countriesInCollection.includes(selectedCountryFilter)) {
-        selectedCountryFilter = "all";
-      }
-
-      const countryMenu = document.getElementById("filter-country-menu");
-      const countryItemsHtml = [
-        `<button type="button" onclick="selectFilterOption('country', 'all')" class="w-full px-3 py-2 text-right text-xs flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${selectedCountryFilter === 'all' ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'}">
-          <span class="truncate">כל המדינות</span>
-          ${selectedCountryFilter === 'all' ? `<span class="text-xs shrink-0">✓</span>` : ""}
-        </button>`,
-        ...countriesInCollection.map(cName => {
-          const meta = getCountryMeta(cName);
-          const active = cName === selectedCountryFilter;
-          return `
-            <button type="button" onclick="selectFilterOption('country', '${escapeJsStr(cName)}')" class="w-full px-3 py-2 text-right text-xs flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${active ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'}">
-              <div class="flex items-center gap-1.5 min-w-0">
-                <span class="emoji-flag text-sm shrink-0">${meta.flag}</span>
-                <span class="truncate">${cName}</span>
-              </div>
-              ${active ? `<span class="text-xs shrink-0">✓</span>` : ""}
-            </button>
-          `;
-        })
-      ].join("");
-      countryMenu.innerHTML = countryItemsHtml;
-
-      if (selectedCountryFilter === "all") {
-        document.getElementById("filter-country-display").textContent = "כל המדינות";
-      } else {
-        const meta = getCountryMeta(selectedCountryFilter);
-        document.getElementById("filter-country-display").textContent = `${meta.flag} ${selectedCountryFilter}`;
-      }
-      setTriggerActiveStyle("filter-country-trigger", selectedCountryFilter !== "all");
-
-      const decades = Array.from(new Set(
-        collection
-          .filter(i => hasValidYear(i.year))
-          .map(i => Math.floor(Number(i.year) / 10) * 10)
-      )).sort((a, b) => b - a);
-
-      if (selectedDecadeFilter !== "all" && !decades.map(String).includes(selectedDecadeFilter)) {
-        selectedDecadeFilter = "all";
-      }
-
-      const decadeMenu = document.getElementById("filter-decade-menu");
-      const decadeOptions = [
-        { value: "all", label: "כל העשורים" },
-        ...decades.map(d => ({ value: String(d), label: `שנות ה-${d}` }))
-      ];
-      decadeMenu.innerHTML = decadeOptions.map(opt => {
-        const active = opt.value === selectedDecadeFilter;
-        return `
-          <button type="button" onclick="selectFilterOption('decade', '${opt.value}')" class="w-full px-3 py-2 text-right text-xs flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${active ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'}">
-            <span class="truncate">${opt.label}</span>
-            ${active ? `<span class="text-xs shrink-0">✓</span>` : ""}
-          </button>
-        `;
-      }).join("");
-      document.getElementById("filter-decade-display").textContent =
-        selectedDecadeFilter === "all" ? "כל העשורים" : `שנות ה-${selectedDecadeFilter}`;
-      setTriggerActiveStyle("filter-decade-trigger", selectedDecadeFilter !== "all");
-    }
-
-    function selectFilterOption(type, value) {
-      if (type === "continent") {
-        selectedContinentFilter = value;
-      } else if (type === "country") {
-        selectedCountryFilter = value;
-      } else if (type === "decade") {
-        selectedDecadeFilter = value;
-      }
-      closeAllFilterDropdowns();
-      updateFilterDropdowns();
-      renderCollection();
-    }
-
-    function setTypeFilter(type) {
-      currentTypeFilter = type;
-      document.querySelectorAll(".type-pill").forEach(btn => {
-        if (btn.dataset.type === type) {
-          btn.className = "type-pill py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white shadow-xs transition";
-        } else {
-          btn.className = "type-pill py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
-        }
-      });
-      renderCollection();
-    }
-
-    function setGroupMode(mode) {
-      currentGroupMode = mode;
-      document.querySelectorAll(".group-pill").forEach(btn => {
-        if (btn.dataset.group === mode) {
-          btn.className = "group-pill px-2.5 py-1 rounded-lg text-xs font-semibold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs transition";
-        } else {
-          btn.className = "group-pill px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
-        }
-      });
-      renderCollection();
-    }
-
-    function updateCollapseToggleButton() {
-      const labelEl = document.getElementById("label-toggle-collapse");
-      const iconEl = document.getElementById("icon-toggle-collapse");
-      if (!labelEl || !iconEl) return;
-      if (isAllCollapsed) {
-        labelEl.textContent = "פתח הכול";
-        iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>`;
-      } else {
-        labelEl.textContent = "כווץ הכול";
-        iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/>`;
-      }
-    }
-
-    function toggleCollapseAll() {
-      if (isAllCollapsed) {
-        expandAll();
-      } else {
-        collapseAll();
-      }
-    }
-
-    function collapseAll() {
-      CONTINENT_ORDER.forEach(c => {
-        collapsedContinents[c] = true;
-      });
-      collection.forEach(item => {
-        const meta = getCountryMeta(item.country);
-        if (meta && meta.continent) {
-          collapsedContinents[meta.continent] = true;
-        }
-        collapsedCountries[item.country] = true;
-      });
-      isAllCollapsed = true;
-      updateCollapseToggleButton();
-      renderCollection();
-    }
-
-    function expandAll() {
-      collapsedContinents = {};
-      collapsedCountries = {};
-      isAllCollapsed = false;
-      updateCollapseToggleButton();
-      renderCollection();
-    }
-
-    function clearSearch() {
-      document.getElementById("search-input").value = "";
-      renderCollection();
-    }
-
-    function formatQuantitySummary(coinsCount, notesCount) {
-      const parts = [];
-      if (coinsCount > 0) {
-        parts.push(coinsCount === 1 ? "מטבע 1" : `${formatDenomination(coinsCount)} מטבעות`);
-      }
-      if (notesCount > 0) {
-        parts.push(notesCount === 1 ? "שטר 1" : `${formatDenomination(notesCount)} שטרות`);
-      }
-      return parts.join(", ");
-    }
-
-    // 6-Level Internal Sorting per Country
-    function sortCountryItems(items, countryName) {
-      return [...items].sort((a, b) => {
-        if (a.type !== b.type) {
-          return a.type === "coin" ? -1 : 1;
-        }
-        const eraA = getEraRank(countryName, a.currency);
-        const eraB = getEraRank(countryName, b.currency);
-        if (eraA !== eraB) {
-          return eraA - eraB;
-        }
-        const seriesA = getSeriesRank(countryName, a.currency, a.year);
-        const seriesB = getSeriesRank(countryName, b.currency, b.year);
-        if (seriesA !== seriesB) {
-          return seriesA - seriesB;
-        }
-        const unitA = getUnitRank(countryName, a.currency);
-        const unitB = getUnitRank(countryName, b.currency);
-        if (unitA !== unitB) {
-          return unitA - unitB;
-        }
-        const valA = Number(a.value) || 0;
-        const valB = Number(b.value) || 0;
-        if (valA !== valB) {
-          return valB - valA;
-        }
-        const hasA = hasValidYear(a.year);
-        const hasB = hasValidYear(b.year);
-        if (hasA !== hasB) {
-          return hasA ? -1 : 1;
-        }
-        if (hasA && hasB) {
-          return Number(a.year) - Number(b.year);
-        }
-        return 0;
-      });
-    }
-
-    // Determine era/series key for visual 1.5px neutral divider between coin eras
-    function getItemEraSignature(item, countryName) {
-      const era = getEraRank(countryName, item.currency);
-      const series = item.type === "coin" ? getSeriesRank(countryName, item.currency, item.year) : 0;
-      return `${item.type}|${era}|${series}`;
-    }
-
-    function renderCountryBlockHtml(cName, rawItems) {
-      const meta = getCountryMeta(cName);
-      const items = sortCountryItems(rawItems, cName);
-      const coinsCount = items.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
-      const notesCount = items.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
-      const summaryText = formatQuantitySummary(coinsCount, notesCount);
-      const isCountryCollapsed = !!collapsedCountries[cName];
-      const safeNameAttr = escapeHtmlAttr(cName);
-      const safeNameJs = escapeJsStr(cName);
-      const hasSeriesInfo = !!SERIES_INFO_DB[cName];
-
-      let block = `
-        <div class="mb-5" data-country-block="${safeNameAttr}">
-          <div data-country-header class="flex items-center justify-between px-2.5 py-2 rounded-lg bg-slate-100/80 dark:bg-slate-800/60 transition-all duration-500">
-            <div onclick="toggleCountry('${safeNameJs}')" class="flex items-center gap-2.5 text-right flex-1 min-w-0 cursor-pointer">
-              <span class="emoji-flag text-2xl shrink-0">${meta.flag}</span>
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <span class="font-bold text-sm text-slate-900 dark:text-white">${cName}</span>
-                  ${hasSeriesInfo ? `<button type="button" onclick="event.stopPropagation(); openSeriesInfoModal('${safeNameJs}')" title="הסבר תקופות וסדרות במדינה זו" aria-label="הסבר תקופות וסדרות" class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold hover:bg-indigo-200 dark:hover:bg-indigo-900 transition">i</button>` : ""}
-                  ${meta.former ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 font-medium">מדינת עבר</span>` : ""}
-                </div>
-                <div class="text-xs text-slate-500 dark:text-slate-400">${summaryText}</div>
-              </div>
-            </div>
-            <div class="flex items-center gap-1 shrink-0">
-              <button type="button" onclick="openItemModal(null, '${safeNameJs}')" title="הוסף פריט ל${safeNameAttr}" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 transition">+</button>
-              <button type="button" onclick="toggleCountry('${safeNameJs}')" class="p-1 text-slate-400">
-                <svg class="w-4 h-4 transition-transform ${isCountryCollapsed ? 'rotate-90' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-            </div>
-          </div>
-      `;
-
-      if (!isCountryCollapsed) {
-        block += `<div class="divide-y divide-slate-100 dark:divide-slate-900 px-1">`;
-        items.forEach((item, idx) => {
-          const isCoin = item.type === "coin";
-          const qty = Number(item.quantity) || 1;
-          const formattedValue = formatDenomination(item.value);
-          const yearHtml = hasValidYear(item.year)
-            ? `<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>`
-            : `<span class="text-[11px] text-slate-400 dark:text-slate-500">ללא שנה</span>`;
-
-          // Apply 2.5px colored divider on era/series transition between coins
-          let eraDividerClass = "";
-          if (idx > 0 && isCoin && items[idx - 1].type === "coin") {
-            const prevSig = getItemEraSignature(items[idx - 1], cName);
-            const currSig = getItemEraSignature(item, cName);
-            if (prevSig !== currSig) {
-              eraDividerClass = "era-divider";
-            }
-          }
-
-          block += `
-            <div class="py-2.5 px-1.5 flex items-center justify-between gap-2 transition ${eraDividerClass}">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
-                  ${isCoin ? 'מטבע' : 'שטר'}
-                </span>
-                <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                  <span class="font-bold">${formattedValue}</span> ${item.currency}
-                  ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
-                </div>
-              </div>
-              <div class="flex items-center gap-1.5 shrink-0">
-                ${yearHtml}
-                <button type="button" onclick="openItemModal('${item.id}')" title="ערוך פריט" aria-label="ערוך פריט" class="p-1.5 -ml-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
-                </button>
-              </div>
-            </div>
-          `;
-        });
-        block += `</div>`;
-      }
-
-      block += `</div>`;
-      return block;
-    }
-
-    function renderCollection() {
-      const search = document.getElementById("search-input").value.trim().toLowerCase();
-      const searchNumericClean = search.replace(/,/g, "");
-      document.getElementById("clear-search-btn").classList.toggle("hidden", !search);
-
-      const totalItems = collection.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
-      const uniqueCountries = new Set(collection.map(i => i.country)).size;
-      document.getElementById("header-subtitle").textContent =
-        `${formatDenomination(totalItems)} פריטים • ${uniqueCountries} מדינות`;
-
-      const filtered = collection.filter(item => {
-        if (currentTypeFilter !== "all" && item.type !== currentTypeFilter) return false;
-        const meta = getCountryMeta(item.country);
-        if (selectedContinentFilter !== "all" && meta.continent !== selectedContinentFilter) return false;
-        if (selectedCountryFilter !== "all" && item.country !== selectedCountryFilter) return false;
-        if (selectedDecadeFilter !== "all") {
-          if (!hasValidYear(item.year)) return false;
-          const dec = Math.floor(Number(item.year) / 10) * 10;
-          if (String(dec) !== selectedDecadeFilter) return false;
-        }
-        if (search) {
-          const yearStr = hasValidYear(item.year) ? String(item.year) : "ללא שנה";
-          const formattedVal = formatDenomination(item.value);
-          const hay = `${item.country} ${item.currency} ${item.value} ${formattedVal} ${yearStr}`.toLowerCase();
-          if (!hay.includes(search) && !hay.replace(/,/g, "").includes(searchNumericClean)) return false;
-        }
-        return true;
-      });
-
-      const container = document.getElementById("collection-container");
-      const collapseBar = document.getElementById("collapse-controls-bar");
-
-      if (filtered.length === 0) {
-        collapseBar.classList.add("hidden");
-        container.innerHTML = `
-          <div class="text-center py-14 text-slate-400 dark:text-slate-500">
-            <p class="text-sm font-medium">לא נמצאו פריטים תואמים</p>
-            <p class="text-xs mt-1">נסה לשנות את הסינון או להוסיף פריט חדש</p>
-          </div>
-        `;
-        return;
-      }
-
-      collapseBar.classList.remove("hidden");
-      updateCollapseToggleButton();
-
-      if (currentGroupMode === "alpha") {
-        const byCountry = {};
-        filtered.forEach(item => {
-          if (!byCountry[item.country]) byCountry[item.country] = [];
-          byCountry[item.country].push(item);
-        });
-        const sortedCountries = Object.keys(byCountry).sort((a, b) => hebrewCollator.compare(a, b));
-        container.innerHTML = sortedCountries
-          .map(cName => renderCountryBlockHtml(cName, byCountry[cName]))
-          .join("");
-        return;
-      }
-
-      // Group by Continent -> Country
-      const byContinent = {};
-      filtered.forEach(item => {
-        const meta = getCountryMeta(item.country);
-        const cont = meta.continent;
-        if (!byContinent[cont]) byContinent[cont] = {};
-        if (!byContinent[cont][item.country]) byContinent[cont][item.country] = [];
-        byContinent[cont][item.country].push(item);
-      });
-
-      const orderedContinents = Object.keys(byContinent).sort((a, b) => {
-        const ia = CONTINENT_ORDER.indexOf(a);
-        const ib = CONTINENT_ORDER.indexOf(b);
-        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-      });
-
-      let html = "";
-      orderedContinents.forEach(cont => {
-        const countriesObj = byContinent[cont];
-        const countryNames = Object.keys(countriesObj).sort((a, b) => hebrewCollator.compare(a, b));
-        const contTotal = Object.values(countriesObj).flat().reduce((s, x) => s + (Number(x.quantity) || 1), 0);
-        const isContCollapsed = !!collapsedContinents[cont];
-
-        html += `
-          <section class="mb-6">
-            <button type="button" onclick="toggleContinent('${escapeJsStr(cont)}')" class="w-full flex items-center justify-between py-2 px-1 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide border-b border-slate-200 dark:border-slate-800 mb-3">
-              <div class="flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 transition-transform ${isContCollapsed ? 'rotate-90' : ''}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                <span>${cont}</span>
-                <span class="text-[11px] font-normal text-slate-400">(${countryNames.length} מדינות)</span>
-              </div>
-              <span class="text-[11px] font-medium">${formatDenomination(contTotal)} פריטים</span>
-            </button>
-        `;
-
-        if (!isContCollapsed) {
-          countryNames.forEach(cName => {
-            html += renderCountryBlockHtml(cName, countriesObj[cName]);
-          });
-        }
-
-        html += `</section>`;
-      });
-
-      container.innerHTML = html;
-    }
-
-    function scrollToCountryBlock(countryName) {
-      if (!countryName) return;
-      const collectionView = document.getElementById("view-collection");
-      if (collectionView.classList.contains("hidden")) return;
-
-      setTimeout(() => {
-        const blocks = Array.from(document.querySelectorAll("[data-country-block]"));
-        const targetBlock = blocks.find(el => el.dataset.countryBlock === countryName);
-        if (!targetBlock) return;
-
-        const headerHeight = document.getElementById("app-header")?.offsetHeight || 105;
-        const targetTop = targetBlock.getBoundingClientRect().top + window.scrollY - headerHeight - 10;
-        window.scrollTo({ top: Math.max(0, targetTop), behavior: "smooth" });
-
-        const headerBar = targetBlock.querySelector("[data-country-header]");
-        if (headerBar) {
-          headerBar.classList.add("ring-2", "ring-indigo-500/70");
-          setTimeout(() => {
-            headerBar.classList.remove("ring-2", "ring-indigo-500/70");
-          }, 1600);
-        }
-      }, 70);
-    }
-
-    function toggleContinent(cont) {
-      collapsedContinents[cont] = !collapsedContinents[cont];
-      if (!collapsedContinents[cont]) {
-        isAllCollapsed = false;
-      }
-      renderCollection();
-    }
-
-    function toggleCountry(cName) {
-      collapsedCountries[cName] = !collapsedCountries[cName];
-      if (!collapsedCountries[cName]) {
-        isAllCollapsed = false;
-      }
-      renderCollection();
-    }
-
-    // Tabs & Oldest Coins Sub-view (with scroll-to-top on active tab re-click)
-    function switchTab(tab) {
-      const oldestViewHidden = document.getElementById("view-oldest-coins").classList.contains("hidden");
-      if (currentTab === tab && oldestViewHidden) {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
-
-      currentTab = tab;
-      document.getElementById("view-oldest-coins").classList.add("hidden");
-      const isCol = tab === "collection";
-      document.getElementById("view-collection").classList.toggle("hidden", !isCol);
-      document.getElementById("view-stats").classList.toggle("hidden", isCol);
-
-      document.getElementById("tab-collection").className = isCol
-        ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
-        : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
-
-      document.getElementById("tab-stats").className = !isCol
-        ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
-        : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
-
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      if (!isCol) renderStats();
-    }
-
-    function getSortedCoinsOldestFirst() {
-      return collection
-        .filter(i => i.type === "coin" && hasValidYear(i.year))
-        .sort((a, b) => {
-          const yearDiff = Number(a.year) - Number(b.year);
-          if (yearDiff !== 0) return yearDiff;
-          return hebrewCollator.compare(a.country, b.country);
-        });
-    }
-
-    function openOldestCoinsView() {
-      const coins = getSortedCoinsOldestFirst();
-      document.getElementById("view-stats").classList.add("hidden");
-      document.getElementById("view-collection").classList.add("hidden");
-      document.getElementById("view-oldest-coins").classList.remove("hidden");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-
-      const totalCoinQty = coins.reduce((s, c) => s + (Number(c.quantity) || 1), 0);
-      document.getElementById("oldest-coins-subtitle").textContent =
-        `${coins.length} רשומות מטבעות עם שנה (${formatDenomination(totalCoinQty)} יחידות)`;
-
-      const listEl = document.getElementById("oldest-coins-list");
-      if (!coins.length) {
-        listEl.innerHTML = `<div class="text-center py-12 text-xs text-slate-400">אין מטבעות עם שנת הנפקה באוסף</div>`;
-        return;
-      }
-
-      listEl.innerHTML = coins.map(coin => {
-        const meta = getCountryMeta(coin.country);
-        return `
-          <div class="py-3 px-1.5 flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <span class="emoji-flag text-xl shrink-0">${meta.flag}</span>
-              <div class="min-w-0">
-                <div class="text-sm font-bold text-slate-900 dark:text-white truncate">${coin.country}</div>
-                <div class="text-xs text-slate-600 dark:text-slate-300 truncate">
-                  <span class="font-semibold">${formatDenomination(coin.value)}</span> ${coin.currency}
-                </div>
-              </div>
-            </div>
-            <div class="shrink-0 px-2.5 py-1 rounded-lg bg-amber-100/80 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 text-xs font-bold">
-              ${coin.year}
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function closeOldestCoinsView() {
-      document.getElementById("view-oldest-coins").classList.add("hidden");
-      document.getElementById("view-stats").classList.remove("hidden");
-      renderStats();
-    }
-
-    function toggleStatsCountry(countryName) {
-      expandedStatsCountries[countryName] = !expandedStatsCountries[countryName];
-      renderStats();
-    }
-
-    function renderStats() {
-      const container = document.getElementById("stats-container");
-      const totalCoins = collection.filter(i => i.type === "coin").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
-      const totalNotes = collection.filter(i => i.type === "banknote").reduce((s, i) => s + (Number(i.quantity) || 1), 0);
-      const totalItems = totalCoins + totalNotes;
-      const totalCountries = new Set(collection.map(i => i.country)).size;
-
-      const sortedCoins = getSortedCoinsOldestFirst();
-      const oldestCoin = sortedCoins.length ? sortedCoins[0] : null;
-      const oldestMeta = oldestCoin ? getCountryMeta(oldestCoin.country) : null;
-
-      const byCountry = {};
-      collection.forEach(i => {
-        byCountry[i.country] = (byCountry[i.country] || 0) + (Number(i.quantity) || 1);
-      });
-      const topCountries = Object.entries(byCountry)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
-
-      const byDecade = {};
-      collection.forEach(i => {
-        if (hasValidYear(i.year)) {
-          const d = Math.floor(Number(i.year) / 10) * 10;
-          byDecade[d] = (byDecade[d] || 0) + (Number(i.quantity) || 1);
-        }
-      });
-      const decadesList = Object.entries(byDecade).sort((a, b) => Number(b[0]) - Number(a[0]));
-
-      const oldestCoinCardHtml = oldestCoin ? `
-        <button type="button" onclick="openOldestCoinsView()" class="w-full text-right p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 hover:bg-amber-100/70 dark:hover:bg-amber-950/50 transition flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            <span class="emoji-flag text-3xl shrink-0">${oldestMeta.flag}</span>
-            <div class="min-w-0">
-              <div class="text-[11px] font-bold text-amber-800 dark:text-amber-300">המטבע הכי ישן באוסף</div>
-              <div class="text-sm font-bold text-slate-900 dark:text-white truncate">
-                ${oldestCoin.country} • <span class="font-semibold">${formatDenomination(oldestCoin.value)} ${oldestCoin.currency}</span>
-              </div>
-              <div class="text-xs text-slate-600 dark:text-slate-300 mt-0.5">שנת הנפקה: <span class="font-bold">${oldestCoin.year}</span></div>
-            </div>
-          </div>
-          <div class="shrink-0 flex items-center gap-1 text-xs font-semibold text-amber-900 dark:text-amber-300 bg-white/80 dark:bg-slate-900/70 px-2.5 py-1.5 rounded-xl border border-amber-200/70 dark:border-amber-800/50">
-            <span>לכל המטבעות</span>
-            <span>←</span>
-          </div>
-        </button>
-      ` : `
-        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-xs text-slate-500">
-          אין מטבעות עם שנת הנפקה להצגת המטבע הכי ישן.
-        </div>
-      `;
-
-      container.innerHTML = `
-        <div class="grid grid-cols-3 gap-2.5">
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-            <div class="text-xl font-bold text-indigo-600 dark:text-indigo-400">${formatDenomination(totalItems)}</div>
-            <div class="text-xs text-slate-500 mt-0.5">סה״כ פריטים</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-            <div class="text-xl font-bold text-amber-600 dark:text-amber-400">${formatDenomination(totalCoins)}</div>
-            <div class="text-xs text-slate-500 mt-0.5">מטבעות</div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-center">
-            <div class="text-xl font-bold text-emerald-600 dark:text-emerald-400">${formatDenomination(totalNotes)}</div>
-            <div class="text-xs text-slate-500 mt-0.5">שטרות</div>
-          </div>
-        </div>
-
-        ${oldestCoinCardHtml}
-
-        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-bold text-sm">המדינות המובילות (עד 10)</h3>
-            <span class="text-xs text-slate-400">מתוך ${totalCountries} מדינות</span>
-          </div>
-          <div class="space-y-2">
-            ${topCountries.map(([cName, count], idx) => {
-              const meta = getCountryMeta(cName);
-              const isExpanded = !!expandedStatsCountries[cName];
-              const countLabel = count === 1 ? "פריט 1" : `${formatDenomination(count)} פריטים`;
-
-              let expandedHtml = "";
-              if (isExpanded) {
-                const countryItems = sortCountryItems(
-                  collection.filter(i => i.country === cName),
-                  cName
-                );
-                const coinsCount = countryItems.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
-                const notesCount = countryItems.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
-                const summaryText = formatQuantitySummary(coinsCount, notesCount);
-
-                expandedHtml = `
-                  <div class="px-3 pb-3 pt-1 border-t border-slate-100 dark:border-slate-800/80 space-y-1.5">
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 pb-1">${summaryText}</div>
-                    <div class="divide-y divide-slate-100 dark:divide-slate-900">
-                      ${countryItems.map((item, itemIdx) => {
-                        const isCoin = item.type === "coin";
-                        const yearHtml = hasValidYear(item.year)
-                          ? `<span class="text-xs text-slate-500 dark:text-slate-400 font-medium">${item.year}</span>`
-                          : `<span class="text-[11px] text-slate-400 dark:text-slate-500">ללא שנה</span>`;
-
-                        let eraDividerClass = "";
-                        if (itemIdx > 0 && isCoin && countryItems[itemIdx - 1].type === "coin") {
-                          if (getItemEraSignature(countryItems[itemIdx - 1], cName) !== getItemEraSignature(item, cName)) {
-                            eraDividerClass = "era-divider";
-                          }
-                        }
-
-                        return `
-                          <div class="py-2 flex items-center justify-between gap-2 ${eraDividerClass}">
-                            <div class="flex items-center gap-2.5 min-w-0">
-                              <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
-                                ${isCoin ? 'מטבע' : 'שטר'}
-                              </span>
-                              <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
-                                <span class="font-bold">${formatDenomination(item.value)}</span> ${item.currency}
-                              </div>
-                            </div>
-                            <div class="shrink-0">
-                              ${yearHtml}
-                            </div>
-                          </div>
-                        `;
-                      }).join("")}
-                    </div>
-                  </div>
-                `;
-              }
-
-              return `
-                <div class="rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 overflow-hidden transition">
-                  <button type="button" onclick="toggleStatsCountry('${escapeJsStr(cName)}')" class="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-right hover:bg-slate-50/80 dark:hover:bg-slate-900/60 transition">
-                    <div class="flex items-center gap-2 min-w-0">
-                      <span class="w-4 text-xs text-slate-400 font-semibold shrink-0">${idx + 1}.</span>
-                      <span class="emoji-flag text-lg shrink-0">${meta.flag}</span>
-                      <span class="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">${cName}</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                      <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300">
-                        ${countLabel}
-                      </span>
-                      <svg class="w-3.5 h-3.5 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                    </div>
-                  </button>
-                  ${expandedHtml}
-                </div>
-              `;
-            }).join("")}
-          </div>
-        </div>
-
-        <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-3">
-          <h3 class="font-bold text-sm">התפלגות לפי עשורים</h3>
-          ${decadesList.length ? `
-            <div class="space-y-2">
-              ${decadesList.map(([dec, count]) => {
-                const countLabel = count === 1 ? "פריט 1" : `${formatDenomination(count)} פריטים`;
-                return `
-                  <div class="px-3 py-2.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2">
-                    <span class="text-sm font-semibold text-slate-800 dark:text-slate-100">שנות ה-${dec}</span>
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 shrink-0">${countLabel}</span>
-                  </div>
-                `;
-              }).join("")}
-            </div>
-          ` : `<p class="text-xs text-slate-400">אין פריטים עם שנת הנפקה</p>`}
-        </div>
-      `;
-    }
-
-    // Custom Dropdowns for Country & Currency in Modal
-    function setCountryInputVisualState(countryName, flagEmoji = "") {
-      const inputEl = document.getElementById("form-country-input");
-      const flagEl = document.getElementById("form-country-flag");
-      const clearBtn = document.getElementById("btn-clear-country");
-      const hasVal = !!(countryName && countryName.trim());
-
-      document.getElementById("form-country").value = hasVal ? countryName.trim() : "";
-      inputEl.value = hasVal ? countryName : "";
-
-      if (hasVal && flagEmoji) {
-        flagEl.textContent = flagEmoji;
-        flagEl.classList.remove("hidden");
-        inputEl.classList.remove("pr-3");
-        inputEl.classList.add("pr-9");
-      } else {
-        flagEl.textContent = "";
-        flagEl.classList.add("hidden");
-        inputEl.classList.remove("pr-9");
-        inputEl.classList.add("pr-3");
-      }
-
-      clearBtn.classList.toggle("hidden", !inputEl.value.trim());
-      updateFormSeriesInfoButton(hasVal ? countryName.trim() : "");
-    }
-
-    function clearCountryField() {
-      setCountryInputVisualState("", "");
-      resetCurrencyFieldEmpty();
-      const inputEl = document.getElementById("form-country-input");
-      inputEl.focus();
-      openCountryDropdown();
-    }
-
-    function openCountryDropdown() {
-      closeCurrencyDropdown();
-      renderCountryDropdownList(document.getElementById("form-country-input").value);
-      document.getElementById("country-dropdown-menu").classList.remove("hidden");
-    }
-
-    function closeCountryDropdown() {
-      document.getElementById("country-dropdown-menu").classList.add("hidden");
-    }
-
-    function toggleCountryDropdown() {
-      const menu = document.getElementById("country-dropdown-menu");
-      if (menu.classList.contains("hidden")) {
-        openCountryDropdown();
-      } else {
-        closeCountryDropdown();
-      }
-    }
-
-    function onCountryInputChange() {
-      const inputEl = document.getElementById("form-country-input");
-      const query = inputEl.value;
-      document.getElementById("btn-clear-country").classList.toggle("hidden", !query.trim());
-
-      const exact = COUNTRIES_DB.find(c => c.name === query.trim());
-      if (exact) {
-        setCountryInputVisualState(exact.name, exact.flag);
-        onFormCountryChange();
-      } else {
-        document.getElementById("form-country").value = query.trim();
-        document.getElementById("form-country-flag").classList.add("hidden");
-        inputEl.classList.remove("pr-9");
-        inputEl.classList.add("pr-3");
-        updateFormSeriesInfoButton(query.trim());
-      }
-
-      renderCountryDropdownList(query);
-      document.getElementById("country-dropdown-menu").classList.remove("hidden");
-    }
-
-    function renderCountryDropdownList(rawQuery) {
-      const q = (rawQuery || "").trim().toLowerCase();
-      const menu = document.getElementById("country-dropdown-menu");
-
-      let matches = COUNTRIES_DB;
-      if (q) {
-        matches = COUNTRIES_DB
-          .filter(c => c.name.toLowerCase().includes(q))
-          .sort((a, b) => {
-            const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
-            const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
-            if (aStarts !== bStarts) return aStarts - bStarts;
-            return hebrewCollator.compare(a.name, b.name);
-          });
-      }
-
-      if (!matches.length) {
-        menu.innerHTML = `<div class="px-3 py-2.5 text-xs text-slate-400">לא נמצאה מדינה תואמת</div>`;
-        return;
-      }
-
-      menu.innerHTML = matches.map(c => `
-        <button type="button" onclick="selectCountryFromDropdown('${escapeJsStr(c.name)}')" class="w-full px-3 py-2 text-right text-sm flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="emoji-flag text-lg shrink-0">${c.flag}</span>
-            <span class="font-medium truncate">${c.name}</span>
-          </div>
-          ${c.former ? `<span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 shrink-0">עבר</span>` : ""}
-        </button>
-      `).join("");
-    }
-
-    function selectCountryFromDropdown(countryName) {
-      const meta = getCountryMeta(countryName);
-      setCountryInputVisualState(meta.name, meta.flag);
-      closeCountryDropdown();
-      onFormCountryChange();
-    }
-
-    function resetCurrencyFieldEmpty() {
-      currentCurrencyOptions = [];
-      document.getElementById("form-currency-select").value = "";
-      document.getElementById("form-currency-display").textContent = "בחר מטבע...";
-      const customInput = document.getElementById("form-currency-custom");
-      customInput.classList.add("hidden");
-      customInput.value = "";
-    }
-
-    function toggleCurrencyDropdown() {
-      const menu = document.getElementById("currency-dropdown-menu");
-      if (!menu.classList.contains("hidden")) {
-        closeCurrencyDropdown();
-        return;
-      }
-      closeCountryDropdown();
-      renderCurrencyDropdownList();
-      menu.classList.remove("hidden");
-    }
-
-    function closeCurrencyDropdown() {
-      document.getElementById("currency-dropdown-menu").classList.add("hidden");
-    }
-
-    function renderCurrencyDropdownList() {
-      const menu = document.getElementById("currency-dropdown-menu");
-      const currentVal = document.getElementById("form-currency-select").value;
-      const items = [
-        ...currentCurrencyOptions.map(c => ({ value: c, label: c })),
-        { value: "__custom__", label: "אחר (הקלדה ידנית)..." }
-      ];
-
-      menu.innerHTML = items.map(opt => {
-        const active = opt.value === currentVal;
-        return `
-          <button type="button" onclick="selectCurrencyFromDropdown('${escapeJsStr(opt.value)}')" class="w-full px-3 py-2 text-right text-sm flex items-center justify-between hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${active ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : ''}">
-            <span class="truncate">${opt.label}</span>
-            ${active ? `<span class="text-xs">✓</span>` : ""}
-          </button>
-        `;
-      }).join("");
-    }
-
-    function selectCurrencyFromDropdown(val) {
-      document.getElementById("form-currency-select").value = val;
-      const customInput = document.getElementById("form-currency-custom");
-      if (val === "__custom__") {
-        document.getElementById("form-currency-display").textContent = "אחר (הקלדה ידנית)...";
-        customInput.classList.remove("hidden");
-        closeCurrencyDropdown();
-        customInput.focus();
-      } else {
-        document.getElementById("form-currency-display").textContent = val;
-        customInput.classList.add("hidden");
-        closeCurrencyDropdown();
-      }
-    }
-
-    // Add / Edit / Duplicate / Confirm Modal Logic
-    function handleModalBackdropClick(e) {
-      if (e.target.id === "item-modal") {
-        closeItemModal();
-      }
-    }
-
-    function openItemModal(itemId = null, prefillCountry = null) {
-      const modal = document.getElementById("item-modal");
-      const form = document.getElementById("item-form");
-      form.reset();
-      closeCountryDropdown();
-      closeCurrencyDropdown();
-      closeAllFilterDropdowns();
-      originalEditingItem = null;
-      pendingEditAction = null;
-
-      const btnSaveMain = document.getElementById("btn-save-main");
-      const btnSaveAsNew = document.getElementById("btn-save-as-new");
-      const btnDelete = document.getElementById("btn-delete-item");
-
-      document.getElementById("edit-item-id").value = itemId || "";
-
-      if (itemId) {
-        const item = collection.find(i => i.id === itemId);
-        if (!item) return;
-        originalEditingItem = { ...item };
-
-        document.getElementById("modal-title").textContent = "עריכת פריט";
-        btnSaveMain.textContent = "שמור שינויים";
-        btnSaveAsNew.classList.remove("hidden");
-        btnDelete.classList.remove("hidden");
-
-        selectFormType(item.type);
-
-        const meta = getCountryMeta(item.country);
-        setCountryInputVisualState(item.country, meta.flag);
-        onFormCountryChange(item.currency);
-
-        document.getElementById("form-value").value = formatDenomination(item.value);
-        document.getElementById("form-year").value = hasValidYear(item.year) ? item.year : "";
-        document.getElementById("form-quantity").value = item.quantity || 1;
-      } else {
-        document.getElementById("modal-title").textContent = "הוספת פריט חדש";
-        btnSaveMain.textContent = "שמור פריט";
-        btnSaveAsNew.classList.add("hidden");
-        btnDelete.classList.add("hidden");
-
-        selectFormType("coin");
-        if (prefillCountry) {
-          const meta = getCountryMeta(prefillCountry);
-          setCountryInputVisualState(prefillCountry, meta.flag);
-          onFormCountryChange();
-        } else {
-          setCountryInputVisualState("", "");
-          resetCurrencyFieldEmpty();
-        }
-        document.getElementById("form-quantity").value = 1;
-      }
-
-      modal.classList.remove("hidden");
-    }
-
-    function closeItemModal() {
-      closeCountryDropdown();
-      closeCurrencyDropdown();
-      originalEditingItem = null;
-      pendingEditAction = null;
-      document.getElementById("item-modal").classList.add("hidden");
-    }
-
-    function scrollFieldIntoView(el) {
-      setTimeout(() => {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 250);
-    }
-
-    function selectFormType(type) {
-      document.getElementById("form-type").value = type;
-      const btnCoin = document.getElementById("btn-type-coin");
-      const btnNote = document.getElementById("btn-type-banknote");
-      if (type === "coin") {
-        btnCoin.className = "py-2 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition";
-        btnNote.className = "py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
-      } else {
-        btnNote.className = "py-2 rounded-lg text-xs font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs transition";
-        btnCoin.className = "py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 transition";
-      }
-    }
-
-    function onFormCountryChange(selectedCurrency = null) {
-      const countryName = document.getElementById("form-country").value;
-      const meta = getCountryMeta(countryName);
-      const currSel = document.getElementById("form-currency-select");
-      const currDisplay = document.getElementById("form-currency-display");
-      const customInput = document.getElementById("form-currency-custom");
-
-      currentCurrencyOptions = meta.currencies.length ? meta.currencies : ["מטבע מקומי"];
-
-      if (selectedCurrency) {
-        if (currentCurrencyOptions.includes(selectedCurrency)) {
-          currSel.value = selectedCurrency;
-          currDisplay.textContent = selectedCurrency;
-          customInput.classList.add("hidden");
-          customInput.value = "";
-        } else {
-          currSel.value = "__custom__";
-          currDisplay.textContent = "אחר (הקלדה ידנית)...";
-          customInput.value = selectedCurrency;
-          customInput.classList.remove("hidden");
-        }
-      } else {
-        const defaultCurr = currentCurrencyOptions[0];
-        currSel.value = defaultCurr;
-        currDisplay.textContent = defaultCurr;
-        customInput.classList.add("hidden");
-        customInput.value = "";
-      }
-    }
-
-    function collectFormData() {
-      const editId = document.getElementById("edit-item-id").value;
-      const type = document.getElementById("form-type").value;
-
-      let country = document.getElementById("form-country").value.trim();
-      const typedCountry = document.getElementById("form-country-input").value.trim();
-      if (typedCountry && typedCountry !== country) {
-        const exactMatch = COUNTRIES_DB.find(c => c.name === typedCountry);
-        country = exactMatch ? exactMatch.name : typedCountry;
-      }
-      if (!country) {
-        showToast("נא לבחור או להזין מדינה");
-        return null;
-      }
-
-      const currSel = document.getElementById("form-currency-select").value;
-      const currency = currSel === "__custom__"
-        ? document.getElementById("form-currency-custom").value.trim()
-        : (currSel || (currentCurrencyOptions[0] || ""));
-
-      if (!currency) {
-        showToast("נא לבחור או להזין שם מטבע");
-        return null;
-      }
-
-      const value = parseDenomination(document.getElementById("form-value").value);
-      const yearRaw = document.getElementById("form-year").value.trim();
-      const year = yearRaw === "" ? null : parseInt(yearRaw, 10);
-      const quantity = parseInt(document.getElementById("form-quantity").value, 10) || 1;
-
-      if (isNaN(value) || value < 0) {
-        showToast("נא למלא ערך נקוב תקין");
-        return null;
-      }
-      if (yearRaw !== "" && isNaN(year)) {
-        showToast("נא להזין שנת הנפקה תקינה או להשאיר ריק");
-        return null;
-      }
-
-      return { editId, type, country, currency, value, year, quantity };
-    }
-
-    function hasItemChanged(orig, nextData) {
-      if (!orig || !nextData) return true;
-      return (
-        orig.type !== nextData.type ||
-        orig.country !== nextData.country ||
-        orig.currency !== nextData.currency ||
-        Number(orig.value) !== Number(nextData.value) ||
-        normalizeYear(orig.year) !== normalizeYear(nextData.year) ||
-        Number(orig.quantity || 1) !== Number(nextData.quantity || 1)
-      );
-    }
-
-    function handleSaveAsNewClick() {
-      const form = document.getElementById("item-form");
-      if (!form.reportValidity()) return;
-      const data = collectFormData();
-      if (!data) return;
-
-      if (originalEditingItem) {
-        const changed = hasItemChanged(originalEditingItem, data);
-        openEditConfirmModal({
-          action: "create_new",
-          data,
-          title: "שמירה כפריט חדש",
-          message: changed
-            ? `לשמור את ${formatDenomination(data.value)} ${data.currency} (${data.country}, ${formatYearText(data.year)}) כפריט חדש באוסף ולהשאיר את הפריט המקורי ללא שינוי?`
-            : `לא בוצעו שינויים מול הפריט המקורי. ליצור עותק זהה כפריט חדש באוסף?`,
-          btnText: "שמור כפריט חדש"
-        });
-      } else {
-        commitSaveItem(data, "create_new");
-      }
-    }
-
-    function handleSaveItem(e, mode = "update") {
-      if (e) e.preventDefault();
-      const data = collectFormData();
-      if (!data) return;
-
-      if (data.editId && mode === "update") {
-        if (!hasItemChanged(originalEditingItem, data)) {
-          closeItemModal();
-          showToast("לא בוצעו שינויים");
-          return;
-        }
-        openEditConfirmModal({
-          action: "update",
-          data,
-          title: "אישור עדכון פריט",
-          message: `לעדכן את הפריט הקיים ל-${formatDenomination(data.value)} ${data.currency} (${data.country}, ${formatYearText(data.year)}, כמות: ${data.quantity})?`,
-          btnText: "אשר ועדכן"
-        });
-        return;
-      }
-
-      commitSaveItem(data, mode);
-    }
-
-    function openEditConfirmModal({ action, data, title, message, btnText }) {
-      pendingEditAction = { action, data };
-      document.getElementById("edit-confirm-title").textContent = title;
-      document.getElementById("edit-confirm-message").textContent = message;
-      document.getElementById("edit-confirm-btn").textContent = btnText;
-      document.getElementById("edit-confirm-modal").classList.remove("hidden");
-    }
-
-    function closeEditConfirmModal() {
-      pendingEditAction = null;
-      document.getElementById("edit-confirm-modal").classList.add("hidden");
-    }
-
-    function executeConfirmedEditAction() {
-      if (!pendingEditAction) return;
-      const { action, data } = pendingEditAction;
-      closeEditConfirmModal();
-      commitSaveItem(data, action);
-    }
-
-    function commitSaveItem(data, mode) {
-      const { editId, type, country, currency, value, year, quantity } = data;
-      const normalizedYear = normalizeYear(year);
-
-      if (editId && mode === "update") {
-        const idx = collection.findIndex(i => i.id === editId);
-        if (idx !== -1) {
-          collection[idx] = { id: editId, type, country, currency, value, year: normalizedYear, quantity };
-        }
-        finalizeSave("השינויים נשמרו בהצלחה", country);
-        return;
-      }
-
-      const existing = collection.find(i =>
-        i.type === type &&
-        i.country === country &&
-        i.currency === currency &&
-        Number(i.value) === value &&
-        normalizeYear(i.year) === normalizedYear
-      );
-
-      if (existing) {
-        pendingDuplicate = { existingId: existing.id, addQty: quantity };
-        const typeLabel = type === "coin" ? "מטבע" : "שטר";
-        document.getElementById("duplicate-message").textContent =
-          `${typeLabel} של ${formatDenomination(value)} ${currency} (${country}, ${formatYearText(normalizedYear)}) כבר נמצא באוסף שלך (כמות נוכית: ${existing.quantity || 1}). האם להוסיף אליו עוד ${quantity}?`;
-        document.getElementById("duplicate-modal").classList.remove("hidden");
-        return;
-      }
-
-      collection.push({
-        id: String(Date.now()),
-        type,
-        country,
-        currency,
-        value,
-        year: normalizedYear,
-        quantity
-      });
-      finalizeSave(mode === "create_new" ? "נשמר כפריט חדש באוסף" : "הפריט נוסף לאוסף", country);
-    }
-
-    function confirmMergeDuplicate() {
-      if (!pendingDuplicate) return;
-      const target = collection.find(i => i.id === pendingDuplicate.existingId);
-      let targetCountry = null;
-      if (target) {
-        target.quantity = (Number(target.quantity) || 1) + pendingDuplicate.addQty;
-        targetCountry = target.country;
-      }
-      pendingDuplicate = null;
-      document.getElementById("duplicate-modal").classList.add("hidden");
-      finalizeSave("הכמות עודכנה בפריט הקיים", targetCountry);
-    }
-
-    function closeDuplicateModal() {
-      pendingDuplicate = null;
-      document.getElementById("duplicate-modal").classList.add("hidden");
-    }
-
-    function openDeleteConfirmModal() {
-      const editId = document.getElementById("edit-item-id").value;
-      if (!editId) return;
-      const item = collection.find(i => i.id === editId);
-      const label = item
-        ? `${formatDenomination(item.value)} ${item.currency} • ${item.country} (${formatYearText(item.year)})`
-        : "הפריט הנבחר";
-      document.getElementById("delete-confirm-message").textContent =
-        `האם אתה בטוח שברצונך למחוק לצמיתות את ${label}?`;
-      document.getElementById("delete-confirm-modal").classList.remove("hidden");
-    }
-
-    function closeDeleteConfirmModal() {
-      document.getElementById("delete-confirm-modal").classList.add("hidden");
-    }
-
-    function confirmDeleteItem() {
-      const editId = document.getElementById("edit-item-id").value;
-      closeDeleteConfirmModal();
-      if (!editId) return;
-      collection = collection.filter(i => i.id !== editId);
-      finalizeSave("הפריט נמחק מהאוסף", null);
-    }
-
-    function finalizeSave(toastMsg, targetCountry = null) {
-      saveCollection();
-      updateFilterDropdowns();
-
-      if (targetCountry) {
-        const meta = getCountryMeta(targetCountry);
-        if (meta && meta.continent) {
-          collapsedContinents[meta.continent] = false;
-        }
-        collapsedCountries[targetCountry] = false;
-        isAllCollapsed = false;
-      }
-
-      renderCollection();
-      if (!document.getElementById("view-oldest-coins").classList.contains("hidden")) {
-        openOldestCoinsView();
-      } else if (!document.getElementById("view-stats").classList.contains("hidden")) {
-        renderStats();
-      }
-      closeItemModal();
-      showToast(toastMsg);
-
-      if (targetCountry) {
-        scrollToCountryBlock(targetCountry);
-      }
-    }
-
-    // Export / Share / Import Logic
-    function openDataModal() {
-      document.getElementById("export-choice-panel").classList.add("hidden");
-      pendingExportFormat = null;
-      document.getElementById("data-modal").classList.remove("hidden");
-    }
-
-    function closeDataModal() {
-      document.getElementById("data-modal").classList.add("hidden");
-    }
-
-    function promptExportFormat(fmt) {
-      pendingExportFormat = fmt;
-      const names = { xlsx: "Excel (.xlsx)", csv: "CSV (.csv)", json: "JSON (.json)" };
-      document.getElementById("export-choice-title").textContent = `ייצוא קובץ ${names[fmt]} — בחר פעולה:`;
-      document.getElementById("export-choice-panel").classList.remove("hidden");
-    }
-
-    function buildExportFile(fmt) {
-      const dateStr = new Date().toISOString().slice(0, 10);
-      if (fmt === "json") {
-        const blob = new Blob([JSON.stringify(collection, null, 2)], { type: "application/json" });
-        return { blob, filename: `coin-collection-${dateStr}.json` };
-      }
-
-      const rows = collection.map(i => ({
-        "סוג": i.type === "coin" ? "מטבע" : "שטר",
-        "מדינה": i.country,
-        "שם מטבע": i.currency,
-        "ערך": i.value,
-        "שנה": hasValidYear(i.year) ? Number(i.year) : "",
-        "כמות": i.quantity || 1
-      }));
-
-      if (fmt === "csv") {
-        const headers = ["סוג", "מדינה", "שם מטבע", "ערך", "שנה", "כמות"];
-        const csvLines = [
-          headers.join(","),
-          ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g, '""')}"`).join(","))
-        ];
-        const blob = new Blob(["\uFEFF" + csvLines.join("\n")], { type: "text/csv;charset=utf-8;" });
-        return { blob, filename: `coin-collection-${dateStr}.csv` };
-      }
-
-      if (fmt === "xlsx") {
-        const ws = XLSX.utils.json_to_sheet(rows);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "אוסף");
-        const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-        const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-        return { blob, filename: `coin-collection-${dateStr}.xlsx` };
-      }
-    }
-
-    async function executeExport(mode) {
-      if (!pendingExportFormat) return;
-      const { blob, filename } = buildExportFile(pendingExportFormat);
-
-      if (mode === "share") {
-        const file = new File([blob], filename, { type: blob.type });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: "אוסף מטבעות ושטרות",
-              text: "גיבוי אוסף מטבעות ושטרות"
-            });
-            closeDataModal();
-            return;
-          } catch (err) {
-            if (err.name === "AbortError") return;
-          }
-        }
-        showToast("הדפדפן לא תומך בשיתוף קובץ זה — מוריד למכשיר");
-      }
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      closeDataModal();
-      showToast("הקובץ הורד למכשיר");
-    }
-
-    function handleImportFile(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const ext = file.name.split(".").pop().toLowerCase();
-
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          let imported = [];
-          if (ext === "json") {
-            const parsed = JSON.parse(e.target.result);
-            if (Array.isArray(parsed)) {
-              imported = parsed.map(item => ({
-                ...item,
-                year: normalizeYear(item.year)
-              }));
-            }
-          } else {
-            const data = new Uint8Array(e.target.result);
-            const wb = XLSX.read(data, { type: "array" });
-            const ws = wb.Sheets[wb.SheetNames[0]];
-            const rows = XLSX.utils.sheet_to_json(ws);
-            imported = rows.map((r, idx) => {
-              const rawY = r["שנה"] ?? r.year;
-              const parsedY = (rawY === "" || rawY === null || rawY === undefined) ? null : parseInt(rawY, 10);
-              return {
-                id: String(Date.now() + idx),
-                type: (r["סוג"] === "שטר" || r.type === "banknote") ? "banknote" : "coin",
-                country: String(r["מדינה"] || r.country || "").trim(),
-                currency: String(r["שם מטבע"] || r.currency || "").trim(),
-                value: parseDenomination(r["ערך"] ?? r.value ?? 0) || 0,
-                year: isNaN(parsedY) ? null : parsedY,
-                quantity: parseInt(r["כמות"] ?? r.quantity ?? 1, 10) || 1
-              };
-            }).filter(x => x.country && x.currency);
-          }
-
-          if (!imported.length) {
-            showToast("לא נמצאו נתונים תקינים בקובץ");
-            return;
-          }
-
-          collection = imported;
-          saveCollection();
-          updateFilterDropdowns();
-          renderCollection();
-          closeDataModal();
-          showToast(`יובאו ${imported.length} רשומות בהצלחה`);
-        } catch (err) {
-          showToast("שגיאה בקריאת הקובץ");
-        }
-      };
-
-      if (ext === "json") {
-        reader.readAsText(file);
-      } else {
-        reader.readAsArrayBuffer(file);
-      }
-      event.target.value = "";
-    }
-
-    init();
-  </script>
+  <script src="./collection.js"></script>
+  <script src="./stats.js"></script>
+  <script src="./modals.js"></script>
+  <script src="./io.js"></script>
+  <script src="./app.js"></script>
 </body>
 </html>

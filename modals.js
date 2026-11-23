@@ -1,21 +1,146 @@
 // Item Details Modal, Add/Edit Form Modal, Dropdowns & Confirmation Dialogs (modals.js)
 
+let currentLocationOptions = [];
 
-// --- Location Datalist Suggestions ---
-function populateLocationSuggestions() {
-  const datalist = document.getElementById("location-suggestions");
-  if (!datalist) return;
-  const uniqueLocations = Array.from(
+// --- Location Selector Dropdown ---
+function getUniqueCollectionLocations() {
+  return Array.from(
     new Set(
       collection
         .map(item => normalizeLocation(item.location))
         .filter(Boolean)
     )
   ).sort((a, b) => hebrewCollator.compare(a, b));
+}
 
-  datalist.innerHTML = uniqueLocations
-    .map(loc => `<option value="${escapeHtmlAttr(loc)}"></option>`)
-    .join("");
+function populateLocationSuggestions() {
+  currentLocationOptions = getUniqueCollectionLocations();
+  renderLocationDropdown();
+}
+
+function updateLocationOptions(preselectedLocation = "") {
+  currentLocationOptions = getUniqueCollectionLocations();
+  const normalized = normalizeLocation(preselectedLocation);
+
+  const locHidden = document.getElementById("form-location");
+  const locDisplay = document.getElementById("form-location-display");
+  const customWrap = document.getElementById("form-location-custom-wrap");
+  const customInput = document.getElementById("form-location-custom-input");
+
+  if (normalized) {
+    if (locHidden) locHidden.value = normalized;
+    if (locDisplay) {
+      locDisplay.textContent = normalized;
+      locDisplay.className = "truncate text-slate-900 dark:text-slate-100";
+    }
+    if (customWrap) customWrap.classList.add("hidden");
+    if (customInput) customInput.value = "";
+  } else {
+    if (locHidden) locHidden.value = "";
+    if (locDisplay) {
+      locDisplay.textContent = "ללא מיקום";
+      locDisplay.className = "truncate text-slate-400";
+    }
+    if (customWrap) customWrap.classList.add("hidden");
+    if (customInput) customInput.value = "";
+  }
+
+  renderLocationDropdown();
+}
+
+function renderLocationDropdown() {
+  const dropdown = document.getElementById("form-location-dropdown");
+  if (!dropdown) return;
+
+  const customWrap = document.getElementById("form-location-custom-wrap");
+  const isCustomOpen = customWrap && !customWrap.classList.contains("hidden");
+  const selectedLoc = isCustomOpen ? "__custom__" : normalizeLocation(document.getElementById("form-location")?.value);
+
+  const itemsHtml = [
+    `<button type="button" onclick="selectLocationOption('')" class="w-full px-3 py-2 text-right text-xs flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${selectedLoc === '' ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : 'text-slate-500 dark:text-slate-400'}">
+      <span class="truncate">ללא מיקום</span>
+      ${selectedLoc === '' ? `<span class="text-xs shrink-0">✓</span>` : ""}
+    </button>`,
+    ...currentLocationOptions.map(loc => {
+      const active = loc === selectedLoc;
+      return `
+        <button type="button" onclick="selectLocationOption('${escapeJsStr(loc)}')" class="w-full px-3 py-2 text-right text-xs flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition ${active ? 'bg-indigo-50/70 dark:bg-indigo-950/40 font-semibold text-indigo-700 dark:text-indigo-300' : 'text-slate-700 dark:text-slate-200'}">
+          <span class="truncate">${loc}</span>
+          ${active ? `<span class="text-xs shrink-0">✓</span>` : ""}
+        </button>
+      `;
+    }),
+    `<button type="button" onclick="selectLocationOption('__custom__')" class="w-full px-3 py-2 text-right text-xs flex items-center justify-between gap-2 hover:bg-indigo-50 dark:hover:bg-slate-700/70 transition text-indigo-600 dark:text-indigo-400 font-semibold border-t border-slate-100 dark:border-slate-700">
+      <span>+ מיקום אחר (הזנה ידנית)...</span>
+    </button>`
+  ];
+
+  dropdown.innerHTML = itemsHtml.join("");
+}
+
+function toggleLocationDropdown() {
+  const dropdown = document.getElementById("form-location-dropdown");
+  if (!dropdown) return;
+  const isHidden = dropdown.classList.contains("hidden");
+  closeCountryDropdown();
+  closeCurrencyDropdown();
+  if (isHidden) {
+    currentLocationOptions = getUniqueCollectionLocations();
+    renderLocationDropdown();
+    dropdown.classList.remove("hidden");
+  } else {
+    dropdown.classList.add("hidden");
+  }
+}
+
+function closeLocationDropdown() {
+  document.getElementById("form-location-dropdown")?.classList.add("hidden");
+}
+
+function selectLocationOption(val) {
+  const locHidden = document.getElementById("form-location");
+  const locDisplay = document.getElementById("form-location-display");
+  const customWrap = document.getElementById("form-location-custom-wrap");
+  const customInput = document.getElementById("form-location-custom-input");
+
+  if (val === "__custom__") {
+    if (locDisplay) {
+      locDisplay.textContent = "מיקום אחר (הזנה ידנית)";
+      locDisplay.className = "truncate text-slate-900 dark:text-slate-100";
+    }
+    if (customWrap) customWrap.classList.remove("hidden");
+    if (customInput) {
+      customInput.value = "";
+      customInput.focus();
+    }
+    if (locHidden) locHidden.value = "";
+  } else if (!val) {
+    if (locHidden) locHidden.value = "";
+    if (locDisplay) {
+      locDisplay.textContent = "ללא מיקום";
+      locDisplay.className = "truncate text-slate-400";
+    }
+    if (customWrap) customWrap.classList.add("hidden");
+    if (customInput) customInput.value = "";
+  } else {
+    if (locHidden) locHidden.value = val;
+    if (locDisplay) {
+      locDisplay.textContent = val;
+      locDisplay.className = "truncate text-slate-900 dark:text-slate-100";
+    }
+    if (customWrap) customWrap.classList.add("hidden");
+    if (customInput) customInput.value = "";
+  }
+
+  closeLocationDropdown();
+}
+
+function onCustomLocationInputChange() {
+  const customInput = document.getElementById("form-location-custom-input");
+  const locHidden = document.getElementById("form-location");
+  if (locHidden && customInput) {
+    locHidden.value = normalizeLocation(customInput.value);
+  }
 }
 
 // --- Item Details Modal (Centered Read-Only Info Popup) ---
@@ -91,9 +216,9 @@ function adjustFormQuantity(delta) {
 }
 
 function openItemModal(itemId = null, prefillCountry = "") {
-  populateLocationSuggestions();
   closeCountryDropdown();
   closeCurrencyDropdown();
+  closeLocationDropdown();
 
   const modal = document.getElementById("item-modal");
   if (!modal) return;
@@ -105,7 +230,6 @@ function openItemModal(itemId = null, prefillCountry = "") {
   const valueInput = document.getElementById("form-value");
   const yearInput = document.getElementById("form-year");
   const qtyInput = document.getElementById("form-quantity");
-  const locInput = document.getElementById("form-location");
   const addActions = document.getElementById("form-add-actions");
   const editActions = document.getElementById("form-edit-actions");
 
@@ -126,7 +250,7 @@ function openItemModal(itemId = null, prefillCountry = "") {
     if (valueInput) valueInput.value = formatDenomination(item.value);
     if (yearInput) yearInput.value = hasValidYear(item.year) ? item.year : "";
     if (qtyInput) qtyInput.value = Number(item.quantity) || 1;
-    if (locInput) locInput.value = normalizeLocation(item.location);
+    updateLocationOptions(normalizeLocation(item.location));
 
     if (addActions) addActions.classList.add("hidden");
     if (editActions) editActions.classList.remove("hidden");
@@ -145,7 +269,7 @@ function openItemModal(itemId = null, prefillCountry = "") {
     if (valueInput) valueInput.value = "";
     if (yearInput) yearInput.value = "";
     if (qtyInput) qtyInput.value = 1;
-    if (locInput) locInput.value = "";
+    updateLocationOptions("");
 
     if (addActions) addActions.classList.remove("hidden");
     if (editActions) editActions.classList.add("hidden");
@@ -157,12 +281,15 @@ function openItemModal(itemId = null, prefillCountry = "") {
 function closeItemModal() {
   closeCountryDropdown();
   closeCurrencyDropdown();
+  closeLocationDropdown();
   originalEditingItem = null;
   document.getElementById("item-modal")?.classList.add("hidden");
 }
 
 // --- Country Searchable Dropdown ---
 function onCountryInputFocus() {
+  closeCurrencyDropdown();
+  closeLocationDropdown();
   const input = document.getElementById("form-country-input");
   renderCountryDropdown(input ? input.value : "");
 }
@@ -303,6 +430,7 @@ function toggleCurrencyDropdown() {
   if (!dropdown) return;
   const isHidden = dropdown.classList.contains("hidden");
   closeCountryDropdown();
+  closeLocationDropdown();
   if (isHidden) {
     renderCurrencyDropdown();
     dropdown.classList.remove("hidden");
@@ -386,7 +514,13 @@ function buildValidatedCandidateFromForm() {
   const rawYear = (document.getElementById("form-year")?.value || "").trim();
   const parsedYear = rawYear === "" ? null : normalizeYear(rawYear);
   const parsedQty = Math.max(1, parseInt(document.getElementById("form-quantity")?.value, 10) || 1);
-  const parsedLoc = normalizeLocation(document.getElementById("form-location")?.value);
+
+  const customLocEl = document.getElementById("form-location-custom-input");
+  const customLocWrapEl = document.getElementById("form-location-custom-wrap");
+  const isCustomLocVisible = customLocWrapEl && !customLocWrapEl.classList.contains("hidden");
+  const parsedLoc = isCustomLocVisible && customLocEl
+    ? normalizeLocation(customLocEl.value)
+    : normalizeLocation(document.getElementById("form-location")?.value);
 
   if (!rawCountry) {
     showToast("יש לבחור או להזין מדינה");

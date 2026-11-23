@@ -291,6 +291,10 @@ function init() {
     if (currWrap && !currWrap.contains(e.target)) {
       closeCurrencyDropdown();
     }
+    const locWrap = document.getElementById("form-location-trigger")?.closest(".relative");
+    if (locWrap && !locWrap.contains(e.target)) {
+      closeLocationDropdown();
+    }
     if (!e.target.closest("[data-filter-wrap]")) {
       closeAllFilterDropdowns();
     }

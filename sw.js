@@ -1,4 +1,4 @@
-const CACHE_NAME = "world-coins-pwa-v18";
+const CACHE_NAME = "world-coins-pwa-v19";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",

@@ -85,6 +85,16 @@ function toggleStatsDecade(decadeStr) {
   renderStats();
 }
 
+function getContinentGlobeEmoji(continentName) {
+  if (continentName === "אמריקה הצפונית" || continentName === "אמריקה הדרומית") {
+    return "🌎";
+  }
+  if (continentName === "אסיה" || continentName === "אוקיאניה") {
+    return "🌏";
+  }
+  return "🌍";
+}
+
 function renderCountryItemsMiniListHtml(rawItems, countryName, options = {}) {
   const { includeCountry = false } = options;
   const sortedItems = sortCountryItems(rawItems, countryName);
@@ -161,6 +171,22 @@ function renderStats() {
   const sortedCoins = getSortedCoinsOldestFirst();
   const oldestCoin = sortedCoins.length ? sortedCoins[0] : null;
   const oldestMeta = oldestCoin ? getCountryMeta(oldestCoin.country) : null;
+
+  // Continent Countries Coverage Aggregation
+  const collectedCountriesSet = new Set(collection.map(i => i.country));
+  const continentCoverageList = CONTINENT_ORDER.map(contName => {
+    const continentCountries = COUNTRIES_DB.filter(c => c.continent === contName);
+    const totalInContinent = continentCountries.length;
+    const ownedInContinent = continentCountries.filter(c => collectedCountriesSet.has(c.name)).length;
+    const pct = totalInContinent > 0 ? Math.round((ownedInContinent / totalInContinent) * 100) : 0;
+    return {
+      continent: contName,
+      emoji: getContinentGlobeEmoji(contName),
+      owned: ownedInContinent,
+      total: totalInContinent,
+      pct
+    };
+  });
 
   // Top Countries Aggregation
   const byCountry = {};
@@ -253,6 +279,34 @@ function renderStats() {
     </div>
   `;
 
+  const continentCoverageHtml = `
+    <section class="p-4 rounded-2xl bg-sky-50/40 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-900/50 space-y-2.5">
+      <div class="flex items-center justify-between pb-1.5 border-b border-sky-200/70 dark:border-sky-800/50">
+        <h3 class="font-extrabold text-[15px] text-sky-950 dark:text-sky-200">כיסוי מדינות לפי יבשת</h3>
+        <span class="text-xs text-sky-700/75 dark:text-sky-300/75">6 יבשות</span>
+      </div>
+      <div class="space-y-1.5">
+        ${continentCoverageList.map(item => `
+          <div class="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/70 dark:border-slate-800">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="emoji-flag text-sm shrink-0">${item.emoji}</span>
+                <span class="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate">${item.continent}</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs text-slate-400 dark:text-slate-500 font-medium">${item.owned}/${item.total}</span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-50 dark:bg-sky-950/70 text-sky-700 dark:text-sky-300">${item.pct}%</span>
+              </div>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mt-1">
+              <div class="h-full rounded-full bg-sky-500 dark:bg-sky-400 transition-all duration-300" style="width: ${item.pct}%"></div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </section>
+  `;
+
   container.innerHTML = `
     <div class="space-y-6">
       <!-- Top Summary Counters -->
@@ -272,6 +326,8 @@ function renderStats() {
       </div>
 
       ${oldestCoinCardHtml}
+
+      ${continentCoverageHtml}
 
       <!-- Top 10 Countries -->
       <section class="p-4 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/20 border border-indigo-200/70 dark:border-indigo-900/50 space-y-3">

@@ -3,8 +3,8 @@
 const UNASSIGNED_LOCATION_KEY = "__UNASSIGNED_LOCATION__";
 
 const CONTINENT_TOTAL_COUNTRIES = {
-  "אסיה": 48,
-  "אירופה": 47,
+  "אסיה": 49,
+  "אירופה": 46,
   "אמריקה הצפונית": 23,
   "אמריקה הדרומית": 12,
   "אפריקה": 54,

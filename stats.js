@@ -2,6 +2,15 @@
 
 const UNASSIGNED_LOCATION_KEY = "__UNASSIGNED_LOCATION__";
 
+const CONTINENT_TOTAL_COUNTRIES = {
+  "אסיה": 48,
+  "אירופה": 47,
+  "אמריקה הצפונית": 23,
+  "אמריקה הדרומית": 12,
+  "אפריקה": 54,
+  "אוקיאניה": 13
+};
+
 function getSortedCoinsOldestFirst() {
   return collection
     .filter(i => i.type === "coin" && hasValidYear(i.year))
@@ -176,7 +185,7 @@ function renderStats() {
   const collectedCountriesSet = new Set(collection.map(i => i.country));
   const continentCoverageList = CONTINENT_ORDER.map(contName => {
     const continentCountries = COUNTRIES_DB.filter(c => c.continent === contName);
-    const totalInContinent = continentCountries.length;
+    const totalInContinent = CONTINENT_TOTAL_COUNTRIES[contName] ?? continentCountries.length;
     const ownedInContinent = continentCountries.filter(c => collectedCountriesSet.has(c.name)).length;
     const pct = totalInContinent > 0 ? Math.round((ownedInContinent / totalInContinent) * 100) : 0;
     return {

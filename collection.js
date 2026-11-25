@@ -1,5 +1,45 @@
 // Collection View, Search, Filters, Grouping & Dividers (collection.js)
 
+const EU_VIRTUAL_COUNTRY = "האיחוד האירופי";
+const EU_VIRTUAL_FLAG = "🇪🇺";
+const EU_CURRENCIES = ["אירו", "אירו סנט"];
+
+function isEuCurrencyItem(item) {
+  const curr = (item?.currency || "").trim();
+  return EU_CURRENCIES.includes(curr);
+}
+
+function sortEuVirtualItems(items) {
+  return [...items].sort((a, b) => {
+    if (a.type !== b.type) {
+      return a.type === "coin" ? -1 : 1;
+    }
+    const unitA = (a.currency || "").trim() === "אירו" ? 0 : 1;
+    const unitB = (b.currency || "").trim() === "אירו" ? 0 : 1;
+    if (unitA !== unitB) {
+      return unitA - unitB;
+    }
+    const valA = Number(a.value) || 0;
+    const valB = Number(b.value) || 0;
+    if (valA !== valB) {
+      return valB - valA;
+    }
+    const countryCmp = hebrewCollator.compare(a.country || "", b.country || "");
+    if (countryCmp !== 0) {
+      return countryCmp;
+    }
+    const hasA = hasValidYear(a.year);
+    const hasB = hasValidYear(b.year);
+    if (hasA !== hasB) {
+      return hasA ? -1 : 1;
+    }
+    if (hasA && hasB) {
+      return Number(a.year) - Number(b.year);
+    }
+    return 0;
+  });
+}
+
 function closeAllFilterDropdowns(exceptType = null) {
   ["continent", "country", "decade"].forEach(type => {
     if (type !== exceptType) {
@@ -186,6 +226,7 @@ function collapseAll() {
     }
     collapsedCountries[item.country] = true;
   });
+  collapsedCountries[EU_VIRTUAL_COUNTRY] = true;
   isAllCollapsed = true;
   updateCollapseToggleButton();
   renderCollection();
@@ -204,24 +245,28 @@ function clearSearch() {
   renderCollection();
 }
 
-function renderCountryBlockHtml(cName, rawItems) {
-  const meta = getCountryMeta(cName);
-  const items = sortCountryItems(rawItems, cName);
+function renderCountryBlockHtml(cName, rawItems, isEuVirtual = false) {
+  const meta = isEuVirtual
+    ? { name: EU_VIRTUAL_COUNTRY, flag: EU_VIRTUAL_FLAG, former: false }
+    : getCountryMeta(cName);
+  const items = isEuVirtual ? sortEuVirtualItems(rawItems) : sortCountryItems(rawItems, cName);
   const coinsCount = items.filter(x => x.type === "coin").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
   const notesCount = items.filter(x => x.type === "banknote").reduce((s, x) => s + (Number(x.quantity) || 1), 0);
   const summaryText = formatQuantitySummary(coinsCount, notesCount);
   const isCountryCollapsed = !!collapsedCountries[cName];
   const safeNameAttr = escapeHtmlAttr(cName);
   const safeNameJs = escapeJsStr(cName);
-  const hasSeriesInfo = !!SERIES_INFO_DB[cName];
+  const hasSeriesInfo = !isEuVirtual && !!SERIES_INFO_DB[cName];
 
   // Check whether this country has at least one coin era/series transition
   let hasCoinEraTransition = false;
-  for (let i = 1; i < items.length; i++) {
-    if (items[i].type === "coin" && items[i - 1].type === "coin") {
-      if (getItemEraSignature(items[i - 1], cName) !== getItemEraSignature(items[i], cName)) {
-        hasCoinEraTransition = true;
-        break;
+  if (!isEuVirtual) {
+    for (let i = 1; i < items.length; i++) {
+      if (items[i].type === "coin" && items[i - 1].type === "coin") {
+        if (getItemEraSignature(items[i - 1], cName) !== getItemEraSignature(items[i], cName)) {
+          hasCoinEraTransition = true;
+          break;
+        }
       }
     }
   }
@@ -241,7 +286,7 @@ function renderCountryBlockHtml(cName, rawItems) {
           </div>
         </div>
         <div class="flex items-center gap-1 shrink-0">
-          <button type="button" onclick="openItemModal(null, '${safeNameJs}')" title="הוסף פריט ל${safeNameAttr}" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 transition">+</button>
+          ${isEuVirtual ? "" : `<button type="button" onclick="openItemModal(null, '${safeNameJs}')" title="הוסף פריט ל${safeNameAttr}" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-indigo-600 dark:text-indigo-400 font-bold text-sm flex items-center justify-center hover:bg-indigo-50 transition">+</button>`}
           <button type="button" onclick="toggleCountry('${safeNameJs}')" class="p-1 text-slate-400">
             <svg class="w-4 h-4 transition-transform ${isCountryCollapsed ? 'rotate-90' : ''}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
           </button>
@@ -260,7 +305,7 @@ function renderCountryBlockHtml(cName, rawItems) {
         : `<span class="text-[11px] text-slate-400 dark:text-slate-500">ללא שנה</span>`;
 
       let dividerClass = "";
-      if (idx > 0) {
+      if (!isEuVirtual && idx > 0) {
         const prevItem = items[idx - 1];
         if (isCoin && prevItem.type === "coin") {
           if (getItemEraSignature(prevItem, cName) !== getItemEraSignature(item, cName)) {
@@ -271,13 +316,24 @@ function renderCountryBlockHtml(cName, rawItems) {
         }
       }
 
+      const originFlagHtml = isEuVirtual
+        ? `<span class="emoji-flag text-base shrink-0">${getCountryMeta(item.country).flag}</span>`
+        : "";
+
       const safeItemId = escapeJsStr(item.id);
+      const editBtnHtml = isEuVirtual
+        ? ""
+        : `<button type="button" onclick="event.stopPropagation(); openItemModal('${safeItemId}')" title="ערוך פריט" aria-label="ערוך פריט" class="p-1.5 -ml-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
+          </button>`;
+
       block += `
         <div onclick="openItemDetailsModal('${safeItemId}')" class="py-2.5 px-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50/80 dark:hover:bg-slate-900/50 rounded-lg transition ${dividerClass}">
           <div class="flex items-center gap-2.5 min-w-0">
             <span class="w-[44px] text-center shrink-0 text-[11px] font-semibold py-0.5 rounded ${isCoin ? 'bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300' : 'bg-emerald-100/80 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'}">
               ${isCoin ? 'מטבע' : 'שטר'}
             </span>
+            ${originFlagHtml}
             <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
               <span class="font-bold">${formattedValue}</span> ${item.currency}
               ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
@@ -285,9 +341,7 @@ function renderCountryBlockHtml(cName, rawItems) {
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
             ${yearHtml}
-            <button type="button" onclick="event.stopPropagation(); openItemModal('${safeItemId}')" title="ערוך פריט" aria-label="ערוך פריט" class="p-1.5 -ml-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
-            </button>
+            ${editBtnHtml}
           </div>
         </div>
       `;
@@ -346,15 +400,31 @@ function renderCollection() {
   collapseBar.classList.remove("hidden");
   updateCollapseToggleButton();
 
+  const euItems = selectedCountryFilter === "all"
+    ? filtered.filter(isEuCurrencyItem)
+    : [];
+
   if (currentGroupMode === "alpha") {
     const byCountry = {};
     filtered.forEach(item => {
       if (!byCountry[item.country]) byCountry[item.country] = [];
       byCountry[item.country].push(item);
     });
-    const sortedCountries = Object.keys(byCountry).sort((a, b) => hebrewCollator.compare(a, b));
-    container.innerHTML = sortedCountries
-      .map(cName => renderCountryBlockHtml(cName, byCountry[cName]))
+    const entries = Object.keys(byCountry).map(cName => ({
+      name: cName,
+      items: byCountry[cName],
+      isEuVirtual: false
+    }));
+    if (euItems.length > 0) {
+      entries.push({
+        name: EU_VIRTUAL_COUNTRY,
+        items: euItems,
+        isEuVirtual: true
+      });
+    }
+    entries.sort((a, b) => hebrewCollator.compare(a.name, b.name));
+    container.innerHTML = entries
+      .map(entry => renderCountryBlockHtml(entry.name, entry.items, entry.isEuVirtual))
       .join("");
     return;
   }
@@ -395,8 +465,21 @@ function renderCollection() {
     `;
 
     if (!isContCollapsed) {
-      countryNames.forEach(cName => {
-        html += renderCountryBlockHtml(cName, countriesObj[cName]);
+      const entries = countryNames.map(cName => ({
+        name: cName,
+        items: countriesObj[cName],
+        isEuVirtual: false
+      }));
+      if (cont === "אירופה" && euItems.length > 0) {
+        entries.push({
+          name: EU_VIRTUAL_COUNTRY,
+          items: euItems,
+          isEuVirtual: true
+        });
+        entries.sort((a, b) => hebrewCollator.compare(a.name, b.name));
+      }
+      entries.forEach(entry => {
+        html += renderCountryBlockHtml(entry.name, entry.items, entry.isEuVirtual);
       });
     }
 

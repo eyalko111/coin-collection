@@ -159,10 +159,16 @@
         </div>
 
         <div id="collapse-controls-bar">
-          <button type="button" onclick="toggleCollapseAll()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition">
-            <svg id="icon-toggle-collapse" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/></svg>
-            <span id="label-toggle-collapse">כווץ הכול</span>
-          </button>
+          <div class="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-900 divide-x divide-x-reverse divide-slate-200 dark:divide-slate-800 overflow-hidden">
+            <button type="button" onclick="expandAll()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></svg>
+              <span>פתח הכול</span>
+            </button>
+            <button type="button" onclick="collapseAll()" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 transition">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/></svg>
+              <span>כווץ הכול</span>
+            </button>
+          </div>
         </div>
       </div>
 

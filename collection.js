@@ -194,27 +194,6 @@ function setGroupMode(mode) {
   renderCollection();
 }
 
-function updateCollapseToggleButton() {
-  const labelEl = document.getElementById("label-toggle-collapse");
-  const iconEl = document.getElementById("icon-toggle-collapse");
-  if (!labelEl || !iconEl) return;
-  if (isAllCollapsed) {
-    labelEl.textContent = "פתח הכול";
-    iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/>`;
-  } else {
-    labelEl.textContent = "כווץ הכול";
-    iconEl.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" d="M18 15l-6-6-6 6"/>`;
-  }
-}
-
-function toggleCollapseAll() {
-  if (isAllCollapsed) {
-    expandAll();
-  } else {
-    collapseAll();
-  }
-}
-
 function collapseAll() {
   CONTINENT_ORDER.forEach(c => {
     collapsedContinents[c] = true;
@@ -228,7 +207,6 @@ function collapseAll() {
   });
   collapsedCountries[EU_VIRTUAL_COUNTRY] = true;
   isAllCollapsed = true;
-  updateCollapseToggleButton();
   renderCollection();
 }
 
@@ -236,7 +214,6 @@ function expandAll() {
   collapsedContinents = {};
   collapsedCountries = {};
   isAllCollapsed = false;
-  updateCollapseToggleButton();
   renderCollection();
 }
 
@@ -405,7 +382,6 @@ function renderCollection() {
   }
 
   collapseBar.classList.remove("hidden");
-  updateCollapseToggleButton();
 
   const euItems = selectedCountryFilter === "all"
     ? filtered.filter(isEuCurrencyItem)

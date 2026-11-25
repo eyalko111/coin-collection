@@ -3,6 +3,7 @@ const STORAGE_KEY = "world_coin_collection_v1";
 
 let collection = [];
 let currentTab = "collection";
+let tabScrollPositions = { collection: 0, stats: 0 };
 let currentTypeFilter = "all";
 let currentGroupMode = "alpha";
 let selectedContinentFilter = "all";
@@ -238,8 +239,13 @@ function showToast(msg) {
 function switchTab(tab) {
   const oldestViewHidden = document.getElementById("view-oldest-coins").classList.contains("hidden");
   if (currentTab === tab && oldestViewHidden) {
+    tabScrollPositions[tab] = 0;
     window.scrollTo({ top: 0, behavior: "smooth" });
     return;
+  }
+
+  if (oldestViewHidden) {
+    tabScrollPositions[currentTab] = window.scrollY;
   }
 
   currentTab = tab;
@@ -256,8 +262,8 @@ function switchTab(tab) {
     ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
     : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
   if (!isCol) renderStats();
+  window.scrollTo(0, tabScrollPositions[tab] || 0);
 }
 
 function init() {

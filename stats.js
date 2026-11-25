@@ -184,7 +184,7 @@ function renderStats() {
   // Continent Countries Coverage Aggregation
   const collectedCountriesSet = new Set(collection.map(i => i.country));
   const continentCoverageList = CONTINENT_ORDER.map(contName => {
-    const continentCountries = COUNTRIES_DB.filter(c => c.continent === contName);
+    const continentCountries = COUNTRIES_DB.filter(c => c.continent === contName && !c.former);
     const totalInContinent = CONTINENT_TOTAL_COUNTRIES[contName] ?? continentCountries.length;
     const ownedInContinent = continentCountries.filter(c => collectedCountriesSet.has(c.name)).length;
     const pct = totalInContinent > 0 ? Math.round((ownedInContinent / totalInContinent) * 100) : 0;

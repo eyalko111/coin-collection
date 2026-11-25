@@ -126,6 +126,7 @@ function renderCountryItemsMiniListHtml(rawItems, countryName, options = {}) {
     <div class="divide-y divide-slate-100 dark:divide-slate-900">
       ${sortedItems.map((item, itemIdx) => {
         const isCoin = item.type === "coin";
+        const qty = Number(item.quantity) || 1;
         const itemCountryName = item.country || countryName;
         const cMeta = includeCountry ? getCountryMeta(itemCountryName) : null;
         const yearHtml = hasValidYear(item.year)
@@ -156,6 +157,7 @@ function renderCountryItemsMiniListHtml(rawItems, countryName, options = {}) {
               </span>
               <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                 <span class="font-bold">${formatDenomination(item.value)}</span> ${item.currency}
+                ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
               </div>
             </div>
             <div class="shrink-0">
@@ -523,6 +525,7 @@ function renderStats() {
                     <div class="divide-y divide-slate-100 dark:divide-slate-900">
                       ${sortedDecItems.map(item => {
                         const isCoin = item.type === "coin";
+                        const qty = Number(item.quantity) || 1;
                         const cMeta = getCountryMeta(item.country);
                         return `
                           <div class="py-2 flex items-center justify-between gap-2">
@@ -533,6 +536,7 @@ function renderStats() {
                               <span class="emoji-flag text-base shrink-0">${cMeta.flag}</span>
                               <div class="truncate text-sm font-medium text-slate-800 dark:text-slate-100">
                                 <span class="font-bold">${formatDenomination(item.value)}</span> ${item.currency}
+                                ${qty > 1 ? `<span class="mr-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">×${qty}</span>` : ""}
                               </div>
                             </div>
                             <div class="shrink-0">

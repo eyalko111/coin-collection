@@ -320,9 +320,13 @@ function renderCountryBlockHtml(cName, rawItems, isEuVirtual = false) {
         ? `<span class="emoji-flag text-base shrink-0">${getCountryMeta(item.country).flag}</span>`
         : "";
 
+      const originCountryBadgeHtml = isEuVirtual
+        ? `<span class="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 truncate max-w-[90px]">${item.country}</span>`
+        : "";
+
       const safeItemId = escapeJsStr(item.id);
       const editBtnHtml = isEuVirtual
-        ? ""
+        ? `<span aria-hidden="true" class="p-1.5 -ml-1 inline-flex items-center justify-center"><span class="w-3.5 h-3.5"></span></span>`
         : `<button type="button" onclick="event.stopPropagation(); openItemModal('${safeItemId}')" title="ערוך פריט" aria-label="ערוך פריט" class="p-1.5 -ml-1 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H8v-2.414a2 2 0 01.586-1.414z"/></svg>
           </button>`;
@@ -340,6 +344,7 @@ function renderCountryBlockHtml(cName, rawItems, isEuVirtual = false) {
             </div>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
+            ${originCountryBadgeHtml}
             ${yearHtml}
             ${editBtnHtml}
           </div>

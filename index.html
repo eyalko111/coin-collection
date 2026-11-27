@@ -11,6 +11,8 @@
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="manifest" href="./manifest.json" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -98,6 +100,9 @@
         <button type="button" id="tab-stats" onclick="switchTab('stats')" class="flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition">
           סטטיסטיקות
         </button>
+        <button type="button" id="tab-map" onclick="switchTab('map')" class="flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition">
+          מפת העולם
+        </button>
       </nav>
     </div>
   </header>
@@ -179,6 +184,11 @@
     <!-- VIEW 2: STATISTICS -->
     <section id="view-stats" class="hidden">
       <div id="stats-container" class="space-y-4"></div>
+    </section>
+
+    <!-- VIEW: WORLD MAP -->
+    <section id="view-map" class="hidden">
+      <div id="map-container"></div>
     </section>
 
     <!-- VIEW 3: TOP 15 OLDEST COINS -->
@@ -501,6 +511,7 @@
   <script src="./series-data.js"></script>
   <script src="./collection.js"></script>
   <script src="./stats.js"></script>
+  <script src="./map.js"></script>
   <script src="./modals.js"></script>
   <script src="./io.js"></script>
   <script src="./app.js"></script>

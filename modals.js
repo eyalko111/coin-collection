@@ -558,8 +558,14 @@ function finalizeCollectionMutation(toastMsg, targetCountry = "") {
   if (currentTab === "stats") {
     renderStats();
   }
+  if (currentTab === "map") {
+    if (typeof updateMapPolygonStyles === "function") updateMapPolygonStyles();
+    if (typeof updateMapSelectionPill === "function") updateMapSelectionPill();
+    if (typeof renderMicrostatesDrawer === "function") renderMicrostatesDrawer();
+    if (typeof renderSelectedMapCountryDetails === "function") renderSelectedMapCountryDetails();
+  }
   if (toastMsg) showToast(toastMsg);
-  if (targetCountry) {
+  if (targetCountry && currentTab === "collection") {
     scrollToCountryBlock(targetCountry);
   }
 }

@@ -3,7 +3,7 @@ const STORAGE_KEY = "world_coin_collection_v1";
 
 let collection = [];
 let currentTab = "collection";
-let tabScrollPositions = { collection: 0, stats: 0 };
+let tabScrollPositions = { collection: 0, stats: 0, map: 0 };
 let currentTypeFilter = "all";
 let currentGroupMode = "alpha";
 let selectedContinentFilter = "all";
@@ -226,6 +226,9 @@ function saveCollection() {
 function toggleDarkMode() {
   const isDark = document.documentElement.classList.toggle("dark");
   localStorage.setItem("coin_theme", isDark ? "dark" : "light");
+  if (typeof updateMapPolygonStyles === "function") {
+    updateMapPolygonStyles();
+  }
 }
 
 function showToast(msg) {
@@ -251,18 +254,23 @@ function switchTab(tab) {
   currentTab = tab;
   document.getElementById("view-oldest-coins").classList.add("hidden");
   const isCol = tab === "collection";
+  const isStats = tab === "stats";
+  const isMap = tab === "map";
+
   document.getElementById("view-collection").classList.toggle("hidden", !isCol);
-  document.getElementById("view-stats").classList.toggle("hidden", isCol);
+  document.getElementById("view-stats").classList.toggle("hidden", !isStats);
+  document.getElementById("view-map")?.classList.toggle("hidden", !isMap);
 
-  document.getElementById("tab-collection").className = isCol
-    ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
-    : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
+  const activeTabClass = "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition";
+  const inactiveTabClass = "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
 
-  document.getElementById("tab-stats").className = !isCol
-    ? "flex-1 py-2.5 text-sm font-semibold border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 transition"
-    : "flex-1 py-2.5 text-sm font-medium border-b-2 border-transparent text-slate-500 dark:text-slate-400 transition";
+  document.getElementById("tab-collection").className = isCol ? activeTabClass : inactiveTabClass;
+  document.getElementById("tab-stats").className = isStats ? activeTabClass : inactiveTabClass;
+  const tabMapEl = document.getElementById("tab-map");
+  if (tabMapEl) tabMapEl.className = isMap ? activeTabClass : inactiveTabClass;
 
-  if (!isCol) renderStats();
+  if (isStats) renderStats();
+  if (isMap && typeof renderWorldMap === "function") renderWorldMap();
   window.scrollTo(0, tabScrollPositions[tab] || 0);
 }
 

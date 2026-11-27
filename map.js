@@ -1,12 +1,14 @@
 // Interactive World Map Tab (map.js)
 
 const WORLD_ATLAS_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
+const MAP_COLOR_MODE_KEY = "world_coin_map_color_mode";
 
 let worldTopologyCache = null;
 let worldFeaturesCache = null;
 let selectedMapCountry = null;
 let currentMapRegion = "all";
 let isMicrostatesOpen = false;
+let mapColorMode = localStorage.getItem(MAP_COLOR_MODE_KEY) || "shades"; // "shades" | "uniform"
 let mapSvgInstance = null;
 let mapZoomBehavior = null;
 let mapZoomGroup = null;
@@ -267,7 +269,8 @@ function resolveHebrewCountryFromFeature(feature) {
 }
 
 function getCountryCollectionStats(countryName) {
-  const items = collection.filter(i => i.country === countryName);
+  const target = String(countryName || "").trim();
+  const items = collection.filter(i => String(i.country || "").trim() === target);
   const totalQty = items.reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
   const coinsQty = items.filter(i => i.type === "coin").reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
   const notesQty = items.filter(i => i.type === "banknote").reduce((sum, i) => sum + (Number(i.quantity) || 1), 0);
@@ -372,6 +375,71 @@ function renderMapRegionPills() {
   }).join("");
 }
 
+function setMapColorMode(mode) {
+  if (mode !== "shades" && mode !== "uniform") return;
+  mapColorMode = mode;
+  localStorage.setItem(MAP_COLOR_MODE_KEY, mode);
+  renderMapLegend();
+  updateMapPolygonStyles();
+}
+
+function renderMapLegend() {
+  const legendBar = document.getElementById("map-legend-bar");
+  if (!legendBar) return;
+
+  const isShades = mapColorMode === "shades";
+
+  const legendItemsHtml = isShades
+    ? `
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="inline-flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-xs bg-indigo-300 dark:bg-indigo-800 inline-block"></span>
+          <span>1–4</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-xs bg-indigo-400 dark:bg-indigo-700 inline-block"></span>
+          <span>5–14</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-xs bg-indigo-500 dark:bg-indigo-900 inline-block"></span>
+          <span>15+</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-xs bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 inline-block"></span>
+          <span>0</span>
+        </span>
+      </div>
+    `
+    : `
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <span class="inline-flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-xs bg-indigo-400 dark:bg-indigo-700 inline-block"></span>
+          <span>מדינה באוסף</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-xs bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 inline-block"></span>
+          <span>טרם נאסף</span>
+        </span>
+      </div>
+    `;
+
+  legendBar.innerHTML = `
+    ${legendItemsHtml}
+    <div class="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200/80 dark:border-slate-800 shrink-0">
+      <button type="button" onclick="setMapColorMode('shades')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition ${
+        isShades
+          ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-2xs"
+          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+      }">גוונים</button>
+      <button type="button" onclick="setMapColorMode('uniform')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition ${
+        !isShades
+          ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 shadow-2xs"
+          : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+      }">אחיד</button>
+    </div>
+  `;
+}
+
 function applyRegionZoom(animate = true) {
   if (!mapSvgInstance || !mapZoomBehavior || !mapProjection) return;
   const reg = MAP_REGIONS.find(r => r.id === currentMapRegion) || MAP_REGIONS[0];
@@ -473,6 +541,9 @@ function getCountryPolygonFill(hebrewCountry, isDark) {
     return isDark ? "#6366f1" : "#4f46e5";
   }
   if (hasItems) {
+    if (mapColorMode === "uniform") {
+      return isDark ? "#3730a3" : "#818cf8";
+    }
     if (stats.totalQty >= 15) return isDark ? "#312e81" : "#6366f1";
     if (stats.totalQty >= 5) return isDark ? "#3730a3" : "#818cf8";
     return isDark ? "#3b429f" : "#a5b4fc";
@@ -680,20 +751,8 @@ async function renderWorldMap() {
         </div>
       </div>
 
-      <!-- Legend -->
-      <div class="flex items-center justify-between px-1 text-[11px] text-slate-500 dark:text-slate-400">
-        <div class="flex items-center gap-3">
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-3 h-3 rounded-xs bg-indigo-400 dark:bg-indigo-700 inline-block"></span>
-            <span>מדינה באוסף</span>
-          </span>
-          <span class="inline-flex items-center gap-1.5">
-            <span class="w-3 h-3 rounded-xs bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 inline-block"></span>
-            <span>טרם נאסף</span>
-          </span>
-        </div>
-        <span>גרור וצבוט להגדלה</span>
-      </div>
+      <!-- Legend & Color Mode Switch -->
+      <div id="map-legend-bar" class="flex items-center justify-between gap-2 px-1 text-[11px] text-slate-500 dark:text-slate-400"></div>
 
       <!-- Collapsible Microstates Drawer (Minimized by Default) -->
       <div id="map-microstates-box"></div>
@@ -704,6 +763,7 @@ async function renderWorldMap() {
   `;
 
   renderMapRegionPills();
+  renderMapLegend();
   renderMicrostatesDrawer();
   updateMapSelectionPill();
   renderSelectedMapCountryDetails();

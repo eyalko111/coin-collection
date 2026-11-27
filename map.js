@@ -244,7 +244,7 @@ const MICROSTATES_LIST = [
 ];
 
 const MAP_REGIONS = [
-  { id: "all", label: "כל העולם", center: [14, 22], scale: 1.18 },
+  { id: "all", label: "כל העולם", center: [12, 18], scale: 1.5 },
   { id: "אירופה", label: "אירופה", center: [15, 53], scale: 3.6 },
   { id: "אסיה", label: "אסיה", center: [88, 32], scale: 2.25 },
   { id: "אמריקה הצפונית", label: "אמריקה הצפונית", center: [-96, 38], scale: 2.3 },
@@ -346,6 +346,10 @@ async function ensureWorldAtlasLoaded() {
 
 function setMapRegion(regionId) {
   currentMapRegion = regionId;
+  if (isMicrostatesOpen) {
+    isMicrostatesOpen = false;
+    renderMicrostatesDrawer();
+  }
   renderMapRegionPills();
   applyRegionZoom(true);
 }
@@ -396,7 +400,13 @@ function zoomMapByFactor(factor) {
 
 function resetMapZoom() {
   currentMapRegion = "all";
+  selectedMapCountry = null;
+  isMicrostatesOpen = false;
   renderMapRegionPills();
+  updateMapSelectionPill();
+  updateMapPolygonStyles();
+  renderMicrostatesDrawer();
+  renderSelectedMapCountryDetails();
   applyRegionZoom(true);
 }
 
@@ -480,12 +490,11 @@ function getCountryPolygonStroke(hebrewCountry, isDark) {
     // Distinct clear border outline when selected country has 0 items
     return isDark ? "#f59e0b" : "#d97706";
   }
-  return isDark ? "#0f172a" : "#94a3b8";
+  return isDark ? "#334155" : "#cbd5e1";
 }
 
-function getCountryPolygonStrokeWidth(hebrewCountry) {
-  const isSelected = hebrewCountry && selectedMapCountry === hebrewCountry;
-  return isSelected ? 1.8 : 0.45;
+function getCountryPolygonStrokeWidth() {
+  return 0.315;
 }
 
 function updateMapPolygonStyles() {
@@ -495,7 +504,7 @@ function updateMapPolygonStyles() {
   mapZoomGroup.selectAll("path.country-shape")
     .attr("fill", d => getCountryPolygonFill(d.hebrewCountry, isDark))
     .attr("stroke", d => getCountryPolygonStroke(d.hebrewCountry, isDark))
-    .attr("stroke-width", d => getCountryPolygonStrokeWidth(d.hebrewCountry));
+    .attr("stroke-width", () => getCountryPolygonStrokeWidth());
 
   // Bring selected country path to front so its border is never clipped by neighbor borders
   if (selectedMapCountry) {
@@ -735,14 +744,18 @@ async function renderWorldMap() {
       .append("path")
       .attr("class", "country-shape transition-colors duration-150")
       .attr("d", mapPathGenerator)
+      .attr("vector-effect", "non-scaling-stroke")
       .attr("fill", d => getCountryPolygonFill(d.hebrewCountry, isDark))
       .attr("stroke", d => getCountryPolygonStroke(d.hebrewCountry, isDark))
-      .attr("stroke-width", d => getCountryPolygonStrokeWidth(d.hebrewCountry))
+      .attr("stroke-width", () => getCountryPolygonStrokeWidth())
       .attr("stroke-linejoin", "round")
       .style("cursor", d => (d.hebrewCountry ? "pointer" : "default"))
       .on("click", (event, d) => {
         event.stopPropagation();
         if (d.hebrewCountry) {
+          if (isMicrostatesOpen) {
+            isMicrostatesOpen = false;
+          }
           selectMapCountry(d.hebrewCountry);
         }
       });

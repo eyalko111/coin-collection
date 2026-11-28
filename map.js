@@ -247,7 +247,7 @@ const MICROSTATES_LIST = [
 
 const MAP_REGIONS = [
   { id: "all", label: "כל העולם", center: [12, 14], scale: 1.68 },
-  { id: "middle_east", label: "ישראל והמזה״ת", center: [34, 30], scale: 6.8 },
+  { id: "middle_east", label: "ישראל והמזה״ת", center: [34, 30], scale: 7 },
   { id: "אירופה", label: "אירופה", center: [15, 53], scale: 4.2 },
   { id: "אסיה", label: "אסיה", center: [88, 32], scale: 2.65 },
   { id: "אמריקה הצפונית", label: "אמריקה הצפונית", center: [-96, 38], scale: 2.7 },
@@ -399,15 +399,15 @@ function renderMapLegend() {
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="w-2.5 h-2.5 rounded-xs bg-indigo-300 dark:bg-indigo-800 inline-block"></span>
-          <span>1–4</span>
+          <span>4-1</span>
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="w-2.5 h-2.5 rounded-xs bg-indigo-400 dark:bg-indigo-700 inline-block"></span>
-          <span>5–14</span>
+          <span>14-5</span>
         </span>
         <span class="inline-flex items-center gap-1">
           <span class="w-2.5 h-2.5 rounded-xs bg-indigo-500 dark:bg-indigo-900 inline-block"></span>
-          <span>15+</span>
+          <span>+15</span>
         </span>
       </div>
     `
@@ -425,7 +425,6 @@ function renderMapLegend() {
     `;
 
   legendBar.innerHTML = `
-    ${legendItemsHtml}
     <div class="inline-flex items-center rounded-lg bg-slate-100 dark:bg-slate-900 p-0.5 border border-slate-200/80 dark:border-slate-800 shrink-0">
       <button type="button" onclick="setMapColorMode('shades')" class="px-2 py-0.5 rounded-md text-[10px] font-semibold transition ${
         isShades
@@ -438,6 +437,7 @@ function renderMapLegend() {
           : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
       }">אחיד</button>
     </div>
+    ${legendItemsHtml}
   `;
 }
 

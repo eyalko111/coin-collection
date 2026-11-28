@@ -246,13 +246,14 @@ const MICROSTATES_LIST = [
 ];
 
 const MAP_REGIONS = [
-  { id: "all", label: "כל העולם", center: [12, 18], scale: 1.5 },
-  { id: "אירופה", label: "אירופה", center: [15, 53], scale: 3.6 },
-  { id: "אסיה", label: "אסיה", center: [88, 32], scale: 2.25 },
-  { id: "אמריקה הצפונית", label: "אמריקה הצפונית", center: [-96, 38], scale: 2.3 },
-  { id: "אמריקה הדרומית", label: "אמריקה הדרומית", center: [-60, -16], scale: 2.6 },
-  { id: "אפריקה", label: "אפריקה", center: [20, 2], scale: 2.35 },
-  { id: "אוקיאניה", label: "אוקיאניה", center: [142, -25], scale: 3.1 }
+  { id: "all", label: "כל העולם", center: [12, 26], scale: 1.68 },
+  { id: "middle_east", label: "ישראל והמזה״ת", center: [39, 29], scale: 6.2 },
+  { id: "אירופה", label: "אירופה", center: [15, 53], scale: 4.2 },
+  { id: "אסיה", label: "אסיה", center: [88, 32], scale: 2.65 },
+  { id: "אמריקה הצפונית", label: "אמריקה הצפונית", center: [-96, 38], scale: 2.7 },
+  { id: "אמריקה הדרומית", label: "אמריקה הדרומית", center: [-60, -16], scale: 3.05 },
+  { id: "אפריקה", label: "אפריקה", center: [20, 2], scale: 2.75 },
+  { id: "אוקיאניה", label: "אוקיאניה", center: [142, -25], scale: 3.65 }
 ];
 
 function resolveHebrewCountryFromFeature(feature) {

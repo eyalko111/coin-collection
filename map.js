@@ -246,8 +246,8 @@ const MICROSTATES_LIST = [
 ];
 
 const MAP_REGIONS = [
-  { id: "all", label: "כל העולם", center: [12, 12], scale: 1.68 },
-  { id: "middle_east", label: "ישראל והמזה״ת", center: [39, 29], scale: 6.8 },
+  { id: "all", label: "כל העולם", center: [12, 14], scale: 1.68 },
+  { id: "middle_east", label: "ישראל והמזה״ת", center: [34, 30], scale: 6.8 },
   { id: "אירופה", label: "אירופה", center: [15, 53], scale: 4.2 },
   { id: "אסיה", label: "אסיה", center: [88, 32], scale: 2.65 },
   { id: "אמריקה הצפונית", label: "אמריקה הצפונית", center: [-96, 38], scale: 2.7 },
@@ -394,6 +394,10 @@ function renderMapLegend() {
     ? `
       <div class="flex items-center gap-2 flex-wrap">
         <span class="inline-flex items-center gap-1">
+          <span class="w-2.5 h-2.5 rounded-xs bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 inline-block"></span>
+          <span>0</span>
+        </span>
+        <span class="inline-flex items-center gap-1">
           <span class="w-2.5 h-2.5 rounded-xs bg-indigo-300 dark:bg-indigo-800 inline-block"></span>
           <span>1–4</span>
         </span>
@@ -404,10 +408,6 @@ function renderMapLegend() {
         <span class="inline-flex items-center gap-1">
           <span class="w-2.5 h-2.5 rounded-xs bg-indigo-500 dark:bg-indigo-900 inline-block"></span>
           <span>15+</span>
-        </span>
-        <span class="inline-flex items-center gap-1">
-          <span class="w-2.5 h-2.5 rounded-xs bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 inline-block"></span>
-          <span>0</span>
         </span>
       </div>
     `
